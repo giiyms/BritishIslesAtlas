@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="British Isles Atlas — a gray altitude map of Great Britain, Ireland, and the surrounding islands."
+    />
+    <meta name="theme-color" content="#e6ebf0" />
+    <title>British Isles Atlas</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  </head>
+  <body>
+    <div id="map" role="application" aria-label="Map of the British Isles"></div>
+
+    <aside id="layers" class="panel" aria-label="Map layers"></aside>
+
+    <form id="search" class="search" role="search">
+      <span class="search-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <circle cx="11" cy="11" r="6.5"></circle>
+          <path d="m20 20-3.6-3.6"></path>
+        </svg>
+      </span>
+      <input
+        id="search-input"
+        name="q"
+        type="search"
+        placeholder="Search places or postcodes..."
+        autocomplete="off"
+        spellcheck="false"
+        aria-label="Search places or postcodes"
+        aria-controls="search-results"
+        aria-autocomplete="list"
+      />
+      <kbd>⌘K</kbd>
+      <ul id="search-results" class="search-results" role="listbox" hidden></ul>
+    </form>
+
+    <div class="nav" aria-label="Map navigation">
+      <div class="nav-group">
+        <button type="button" id="zoom-in" aria-label="Zoom in">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+        </button>
+        <button type="button" id="zoom-out" aria-label="Zoom out">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 12h14"></path></svg>
+        </button>
+      </div>
+      <button type="button" id="home" class="nav-home" aria-label="Reset view to the British Isles">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <circle cx="12" cy="12" r="6"></circle>
+          <path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3"></path>
+        </svg>
+      </button>
+    </div>
+
+    <div id="scale" class="scale" role="img" aria-label="Scale bar"></div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
