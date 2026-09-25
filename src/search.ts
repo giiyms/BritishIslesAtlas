@@ -74,8 +74,12 @@ export function mountSearch(
   let active = -1;
   let remoteController: AbortController | null = null;
   let remoteTimer = 0;
+  let requestSeq = 0;
 
   const close = () => {
+    requestSeq += 1;
+    window.clearTimeout(remoteTimer);
+    remoteController?.abort();
     list.hidden = true;
     list.replaceChildren();
     hits = [];
@@ -115,12 +119,14 @@ export function mountSearch(
     window.clearTimeout(remoteTimer);
     remoteController?.abort();
     if (query.trim().length < 3) return;
+    const seq = requestSeq;
     remoteTimer = window.setTimeout(() => {
+      if (seq !== requestSeq) return;
       const controller = new AbortController();
       remoteController = controller;
       remoteHits(query, controller.signal)
         .then((remote) => {
-          if (controller.signal.aborted || input.value.trim() !== query) return;
+          if (seq !== requestSeq || controller.signal.aborted || input.value.trim() !== query) return;
           const seen = new Set(hits.map((hit) => hit.title.toLowerCase()));
           for (const hit of remote) {
             if (seen.has(hit.title.toLowerCase())) continue;

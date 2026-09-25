@@ -1,10 +1,14 @@
 import {
   Map,
   Popup,
+  setWorkerUrl,
   type ExpressionSpecification,
   type Map as MapLibreMap,
   type StyleSpecification,
 } from "maplibre-gl";
+import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
+
+setWorkerUrl(workerUrl);
 import { buildCollections } from "./geo";
 import { LAYERS, type LayerId, type MarkerKind } from "./layers";
 
