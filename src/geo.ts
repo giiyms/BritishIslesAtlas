@@ -560,18 +560,6 @@ const SCATTER: Record<string, ScatterRule> = {
     max: 1,
     nouns: ["Meeting House", "Temple", "Gurdwara"],
   },
-  petrol: {
-    perMillion: 8,
-    minPop: 12000,
-    max: 3,
-    nouns: ["Petrol station", "Service station", "Fuel stop"],
-  },
-  ev: {
-    perMillion: 3,
-    minPop: 40000,
-    max: 2,
-    nouns: ["EV charging", "Rapid charging"],
-  },
 };
 
 function radiusFor(pop: number): number {
@@ -694,8 +682,8 @@ const builders: Record<LayerId, () => Feature[]> = {
   population: populationLayer,
   "other-religious": () => scatterLayer("other-religious"),
   census: censusLayer,
-  petrol: () => scatterLayer("petrol"),
-  ev: () => scatterLayer("ev"),
+  petrol: () => [],
+  ev: () => [],
   cemeteries: () => namedLayer("cemeteries", "Preview cemetery"),
   immigration: () => namedLayer("immigration", "Preview checkpoint"),
   crime: () => namedLayer("crime", "Preview only, not an offence record"),

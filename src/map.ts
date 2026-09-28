@@ -256,12 +256,13 @@ export function createAtlas(container: HTMLElement): Atlas {
 
   let loaded = false;
   const ordered = [...LAYERS].sort((a, b) => a.z - b.z);
+  const OSM_STATIC = new Set<LayerId>(["petrol", "ev"]);
   const clustered = new Set<LayerId>([
     "pubs", "schools", "churches", "post-offices", "mosques", "other-religious", "petrol", "ev",
     "census", "weather", "crime", "legends",
   ]);
   const minZoom = (id: LayerId) => id === "post-offices" ? 7 :
-    ["pubs", "schools", "churches", "other-religious", "mosques"].includes(id) ? 6 : 0;
+    ["pubs", "schools", "churches", "other-religious", "mosques", "petrol", "ev"].includes(id) ? 6 : 0;
   const layerIds = (id: LayerId) => id === "roads" ? [id, "roads-hit"] :
     clustered.has(id) ? [id, `${id}-cluster`, `${id}-cluster-count`] : [id];
   const beforeFor = (z: number): string | undefined => {
@@ -273,9 +274,11 @@ export function createAtlas(container: HTMLElement): Atlas {
     const layer = LAYERS.find((item) => item.id === id)!;
     const clusters = clustered.has(id);
     map.addSource(id, {
-      type: "geojson", data: buildCollection(id),
+      type: "geojson",
+      data: OSM_STATIC.has(id) ? `/data/${id}.geojson` : buildCollection(id),
       ...(clusters ? { cluster: true, clusterRadius: 44, clusterMaxZoom: 11, clusterMinPoints: 3,
         maxzoom: 12, buffer: 64, tolerance: 0.5 } : {}),
+      ...(OSM_STATIC.has(id) ? { attribution: "© OpenStreetMap contributors (ODbL 1.0)" } : {}),
     });
     const before = beforeFor(layer.z);
     const visible = state[id] ? "visible" : "none";
@@ -361,11 +364,24 @@ export function createAtlas(container: HTMLElement): Atlas {
       return;
     }
     const properties = feature.properties as Record<string, unknown>;
-    const layer = LAYERS.find((item) => item.id === properties.layer);
+    const layerId = String(properties.layer ?? feature.source ?? "");
+    const layer = LAYERS.find((item) => item.id === layerId);
+    const name = String(properties.name ?? layer?.label ?? "Place");
+    const brand = properties.brand ? String(properties.brand) : "";
+    const note = properties.note != null && String(properties.note).length
+      ? String(properties.note)
+      : OSM_STATIC.has(layerId as LayerId)
+        ? "OpenStreetMap"
+        : "Preview stub";
+    const osmUrl = properties.osm_url ? String(properties.osm_url) : "";
+    const metaBits = [layer?.label ?? "Layer", brand && brand !== name ? brand : ""].filter(Boolean);
     popup.setLngLat(event.lngLat).setHTML(
-      `<strong>${escapeHtml(String(properties.name ?? "Preview"))}</strong>` +
-      `<div class="popup-meta">${escapeHtml(layer?.label ?? "Layer")}</div>` +
-      `<div class="popup-note">${escapeHtml(String(properties.note ?? "Preview stub"))}</div>`,
+      `<strong>${escapeHtml(name)}</strong>` +
+      `<div class="popup-meta">${escapeHtml(metaBits.join(" · "))}</div>` +
+      `<div class="popup-note">${escapeHtml(note)}</div>` +
+      (osmUrl
+        ? `<div class="popup-note"><a href="${escapeHtml(osmUrl)}" target="_blank" rel="noopener noreferrer">OpenStreetMap</a></div>`
+        : ""),
     ).addTo(map);
   });
   map.on("mousemove", (event) => {
