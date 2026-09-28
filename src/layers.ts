@@ -11,7 +11,8 @@ export type MarkerKind =
   | "triangle";
 
 export interface LayerDef {
-  id: string;
+  readonly id: string;
+  readonly z: number;
   label: string;
   group: "data" | "upcoming";
   /** Chip icon color. */
@@ -28,14 +29,15 @@ export interface LayerDef {
   icon: string;
 }
 
-export const LAYERS: LayerDef[] = [
+export const LAYERS = [
   {
     id: "roads",
+    z: 50,
     label: "Roads",
     group: "data",
     accent: "#12866f",
     tint: "#e3f6f1",
-    color: "#2fbfa8",
+    color: "#23938a",
     kind: "line",
     defaultOn: true,
     blurb: "Preview motorway and trunk corridors",
@@ -44,6 +46,7 @@ export const LAYERS: LayerDef[] = [
   },
   {
     id: "pubs",
+    z: 220,
     label: "Pubs",
     group: "data",
     accent: "#d99212",
@@ -57,6 +60,7 @@ export const LAYERS: LayerDef[] = [
   },
   {
     id: "schools",
+    z: 140,
     label: "Schools",
     group: "data",
     accent: "#6d5bd4",
@@ -70,6 +74,7 @@ export const LAYERS: LayerDef[] = [
   },
   {
     id: "hospitals",
+    z: 240,
     label: "Hospitals",
     group: "data",
     accent: "#e3534a",
@@ -83,6 +88,7 @@ export const LAYERS: LayerDef[] = [
   },
   {
     id: "churches",
+    z: 110,
     label: "Churches",
     group: "data",
     accent: "#7d62c8",
@@ -96,6 +102,7 @@ export const LAYERS: LayerDef[] = [
   },
   {
     id: "post-offices",
+    z: 210,
     label: "Post offices",
     group: "data",
     accent: "#e25b52",
@@ -109,6 +116,7 @@ export const LAYERS: LayerDef[] = [
   },
   {
     id: "mosques",
+    z: 120,
     label: "Mosques",
     group: "data",
     accent: "#b0893e",
@@ -122,6 +130,7 @@ export const LAYERS: LayerDef[] = [
   },
   {
     id: "population",
+    z: 10,
     label: "Population",
     group: "data",
     accent: "#d79a2b",
@@ -135,6 +144,7 @@ export const LAYERS: LayerDef[] = [
   },
   {
     id: "other-religious",
+    z: 130,
     label: "Other religious",
     group: "data",
     accent: "#7d848f",
@@ -148,6 +158,7 @@ export const LAYERS: LayerDef[] = [
   },
   {
     id: "census",
+    z: 20,
     label: "Census",
     group: "data",
     accent: "#7e868f",
@@ -161,6 +172,7 @@ export const LAYERS: LayerDef[] = [
   },
   {
     id: "petrol",
+    z: 80,
     label: "Petrol stations",
     group: "upcoming",
     accent: "#d4532b",
@@ -174,6 +186,7 @@ export const LAYERS: LayerDef[] = [
   },
   {
     id: "ev",
+    z: 90,
     label: "EV charging",
     group: "upcoming",
     accent: "#1c9a48",
@@ -187,6 +200,7 @@ export const LAYERS: LayerDef[] = [
   },
   {
     id: "cemeteries",
+    z: 100,
     label: "Cemeteries",
     group: "upcoming",
     accent: "#6d7480",
@@ -200,6 +214,7 @@ export const LAYERS: LayerDef[] = [
   },
   {
     id: "immigration",
+    z: 180,
     label: "Immigration",
     group: "upcoming",
     accent: "#2b7fd4",
@@ -213,6 +228,7 @@ export const LAYERS: LayerDef[] = [
   },
   {
     id: "crime",
+    z: 190,
     label: "Crime",
     group: "upcoming",
     accent: "#c4364a",
@@ -226,6 +242,7 @@ export const LAYERS: LayerDef[] = [
   },
   {
     id: "health",
+    z: 200,
     label: "Health",
     group: "upcoming",
     accent: "#d94872",
@@ -239,6 +256,7 @@ export const LAYERS: LayerDef[] = [
   },
   {
     id: "weather",
+    z: 30,
     label: "Weather",
     group: "upcoming",
     accent: "#2f93c8",
@@ -252,6 +270,7 @@ export const LAYERS: LayerDef[] = [
   },
   {
     id: "power",
+    z: 70,
     label: "Power",
     group: "upcoming",
     accent: "#d49216",
@@ -265,6 +284,7 @@ export const LAYERS: LayerDef[] = [
   },
   {
     id: "wind",
+    z: 60,
     label: "Wind turbines",
     group: "upcoming",
     accent: "#1497ab",
@@ -278,6 +298,7 @@ export const LAYERS: LayerDef[] = [
   },
   {
     id: "nuclear",
+    z: 230,
     label: "Nuclear",
     group: "upcoming",
     accent: "#6e9418",
@@ -291,6 +312,7 @@ export const LAYERS: LayerDef[] = [
   },
   {
     id: "castles",
+    z: 170,
     label: "Castles",
     group: "upcoming",
     accent: "#9a6232",
@@ -304,6 +326,7 @@ export const LAYERS: LayerDef[] = [
   },
   {
     id: "historic",
+    z: 150,
     label: "Historic",
     group: "upcoming",
     accent: "#b26a2a",
@@ -317,6 +340,7 @@ export const LAYERS: LayerDef[] = [
   },
   {
     id: "legends",
+    z: 160,
     label: "Legends",
     group: "upcoming",
     accent: "#7a4ec4",
@@ -330,6 +354,7 @@ export const LAYERS: LayerDef[] = [
   },
   {
     id: "mountains",
+    z: 40,
     label: "Mountains",
     group: "upcoming",
     accent: "#6a6258",
@@ -341,9 +366,13 @@ export const LAYERS: LayerDef[] = [
     pointScale: 1,
     icon: ICONS.mountains,
   },
-];
+] as const satisfies readonly LayerDef[];
 
 export type LayerId = (typeof LAYERS)[number]["id"];
+
+export function isLayerId(value: unknown): value is LayerId {
+  return typeof value === "string" && LAYERS.some((layer) => layer.id === value);
+}
 
 export function layerById(id: string): LayerDef {
   const layer = LAYERS.find((item) => item.id === id);

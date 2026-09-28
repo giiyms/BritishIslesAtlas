@@ -1,5 +1,5 @@
 import { ICONS } from "./icons";
-import { LAYERS, type LayerId } from "./layers";
+import { LAYERS, isLayerId, type LayerId } from "./layers";
 
 export function mountPanel(
   root: HTMLElement,
@@ -17,6 +17,11 @@ export function mountPanel(
     <div class="panel-body" id="layer-body"></div>
   `;
 
+  if (window.matchMedia("(max-width: 860px)").matches) {
+    root.classList.add("collapsed");
+    root.querySelector(".panel-toggle")?.setAttribute("aria-expanded", "false");
+  }
+
   const body = root.querySelector<HTMLElement>("#layer-body");
   const status = root.querySelector<HTMLElement>(".status-value");
   const toggle = root.querySelector<HTMLButtonElement>(".panel-toggle");
@@ -24,11 +29,19 @@ export function mountPanel(
 
   const dataGrid = document.createElement("div");
   dataGrid.className = "chip-grid";
-  const upcomingLabel = document.createElement("p");
+  dataGrid.setAttribute("role", "group");
+  dataGrid.setAttribute("aria-label", "Data layers");
+  dataGrid.setAttribute("aria-describedby", "layer-status");
+  const upcoming = document.createElement("details");
+  upcoming.className = "group";
+  const upcomingLabel = document.createElement("summary");
   upcomingLabel.className = "group-label";
   upcomingLabel.textContent = "Upcoming";
   const upcomingGrid = document.createElement("div");
   upcomingGrid.className = "chip-grid";
+  upcomingGrid.setAttribute("role", "group");
+  upcomingGrid.setAttribute("aria-label", "Upcoming layers");
+  upcomingGrid.setAttribute("aria-describedby", "layer-status");
   const note = document.createElement("p");
   note.className = "panel-note";
   note.textContent = "Preview geometry. Live datasets come later.";
@@ -46,7 +59,8 @@ export function mountPanel(
     (layer.group === "data" ? dataGrid : upcomingGrid).append(button);
   }
 
-  body.append(dataGrid, upcomingLabel, upcomingGrid, note);
+  upcoming.append(upcomingLabel, upcomingGrid);
+  body.append(dataGrid, upcoming, note);
 
   const refreshStatus = () => {
     const anyOn = LAYERS.some((layer) => layer.group === "data" && options.isOn(layer.id));
@@ -57,8 +71,8 @@ export function mountPanel(
 
   body.addEventListener("click", (event) => {
     const button = (event.target as HTMLElement).closest<HTMLButtonElement>(".chip");
-    if (!button?.dataset.layer) return;
-    const id = button.dataset.layer as LayerId;
+    const id = button?.dataset.layer;
+    if (!button || !isLayerId(id)) return;
     const next = button.getAttribute("aria-pressed") !== "true";
     button.setAttribute("aria-pressed", next ? "true" : "false");
     options.setOn(id, next);

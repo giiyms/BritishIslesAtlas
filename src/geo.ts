@@ -655,6 +655,7 @@ function populationLayer(): Feature[] {
       name: place.name,
       layer: "population",
       note: `Preview population disc · ${place.region}`,
+      pop: place.pop,
       r: Math.round(Math.max(5, Math.min(32, Math.sqrt(place.pop) / 75)) * 10) / 10,
     }),
   );
@@ -709,12 +710,8 @@ const builders: Record<LayerId, () => Feature[]> = {
   mountains: () => namedLayer("mountains", "Preview summit"),
 };
 
-export function buildCollections(): Record<LayerId, FeatureCollection> {
-  const collections = {} as Record<LayerId, FeatureCollection>;
-  for (const id of Object.keys(builders) as LayerId[]) {
-    collections[id] = collection(builders[id]());
-  }
-  return collections;
+export function buildCollection(id: LayerId): FeatureCollection {
+  return collection(builders[id]());
 }
 
 export function searchPlaces(query: string): Place[] {

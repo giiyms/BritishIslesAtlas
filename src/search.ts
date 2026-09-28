@@ -33,12 +33,23 @@ function localHits(query: string): SearchHit[] {
   }));
 }
 
+const UK_POSTCODE = /^(GIR\s?0AA|(?:[A-Z]{1,2}\d[A-Z\d]?|[A-Z]{1,2}\d{1,2})\s?\d[A-Z]{2})$/i;
+
 async function remoteHits(query: string, signal: AbortSignal): Promise<SearchHit[]> {
+  const postcode = query.trim().toUpperCase().replace(/\s+/g, "");
+  if (UK_POSTCODE.test(query.trim())) {
+    const response = await fetch(`https://api.postcodes.io/postcodes/${encodeURIComponent(postcode)}`, { signal });
+    if (!response.ok) return [];
+    const data = await response.json() as { result?: { latitude: number; longitude: number; postcode: string } };
+    const result = data.result;
+    return result ? [{ title: result.postcode, subtitle: "UK postcode", lon: result.longitude, lat: result.latitude, zoom: 14 }] : [];
+  }
   const url = new URL("https://nominatim.openstreetmap.org/search");
   url.searchParams.set("format", "jsonv2");
   url.searchParams.set("limit", "5");
   url.searchParams.set("addressdetails", "0");
   url.searchParams.set("countrycodes", "gb,ie,im,gg,je");
+  url.searchParams.set("bounded", "1");
   url.searchParams.set("viewbox", "-12.6,61.4,2.8,49.0");
   url.searchParams.set("q", query);
   const response = await fetch(url, { signal, headers: { Accept: "application/json" } });
@@ -75,6 +86,10 @@ export function mountSearch(
   let remoteController: AbortController | null = null;
   let remoteTimer = 0;
   let requestSeq = 0;
+  let lastNominatimAt = 0;
+  form.querySelector("kbd")!.textContent = /Mac|iPhone|iPad|iPod/i.test(navigator.userAgent) ? "⌘K" : "Ctrl K";
+  input.setAttribute("role", "combobox");
+  input.setAttribute("aria-expanded", "false");
 
   const close = () => {
     requestSeq += 1;
@@ -84,17 +99,27 @@ export function mountSearch(
     list.replaceChildren();
     hits = [];
     active = -1;
+    input.setAttribute("aria-expanded", "false");
+    input.removeAttribute("aria-activedescendant");
   };
 
   const paint = () => {
     list.replaceChildren();
     if (hits.length === 0) {
       list.hidden = true;
+      input.setAttribute("aria-expanded", "false");
+      input.removeAttribute("aria-activedescendant");
       return;
     }
     list.hidden = false;
+    input.setAttribute("aria-expanded", "true");
+    if (active >= 0) input.setAttribute("aria-activedescendant", `search-option-${active}`);
+    else input.removeAttribute("aria-activedescendant");
     hits.forEach((hit, index) => {
       const item = document.createElement("li");
+      item.id = `search-option-${index}`;
+      item.setAttribute("role", "option");
+      item.setAttribute("aria-selected", index === active ? "true" : "false");
       const button = document.createElement("button");
       button.type = "button";
       button.className = index === active ? "is-active" : "";
@@ -105,7 +130,7 @@ export function mountSearch(
       subtitle.className = "hit-sub";
       subtitle.textContent = hit.subtitle;
       button.append(title, subtitle);
-      button.addEventListener("click", () => {
+      item.addEventListener("click", () => {
         go(hit);
         close();
         input.blur();
@@ -120,8 +145,11 @@ export function mountSearch(
     remoteController?.abort();
     if (query.trim().length < 3) return;
     const seq = requestSeq;
+    const isPostcode = UK_POSTCODE.test(query.trim());
+    const wait = isPostcode ? 600 : Math.max(600, 1000 - (Date.now() - lastNominatimAt));
     remoteTimer = window.setTimeout(() => {
       if (seq !== requestSeq) return;
+      if (!isPostcode) lastNominatimAt = Date.now();
       const controller = new AbortController();
       remoteController = controller;
       remoteHits(query, controller.signal)
@@ -139,7 +167,7 @@ export function mountSearch(
         .catch(() => {
           /* Local matches still stand if the geocoder is unreachable. */
         });
-    }, 280);
+    }, wait);
   };
 
   input.addEventListener("input", () => {
@@ -171,6 +199,10 @@ export function mountSearch(
     if (!hit) return;
     go(hit);
     close();
+  });
+
+  form.addEventListener("focusout", (event) => {
+    if (!form.contains(event.relatedTarget as Node)) close();
   });
 
   document.addEventListener("click", (event) => {

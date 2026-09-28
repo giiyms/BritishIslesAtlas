@@ -1,7 +1,12 @@
 :root {
   color-scheme: light;
   --ink: #1d232c;
-  --muted: #8b919c;
+  --muted: #6b7280;
+  --faint: #7c8491;
+  --glass-bg: rgba(255, 255, 255, 0.82);
+  --glass-bg-strong: rgba(255, 255, 255, 0.93);
+  --glass-border: rgba(255, 255, 255, 0.75);
+  --glass-blur: blur(16px) saturate(1.25);
   --line: #e4e7ed;
   --shadow: 0 14px 40px rgba(28, 35, 48, 0.12), 0 1px 3px rgba(28, 35, 48, 0.05);
   font-family: Inter, "Segoe UI", system-ui, sans-serif;
@@ -44,7 +49,6 @@ button { cursor: pointer; }
 
 .maplibregl-ctrl-attrib a { color: #5c6570; }
 
-.maplibregl-ctrl-attrib-button { display: none; }
 
 .panel {
   position: absolute;
@@ -128,7 +132,7 @@ button { cursor: pointer; }
 .chip-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  gap: 9px 8px;
 }
 
 .chip {
@@ -136,13 +140,13 @@ button { cursor: pointer; }
   align-items: center;
   gap: 7px;
   min-width: 0;
-  height: 36px;
+  height: 34px;
   padding: 0 10px;
   border-radius: 10px;
-  border: 1px solid var(--line);
-  background: #fff;
+  border: 1px solid transparent;
+  background: #f4f5f7;
   text-align: left;
-  transition: background 120ms ease, border-color 120ms ease;
+  transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
 }
 
 .chip-icon {
@@ -164,12 +168,13 @@ button { cursor: pointer; }
 
 .chip[aria-pressed="true"] {
   background: var(--tint);
-  border-color: transparent;
+  border-color: color-mix(in srgb, var(--accent) 34%, transparent);
 }
 
 .chip:hover { border-color: #d3d8e0; }
 
-.chip[aria-pressed="true"]:hover { border-color: transparent; }
+.chip[aria-pressed="true"]:hover { border-color: color-mix(in srgb, var(--accent) 55%, transparent); }
+.chip:active { transform: scale(0.98); }
 
 .chip:focus-visible,
 .panel-toggle:focus-visible,
@@ -191,7 +196,7 @@ button { cursor: pointer; }
 
 .panel-note {
   margin: 12px 2px 2px;
-  color: #a0a6b0;
+  color: var(--faint);
   font-size: 11px;
   line-height: 1.4;
 }
@@ -306,7 +311,7 @@ button { cursor: pointer; }
   width: 40px;
   height: 40px;
   border: 0;
-  background: #fff;
+  background: transparent;
   color: #2c3340;
 }
 
@@ -314,7 +319,7 @@ button { cursor: pointer; }
 
 .nav-home { border-radius: 12px; }
 
-.nav button:hover { background: #f6f7f9; }
+.nav button:hover { background: rgba(255, 255, 255, 0.45); }
 
 .scale {
   position: absolute;
@@ -325,18 +330,22 @@ button { cursor: pointer; }
   display: flex;
   align-items: center;
   gap: 12px;
-  height: 36px;
+  width: clamp(240px, 34vw, 432px);
+  height: 40px;
   padding: 0 16px 0 10px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.95);
   box-shadow: var(--shadow);
 }
 
+.scale-track { flex: 1; min-width: 0; height: 8px; border-radius: 999px; background: #e4e8ed; }
 .scale-fill {
+  position: relative;
   height: 8px;
   border-radius: 999px;
-  background: linear-gradient(90deg, #8e949e 0%, #c5c9cf 58%, #f3f4f6 100%);
+  background: linear-gradient(90deg, #89919c, #5e6875);
 }
+.scale-fill::after { content: ""; position: absolute; right: 0; top: -3px; width: 2px; height: 14px; background: #515b68; }
 
 .scale-label {
   color: #5d6572;
@@ -395,5 +404,25 @@ button { cursor: pointer; }
 
 @media (max-width: 520px) {
   .search kbd { display: none; }
-  .nav { bottom: 64px; }
+  .scale { bottom: 36px; width: clamp(240px, 66vw, 300px); }
+  .nav { bottom: 84px; }
+  .maplibregl-ctrl-bottom-right { left: 0; right: 0; }
+  .maplibregl-ctrl-attrib { width: 100%; max-width: none; margin: 0 !important; border-radius: 0 !important; text-align: center; font-size: 9px; padding: 2px 6px; }
 }
+
+/* Shared frosted surface; solid backgrounds remain readable without blur support. */
+.panel, .search, .nav-group, .nav-home, .scale, .search-results,
+.maplibregl-ctrl-attrib, .atlas-popup .maplibregl-popup-content {
+  background: var(--glass-bg-strong) !important;
+  border: 1px solid var(--glass-border);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--shadow);
+}
+.panel, .scale, .maplibregl-ctrl-attrib { background: var(--glass-bg) !important; }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .panel, .search, .nav-group, .nav-home, .scale, .search-results,
+  .maplibregl-ctrl-attrib, .atlas-popup .maplibregl-popup-content { background: #fff !important; }
+}
+.group > summary { cursor: pointer; }
+.group > .chip-grid { padding-top: 2px; }

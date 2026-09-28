@@ -25,10 +25,12 @@ pnpm preview
 - Full-bleed [MapLibre GL JS](https://maplibre.org/) map, framed on the British Isles
 - Cool gray altitude basemap: Esri World Hillshade, lightened, with flat water from [OpenFreeMap](https://openfreemap.org/) / OpenMapTiles
 - Multi-select layer chips. Roads, schools, churches, mosques, other religious sites, pubs, hospitals, post offices, population, and census ship with preview geometry. Petrol stations, EV charging, cemeteries, immigration, crime, health, weather, power, wind turbines, nuclear, castles, historic, legends, and mountains are the same kind of stub, grouped as upcoming
-- Continuous scale bar in round kilometres or metres. The bar width tracks the current view; the label only uses nice round distances. Zoom level is not printed on the map
-- Place search over the bundled gazetteer, with OpenStreetMap Nominatim as a fallback for postcodes and smaller places
+- Fixed-width scale track in round kilometres or metres. The fill tracks the current view; the label only uses nice round distances. Zoom level is not printed on the map
+- Place search over the bundled gazetteer, with postcodes.io for UK postcodes and rate-limited OpenStreetMap Nominatim for smaller places
 
-Feature geometry in this version is preview data for the scaffold, not a live survey.
+Dense point preview layers cluster at low zoom and reveal individual points as you zoom in. The population glow remains visible independently of its chip. Water shares the OpenFreeMap vector source, so its overzoom follows the provider tile metadata. Mobile attribution is always visible; panel, search, scale, and controls share glass styling tokens.
+
+Feature geometry in this version is preview data for the scaffold, not a live survey. Petrol and EV remain upcoming preview stubs, not live OpenStreetMap data.
 
 ## Planned stack
 
