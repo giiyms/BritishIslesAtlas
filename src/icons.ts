@@ -33,6 +33,9 @@ export const ICONS = {
     `<path d="M5 8h9.5v7.2A3.2 3.2 0 0 1 11.3 18.4H8.2A3.2 3.2 0 0 1 5 15.2V8z"/><path d="M14.5 9.2h2.2a2.2 2.2 0 1 1 0 4.4H14.5"/><path d="M7.2 5.2c.6 1.1 1.8 1.1 2.4 0M10.2 5.2c.5 1 1.5 1 2 0"/>`,
   ),
   hospitals: icon(`<path d="M12 4.5v15M4.5 12h15"/>`),
+  "fire-stations": icon(
+    `<path d="M5 20.5V10l7-5.5 7 5.5v10.5"/><path d="M5 20.5h14"/><path d="M10 20.5v-5h4v5"/><path d="M12 6.5v3"/>`
+  ),
   post: icon(
     `<rect x="3.5" y="6" width="17" height="12" rx="1.6"/><path d="m4 8 8 5.5L20 8"/>`,
   ),

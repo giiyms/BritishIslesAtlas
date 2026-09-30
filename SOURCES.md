@@ -6,7 +6,8 @@ runs live Overpass (or other) queries while panning.
 ## Extract pipeline
 
 The petrol and EV layers are rebuilt by `scripts/extract_osm_fuel_ev.py`; power by
-`scripts/extract_osm_power.py`; hospitals by `scripts/extract_osm_hospitals.py`.
+`scripts/extract_osm_power.py`; hospitals by `scripts/extract_osm_hospitals.py`;
+fire stations by `scripts/extract_osm_fire_stations.py`.
 Shared pipeline:
 
 1. Load OSM admin polygons for England, Scotland, Wales, Northern Ireland,
@@ -126,6 +127,29 @@ Same pipeline fields as petrol/EV/power (`name`, optional `brand`/`operator`, `o
 `"Hospital"`. Ways as centre points: 1 704 of 1 946. Pipeline-filled generic
 names: 110 (~6%).
 
+## Fire stations (`fire-stations`)
+
+| | |
+|---|---|
+| **File** | `public/data/fire-stations.geojson` |
+| **Features** | 2 338 points (not a round cap) |
+| **Coverage** | Same admin-area footprint: England 1 523, Scotland 363, Wales 150, Northern Ireland 74, Ireland 216, Isle of Man 6, Guernsey 2, Jersey 4. **Northern France bleed ≈ 0**. |
+| **Sample vs full** | Admin-area extract of OSM `amenity=fire_station` at extract time. Hydrants (`emergency=fire_hydrant`), ambulance stations (`amenity=ambulance_station`), and `building=fire_station` without `amenity=fire_station` are **not** included. |
+| **Source** | [OpenStreetMap](https://www.openstreetmap.org/) via Overpass API |
+| **Query** | `amenity=fire_station` nodes and ways (`out center tags`) |
+| **Endpoint used** | `https://overpass.openstreetmap.fr/api/interpreter` |
+| **Extract date (UTC)** | 2026-09-30T23:33:19Z |
+| **Method** | Same admin-area pipeline as petrol/EV/power/hospitals (`scripts/extract_osm_fire_stations.py`) |
+| **License** | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/) — © OpenStreetMap contributors |
+| **Attribution** | © OpenStreetMap contributors |
+
+### Property semantics (pipeline)
+
+Same pipeline fields as petrol/EV/power/hospitals (`name`, optional `brand`/`operator`, `osm_id`,
+`osm_url`, pipeline `note`, `layer`, `source`). Generic missing names fill as
+`"Fire station"`. Ways as centre points: 2 033 of 2 338. Pipeline-filled generic
+names: 411 (~18%).
+
 ## Remaining honest caveats
 
 - OSM tagging completeness varies; absence of a station on the map is not proof
@@ -135,6 +159,7 @@ names: 110 (~6%).
 - Guernsey EV count is only 1 in OSM at extract time — likely under-tagged.
 - Power layer is `power=plant` sites only (not every turbine/generator).
 - Hospitals layer is `amenity=hospital` only (not clinics, GPs, or pharmacies).
+- Fire stations layer is `amenity=fire_station` only (not hydrants or ambulance stations).
 - Isle of Man has only 2 OSM hospitals at extract time — likely under-tagged
   relative to known sites; Channel Islands admin-clip counts are GG 4 / JE 4
   (hard bbox check slightly lower for Guernsey).

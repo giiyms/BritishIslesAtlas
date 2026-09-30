@@ -38,3 +38,13 @@ using the same admin-area Overpass + polygon-clip pipeline, querying
 python3 scripts/extract_osm_hospitals.py
 ```
 
+## `extract_osm_fire_stations.py`
+
+Rebuilds `public/data/fire-stations.geojson` (and merges into `extract-meta.json`)
+using the same admin-area Overpass + polygon-clip pipeline, querying
+`amenity=fire_station` (not hydrants or ambulance stations).
+
+```bash
+python3 scripts/extract_osm_fire_stations.py
+```
+
