@@ -1,0 +1,79 @@
+/** Small stroke icons for chips and controls. */
+export function icon(body: string): string {
+  return `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
+}
+
+export const ICONS = {
+  layers: icon(
+    `<path d="m12 3 9 5-9 5L3 8l9-5z"/><path d="m3 12 9 5 9-5"/><path d="m3 16 9 5 9-5"/>`,
+  ),
+  chevron: icon(`<path d="m6 14 6-6 6 6"/>`),
+  search: icon(`<circle cx="11" cy="11" r="6.5"/><path d="m20 20-3.6-3.6"/>`),
+  plus: icon(`<path d="M12 5v14M5 12h14"/>`),
+  minus: icon(`<path d="M5 12h14"/>`),
+  crosshair: icon(
+    `<circle cx="12" cy="12" r="6"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3"/>`,
+  ),
+  roads: icon(
+    `<path d="M4 19 8.2 5"/><path d="M15.8 5 20 19"/><path d="M12 6.5v2.2M12 12v2.2M12 17.2V19"/>`,
+  ),
+  schools: icon(
+    `<path d="M3 10 12 4l9 6"/><path d="M5 10.5V20h14v-9.5"/><path d="M10 20v-4.5h4V20"/>`,
+  ),
+  churches: icon(
+    `<path d="M12 3v3M10.2 4.6h3.6"/><path d="M6 21V11.2L12 7l6 4.2V21"/><path d="M10 21v-4h4v4"/><path d="M4 21h16"/>`,
+  ),
+  mosques: icon(
+    `<path d="M4 20V12a8 8 0 0 1 16 0v8"/><path d="M4 20h16"/><path d="M12 4V2.2"/><path d="M8.5 20v-2.5a3.5 3.5 0 0 1 7 0V20"/>`,
+  ),
+  religious: icon(
+    `<path d="M4 20V9.5L12 4l8 5.5V20"/><path d="M4 20h16"/><path d="M9.5 20v-5h5v5"/>`,
+  ),
+  pubs: icon(
+    `<path d="M5 8h9.5v7.2A3.2 3.2 0 0 1 11.3 18.4H8.2A3.2 3.2 0 0 1 5 15.2V8z"/><path d="M14.5 9.2h2.2a2.2 2.2 0 1 1 0 4.4H14.5"/><path d="M7.2 5.2c.6 1.1 1.8 1.1 2.4 0M10.2 5.2c.5 1 1.5 1 2 0"/>`,
+  ),
+  hospitals: icon(`<path d="M12 4.5v15M4.5 12h15"/>`),
+  post: icon(
+    `<rect x="3.5" y="6" width="17" height="12" rx="1.6"/><path d="m4 8 8 5.5L20 8"/>`,
+  ),
+  population: icon(
+    `<circle cx="9" cy="8" r="2.6"/><path d="M3.4 19c.5-2.8 2.5-4.2 5.6-4.2s5.1 1.4 5.6 4.2"/><circle cx="17" cy="9" r="2"/><path d="M16 14.6c1.8.2 3.2 1.3 3.8 3.6"/>`,
+  ),
+  census: icon(
+    `<rect x="5" y="3.5" width="14" height="17" rx="1.8"/><path d="M8 8.5h8M8 12h8M8 15.5h5"/>`,
+  ),
+  petrol: icon(
+    `<path d="M5 20V7.2A1.8 1.8 0 0 1 6.8 5.4h6.2A1.8 1.8 0 0 1 14.8 7.2V20"/><path d="M5 20h9.8"/><path d="M14.8 10h1.6l2.6 2v4.2a1.6 1.6 0 1 1-3.2 0"/><path d="M7.4 9h4"/>`,
+  ),
+  ev: icon(`<path d="M13 2.5 4.5 13.5H11l-1 8 9-11.2h-6.4L13 2.5z"/>`),
+  cemeteries: icon(
+    `<path d="M12 3.5v6M9.2 6.5h5.6"/><path d="M5.5 20.5c.8-5.2 2.8-8 6.5-8s5.7 2.8 6.5 8"/>`,
+  ),
+  immigration: icon(
+    `<rect x="4.5" y="3.5" width="15" height="17" rx="1.8"/><circle cx="12" cy="11" r="2.6"/><path d="M8 17.2h8"/>`,
+  ),
+  crime: icon(`<path d="M12 3.2 5 6.2v5.6c0 4.2 2.8 7 7 8.6 4.2-1.6 7-4.4 7-8.6V6.2L12 3.2z"/>`),
+  health: icon(`<path d="M3 12h4.2l2.1-5 3.8 10 2.2-5H21"/>`),
+  weather: icon(
+    `<path d="M7 18h9.5a3.8 3.8 0 0 0 .5-7.6 5.2 5.2 0 0 0-10 .9A3.3 3.3 0 0 0 7 18z"/>`,
+  ),
+  power: icon(
+    `<path d="M9 3.5v5.2M15 3.5v5.2"/><path d="M7.2 8.7h9.6v2.6a4.8 4.8 0 0 1-9.6 0V8.7z"/><path d="M12 16.2V20.5"/>`,
+  ),
+  wind: icon(
+    `<path d="M3 8h10.5a2.8 2.8 0 1 0-2.8-2.8"/><path d="M3 12h14a2.8 2.8 0 1 1-2.8 2.8"/><path d="M3 16h7.5a2.3 2.3 0 1 1-2.3 2.3"/>`,
+  ),
+  nuclear: icon(
+    `<circle cx="12" cy="12" r="1.7" fill="currentColor" stroke="none"/><ellipse cx="12" cy="12" rx="8.5" ry="3.3"/><ellipse cx="12" cy="12" rx="8.5" ry="3.3" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="8.5" ry="3.3" transform="rotate(120 12 12)"/>`,
+  ),
+  castles: icon(
+    `<path d="M4 20.5V10.5l2.6-1.6v2.2L12 7l5.4 4.1V8.9l2.6 1.6v10"/><path d="M4 20.5h16"/><path d="M10 20.5v-4h4v4"/>`,
+  ),
+  historic: icon(
+    `<path d="M4 20h16"/><path d="M6 20V9.5M10 20V9.5M14 20V9.5M18 20V9.5"/><path d="M4.5 9.5h15"/><path d="M6.2 9.5 8.2 5h7.6l2 4.5"/>`,
+  ),
+  legends: icon(
+    `<path d="M7 4.5h10.2a2 2 0 0 1 0 4H7"/><path d="M7 8.5V18a2 2 0 0 0 2 2h8.2V8.5"/><path d="M7 4.5a2 2 0 0 0 0 4"/>`,
+  ),
+  mountains: icon(`<path d="M3 19.5 9.2 8l3.1 4.6L15.2 6.5 21 19.5H3z"/>`),
+} as const;

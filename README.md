@@ -4,6 +4,34 @@ A British Isles mega-map website covering Great Britain, Ireland, and the surrou
 
 The site centers on an ultra-fast interactive map hero. Data layers are combinable and controlled with toggles, so the map can show one layer or many at once.
 
+## Run
+
+Requires Node.js 20+ and [pnpm](https://pnpm.io/).
+
+```bash
+pnpm install
+pnpm dev
+```
+
+Open http://localhost:5173.
+
+```bash
+pnpm build
+pnpm preview
+```
+
+## v0 map
+
+- Full-bleed [MapLibre GL JS](https://maplibre.org/) map, framed on the British Isles
+- Cool gray altitude basemap: Esri World Hillshade, lightened, with flat water from [OpenFreeMap](https://openfreemap.org/) / OpenMapTiles
+- Multi-select layer chips. Roads, schools, churches, mosques, other religious sites, pubs, hospitals, post offices, population, and census ship with preview geometry. Petrol stations, EV charging, cemeteries, immigration, crime, health, weather, power, wind turbines, nuclear, castles, historic, legends, and mountains are the same kind of stub, grouped as upcoming
+- Fixed-width scale track in round kilometres or metres. The fill tracks the current view; the label only uses nice round distances. Zoom level is not printed on the map
+- Place search over the bundled gazetteer, with postcodes.io for UK postcodes and rate-limited OpenStreetMap Nominatim for smaller places
+
+Dense point preview layers cluster at low zoom and reveal individual points as you zoom in. The population glow remains visible independently of its chip. Water shares the OpenFreeMap vector source, so its overzoom follows the provider tile metadata. Mobile attribution is always visible; panel, search, scale, and controls share glass styling tokens.
+
+Feature geometry in this version is preview data for the scaffold, not a live survey. Petrol and EV remain upcoming preview stubs, not live OpenStreetMap data.
+
 ## Planned stack
 
 - MapLibre for the interactive map
@@ -17,3 +45,7 @@ Concept 1 is locked:
 - Distinct saturated accent colors for feature layers: roads, schools, churches, mosques, other religious sites, pubs, hospitals, post offices, population, and census
 - Light theme and clean cartography
 - Continuous scales, clustering, and density, with no fragmented zoom-number labels
+
+## Credits
+
+Hillshade tiles © Esri, USGS, NOAA. Water polygons © OpenStreetMap contributors, rendered via OpenMapTiles and OpenFreeMap. Search may query Nominatim (© OpenStreetMap contributors).
