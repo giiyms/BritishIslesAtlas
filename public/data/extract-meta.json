@@ -61,5 +61,37 @@
       "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
       "counting_caveat": "amenity=charging_station may be site or device"
     }
+  },
+  "power": {
+    "extracted_at": "2026-09-30T21:55:32Z",
+    "method": "Overpass per-nation/territory bbox tiles clipped to OSM admin polygons (Nominatim); endpoint overpass.openstreetmap.fr",
+    "license": "ODbL 1.0",
+    "endpoint": "https://overpass.openstreetmap.fr/api/interpreter",
+    "layer": "power",
+    "count": 2821,
+    "coverage": "Admin-area extract (ENG/SCT/WLS/NIR/IE/IM/GG/JE); IoM=4; GG=5; JE=4; northern France bleed\u22480",
+    "region_counts": {
+      "england": 2045,
+      "scotland": 328,
+      "wales": 216,
+      "northern-ireland": 84,
+      "ireland": 135,
+      "isle-of-man": 4,
+      "guernsey": 5,
+      "jersey": 4
+    },
+    "limitations": {
+      "isle_of_man": 4,
+      "channel_islands": 9,
+      "guernsey": 5,
+      "jersey": 4,
+      "northern_france_approx": 0,
+      "ways_as_centre_points": 2817,
+      "pipeline_generic_names": 871,
+      "pipeline_note_repeats_brand": 1431,
+      "note_semantics": "pipeline field (brand/operator or 'OpenStreetMap'), not OSM note=*",
+      "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
+      "counting_caveat": "power=plant is a site; individual generators are omitted"
+    }
   }
 }

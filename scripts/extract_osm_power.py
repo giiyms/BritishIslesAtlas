@@ -1,25 +1,8 @@
 #!/usr/bin/env python3
-"""Extract petrol (amenity=fuel) and EV (amenity=charging_station) as static GeoJSON.
+"""Extract power plants (OSM power=plant) as static GeoJSON for British Isles.
 
-British Isles coverage via per-nation/territory extracts for:
-  England, Scotland, Wales, Northern Ireland, Ireland, Isle of Man,
-  Guernsey, Jersey.
-
-Method:
-  1. Admin polygons from Nominatim (OSM relations; cached under scripts/cache/).
-  2. Overpass queries on each region's bounding-box tiles (not one Isles-wide
-     bbox) against overpass.openstreetmap.fr.
-  3. Client-side clip to the admin polygon (shapely) so mainland France and
-     cross-border spill are dropped.
-  4. Deduplicate by OSM type/id across tiles/regions.
-
-Why not Overpass `area[...]` ISO3166 filters?
-  overpass.openstreetmap.fr currently errors on area queries
-  (`area_tags_local.bin` missing). Official DE mirrors were TLS / rate-limit
-  unreliable from this host. Polygon-clipped bbox tiles are the practical
-  equivalent and are documented in SOURCES.md.
-
-Ways are stored as centre points (`out center`).
+Same admin-area pipeline as extract_osm_fuel_ev.py: per-region Overpass bbox
+tiles clipped to OSM admin polygons (ENG/SCT/WLS/NIR/IE/IM/GG/JE).
 """
 
 from __future__ import annotations
@@ -58,15 +41,11 @@ REGIONS = [
 ]
 
 LAYERS = {
-    "petrol": {
-        "amenity": "fuel",
-        "generic_name": "Petrol station",
-        "layer": "petrol",
-    },
-    "ev": {
-        "amenity": "charging_station",
-        "generic_name": "EV charging",
-        "layer": "ev",
+    "power": {
+        "tag_key": "power",
+        "tag_value": "plant",
+        "generic_name": "Power plant",
+        "layer": "power",
     },
 }
 
@@ -137,7 +116,8 @@ def post_overpass(endpoint: str, query: str, timeout: int) -> dict[str, Any]:
 
 def fetch_bbox(
     endpoint: str,
-    amenity: str,
+    tag_key: str,
+    tag_value: str,
     south: float,
     west: float,
     north: float,
@@ -149,8 +129,8 @@ def fetch_bbox(
 ) -> list[dict[str, Any]]:
     query = f"""[out:json][timeout:{timeout}];
 (
-  node["amenity"="{amenity}"]({south},{west},{north},{east});
-  way["amenity"="{amenity}"]({south},{west},{north},{east});
+  node["{tag_key}"="{tag_value}"]({south},{west},{north},{east});
+  way["{tag_key}"="{tag_value}"]({south},{west},{north},{east});
 );
 out center tags;
 """
@@ -158,7 +138,7 @@ out center tags;
     for attempt in range(1, retries + 1):
         try:
             print(
-                f"  [{label}] {amenity} "
+                f"  [{label}] {tag_key}={tag_value} "
                 f"({south:.3f},{west:.3f},{north:.3f},{east:.3f}) "
                 f"attempt {attempt}/{retries} …",
                 flush=True,
@@ -248,7 +228,6 @@ def extract_layer(
     max_span: float,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     cfg = LAYERS[layer_name]
-    amenity = cfg["amenity"]
     by_id: dict[str, dict[str, Any]] = {}
     region_counts: dict[str, int] = {}
 
@@ -260,7 +239,8 @@ def extract_layer(
         for south, west, north, east in tiles:
             elements = fetch_bbox(
                 endpoint,
-                amenity,
+                cfg["tag_key"],
+                cfg["tag_value"],
                 south,
                 west,
                 north,
@@ -330,7 +310,7 @@ def extract_layer(
         "jersey_bbox_count": je,
         "channel_islands_bbox_count": gg + je,
         "northern_france_bleed_approx": france,
-        "amenity": amenity,
+        "tag": f'{cfg["tag_key"]}={cfg["tag_value"]}',
     }
     return fc, meta
 
@@ -393,7 +373,7 @@ def main() -> int:
         help="Max bbox tile span in degrees (lon/lat).",
     )
     ap.add_argument("--refresh-polygons", action="store_true")
-    ap.add_argument("--layers", nargs="+", default=["petrol", "ev"], choices=list(LAYERS))
+    ap.add_argument("--layers", nargs="+", default=["power"], choices=list(LAYERS))
     args = ap.parse_args()
 
     if args.refresh_polygons or any(not (CACHE / f"{r}.geojson").exists() for r in REGIONS):
@@ -431,9 +411,9 @@ def main() -> int:
             "note_semantics": "pipeline field (brand/operator or 'OpenStreetMap'), not OSM note=*",
             "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
         }
-        if layer_name == "ev":
+        if layer_name == "power":
             limitations["counting_caveat"] = (
-                "amenity=charging_station may be site or device"
+                "power=plant is a site; individual generators are omitted"
             )
 
         all_meta[layer_name] = {

@@ -78,6 +78,29 @@ single device, so **feature counts are not site counts**. Ways as centre
 points: 913. Pipeline-filled generic names: 6 697 (~71%) — many chargers are
 untagged for `name` in OSM.
 
+## Power plants (`power`)
+
+| | |
+|---|---|
+| **File** | `public/data/power.geojson` |
+| **Features** | 2 821 points |
+| **Coverage** | Same admin-area footprint: England 2 045, Scotland 328, Wales 216, Northern Ireland 84, Ireland 135, Isle of Man 4, Guernsey 5, Jersey 4. **Northern France bleed ≈ 0**. |
+| **Sample vs full** | Admin-area extract of OSM `power=plant` at extract time. Individual `power=generator` devices are **not** included. |
+| **Source** | [OpenStreetMap](https://www.openstreetmap.org/) via Overpass API |
+| **Query** | `power=plant` nodes and ways (`out center tags`) |
+| **Endpoint used** | `https://overpass.openstreetmap.fr/api/interpreter` |
+| **Extract date (UTC)** | 2026-09-30T21:55:32Z |
+| **Method** | Same admin-area pipeline as petrol/EV (`scripts/extract_osm_power.py`) |
+| **License** | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/) — © OpenStreetMap contributors |
+| **Attribution** | © OpenStreetMap contributors |
+
+### Property semantics (pipeline)
+
+Same pipeline fields as petrol/EV (`name`, optional `brand`/`operator`, `osm_id`,
+`osm_url`, pipeline `note`, `layer`, `source`). Generic missing names fill as
+`"Power plant"`. Almost all features are ways stored as centre points
+(2 817 of 2 821).
+
 ## Remaining honest caveats
 
 - OSM tagging completeness varies; absence of a station on the map is not proof
@@ -85,6 +108,7 @@ untagged for `name` in OSM.
 - Ways are centre points, not footprints.
 - `name` / `note` generics are pipeline fills, not OSM-verified labels.
 - Guernsey EV count is only 1 in OSM at extract time — likely under-tagged.
+- Power layer is `power=plant` sites only (not every turbine/generator).
 - Extract uses polygon clip + buffer; stations extremely close to a land border
   could in theory be included or excluded by the ~200 m buffer.
 

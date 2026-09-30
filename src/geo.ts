@@ -689,7 +689,7 @@ const builders: Record<LayerId, () => Feature[]> = {
   crime: () => namedLayer("crime", "Preview only, not an offence record"),
   health: () => namedLayer("health", "Preview health marker"),
   weather: () => namedLayer("weather", "Preview weather station"),
-  power: () => namedLayer("power", "Preview power station"),
+  power: () => [],
   wind: windLayer,
   nuclear: () => namedLayer("nuclear", "Preview nuclear site"),
   castles: () => namedLayer("castles", "Preview castle"),
