@@ -157,5 +157,37 @@
       "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
       "counting_caveat": "amenity=fire_station only; hydrants, ambulance stations, and building=fire_station without amenity=fire_station are omitted"
     }
+  },
+  "police": {
+    "extracted_at": "2026-09-30T23:44:09Z",
+    "method": "Overpass per-nation/territory bbox tiles clipped to OSM admin polygons (Nominatim); endpoint overpass.openstreetmap.fr",
+    "license": "ODbL 1.0",
+    "endpoint": "https://overpass.openstreetmap.fr/api/interpreter",
+    "layer": "police",
+    "count": 2298,
+    "coverage": "Admin-area extract (ENG/SCT/WLS/NIR/IE/IM/GG/JE); IoM≈7; GG≈2; JE≈3; northern France bleed≈0",
+    "region_counts": {
+      "england": 1265,
+      "scotland": 310,
+      "wales": 181,
+      "northern-ireland": 70,
+      "ireland": 460,
+      "isle-of-man": 7,
+      "guernsey": 2,
+      "jersey": 3
+    },
+    "limitations": {
+      "isle_of_man": 7,
+      "channel_islands": 5,
+      "guernsey": 2,
+      "jersey": 3,
+      "northern_france_approx": 0,
+      "ways_as_centre_points": 1589,
+      "pipeline_generic_names": 482,
+      "pipeline_note_repeats_brand": 1187,
+      "note_semantics": "pipeline field (brand/operator or 'OpenStreetMap'), not OSM note=*",
+      "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
+      "counting_caveat": "amenity=police only; police boxes, cameras, and building=police without amenity=police are omitted"
+    }
   }
 }

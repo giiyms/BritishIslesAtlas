@@ -36,6 +36,9 @@ export const ICONS = {
   "fire-stations": icon(
     `<path d="M5 20.5V10l7-5.5 7 5.5v10.5"/><path d="M5 20.5h14"/><path d="M10 20.5v-5h4v5"/><path d="M12 6.5v3"/>`
   ),
+  police: icon(
+    `<path d="M12 3.2 5 6.2v5.6c0 4.2 2.8 7 7 8.6 4.2-1.6 7-4.4 7-8.6V6.2L12 3.2z"/><path d="M9.5 12.2h5M12 9.7v5"/>`
+  ),
   post: icon(
     `<rect x="3.5" y="6" width="17" height="12" rx="1.6"/><path d="m4 8 8 5.5L20 8"/>`,
   ),
