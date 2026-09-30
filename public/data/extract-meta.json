@@ -1,0 +1,20 @@
+{
+  "petrol": {
+    "extracted_at": "2026-09-28T15:55:19Z",
+    "method": "regional Overpass via overpass.openstreetmap.fr",
+    "license": "ODbL 1.0",
+    "endpoint": "https://overpass.openstreetmap.fr/api/interpreter",
+    "layer": "petrol",
+    "count": 10000,
+    "coverage": "British Isles HOME_BOUNDS regional Overpass extract"
+  },
+  "ev": {
+    "extracted_at": "2026-09-28T15:55:19Z",
+    "method": "regional Overpass via overpass.openstreetmap.fr",
+    "license": "ODbL 1.0",
+    "endpoint": "https://overpass.openstreetmap.fr/api/interpreter",
+    "layer": "ev",
+    "count": 9202,
+    "coverage": "British Isles HOME_BOUNDS regional Overpass extract"
+  }
+}
