@@ -48,3 +48,12 @@ using the same admin-area Overpass + polygon-clip pipeline, querying
 python3 scripts/extract_osm_fire_stations.py
 ```
 
+## `extract_osm_police.py`
+
+Rebuilds `public/data/police.geojson` (and merges into `extract-meta.json`)
+using the same admin-area Overpass + polygon-clip pipeline, querying
+`amenity=police` (not police boxes or cameras).
+
+```bash
+python3 scripts/extract_osm_police.py
+```
