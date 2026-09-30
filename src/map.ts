@@ -269,10 +269,10 @@ export function createAtlas(container: HTMLElement): Atlas {
     return next?.id;
   };
   const add = (id: LayerId) => {
-    if (map.getSource(id)) return;
+    if (map.getLayer(id)) return;
     const layer = LAYERS.find((item) => item.id === id)!;
     const clusters = clustered.has(id);
-    map.addSource(id, {
+    if (!map.getSource(id)) map.addSource(id, {
       type: "geojson", data: buildCollection(id),
       ...(clusters ? { cluster: true, clusterRadius: 44, clusterMaxZoom: 11, clusterMinPoints: 3,
         maxzoom: 12, buffer: 64, tolerance: 0.5 } : {}),
@@ -280,7 +280,8 @@ export function createAtlas(container: HTMLElement): Atlas {
     const before = beforeFor(layer.z);
     const visible = state[id] ? "visible" : "none";
     const layout = { visibility: visible } as const;
-    const filter: FilterSpecification | undefined = clusters ? ["!", ["has", "point_count"]] : undefined;
+    const pointFilter: { filter?: FilterSpecification } =
+      clusters ? { filter: ["!", ["has", "point_count"]] } : {};
     if (layer.kind === "line") {
       map.addLayer({ id, type: "line", source: id,
         layout: { ...layout, "line-cap": "round", "line-join": "round" },
@@ -307,15 +308,17 @@ export function createAtlas(container: HTMLElement): Atlas {
         "circle-opacity": 0.95, "circle-stroke-width": 0.8,
         "circle-stroke-color": "rgba(255,255,255,0.92)",
       };
-      map.addLayer({ id, type: "circle", source: id, layout, filter,
+      map.addLayer({ id, type: "circle", source: id, layout, ...pointFilter,
         minzoom: minZoom(id), paint }, before);
     } else if (SYMBOL_KINDS.has(layer.kind)) {
-      map.addImage(`${id}-mark`, markerImage(layer.kind, layer.color), { pixelRatio: 2 });
+      if (!map.hasImage(`${id}-mark`)) {
+        map.addImage(`${id}-mark`, markerImage(layer.kind, layer.color), { pixelRatio: 2 });
+      }
       map.addLayer({ id, type: "symbol", source: id, layout: {
         ...layout, "icon-image": `${id}-mark`, "icon-size": iconSize(layer.pointScale),
         "icon-allow-overlap": id === "hospitals",
         ...(id === "hospitals" ? { "icon-ignore-placement": true } : {}),
-      }, filter, minzoom: minZoom(id) }, before);
+      }, ...pointFilter, minzoom: minZoom(id) }, before);
     }
     if (clusters) {
       map.addLayer({ id: `${id}-cluster`, type: "circle", source: id,
