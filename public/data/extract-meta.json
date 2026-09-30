@@ -1,20 +1,40 @@
 {
   "petrol": {
     "extracted_at": "2026-09-28T15:55:19Z",
-    "method": "regional Overpass via overpass.openstreetmap.fr",
+    "method": "regional Overpass via overpass.openstreetmap.fr (bbox tiles)",
     "license": "ODbL 1.0",
     "endpoint": "https://overpass.openstreetmap.fr/api/interpreter",
     "layer": "petrol",
     "count": 10000,
-    "coverage": "British Isles HOME_BOUNDS regional Overpass extract"
+    "coverage": "Partial HOME_BOUNDS bbox extract \u2014 suspected 10k cap; excludes IM/GG/JE; includes ~104 northern France points",
+    "limitations": {
+      "suspected_cap": 10000,
+      "isle_of_man": 0,
+      "channel_islands": 0,
+      "northern_france_approx": 104,
+      "ways_as_centre_points": 5484,
+      "pipeline_generic_names": 778,
+      "pipeline_note_repeats_brand": 2297,
+      "note_semantics": "pipeline field (brand or 'OpenStreetMap'), not OSM note=*"
+    }
   },
   "ev": {
     "extracted_at": "2026-09-28T15:55:19Z",
-    "method": "regional Overpass via overpass.openstreetmap.fr",
+    "method": "regional Overpass via overpass.openstreetmap.fr (bbox tiles)",
     "license": "ODbL 1.0",
     "endpoint": "https://overpass.openstreetmap.fr/api/interpreter",
     "layer": "ev",
     "count": 9202,
-    "coverage": "British Isles HOME_BOUNDS regional Overpass extract"
+    "coverage": "Partial HOME_BOUNDS bbox extract \u2014 excludes IM/GG/JE; includes ~202 northern France points",
+    "limitations": {
+      "isle_of_man": 0,
+      "channel_islands": 0,
+      "northern_france_approx": 202,
+      "ways_as_centre_points": 891,
+      "pipeline_generic_names": 2369,
+      "pipeline_note_repeats_brand": 2249,
+      "note_semantics": "pipeline field (brand or 'OpenStreetMap'), not OSM note=*",
+      "counting_caveat": "amenity=charging_station may be site or device"
+    }
   }
 }
