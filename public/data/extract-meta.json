@@ -6,7 +6,7 @@
     "endpoint": "https://overpass.openstreetmap.fr/api/interpreter",
     "layer": "petrol",
     "count": 10267,
-    "coverage": "Admin-area extract (ENG/SCT/WLS/NIR/IE/IM/GG/JE); IoM=21; GG=26; JE=32; northern France bleed\u22480",
+    "coverage": "Admin-area extract (ENG/SCT/WLS/NIR/IE/IM/GG/JE); IoM=21; GG=26; JE=32; northern France bleed≈0",
     "region_counts": {
       "england": 6599,
       "scotland": 818,
@@ -37,7 +37,7 @@
     "endpoint": "https://overpass.openstreetmap.fr/api/interpreter",
     "layer": "ev",
     "count": 9420,
-    "coverage": "Admin-area extract (ENG/SCT/WLS/NIR/IE/IM/GG/JE); IoM=60; GG=1; JE=6; northern France bleed\u22480",
+    "coverage": "Admin-area extract (ENG/SCT/WLS/NIR/IE/IM/GG/JE); IoM=60; GG=1; JE=6; northern France bleed≈0",
     "region_counts": {
       "england": 6564,
       "scotland": 1123,
@@ -69,7 +69,7 @@
     "endpoint": "https://overpass.openstreetmap.fr/api/interpreter",
     "layer": "power",
     "count": 2821,
-    "coverage": "Admin-area extract (ENG/SCT/WLS/NIR/IE/IM/GG/JE); IoM=4; GG=5; JE=4; northern France bleed\u22480",
+    "coverage": "Admin-area extract (ENG/SCT/WLS/NIR/IE/IM/GG/JE); IoM=4; GG=5; JE=4; northern France bleed≈0",
     "region_counts": {
       "england": 2045,
       "scotland": 328,
@@ -92,6 +92,38 @@
       "note_semantics": "pipeline field (brand/operator or 'OpenStreetMap'), not OSM note=*",
       "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
       "counting_caveat": "power=plant is a site; individual generators are omitted"
+    }
+  },
+  "hospitals": {
+    "extracted_at": "2026-09-30T23:21:25Z",
+    "method": "Overpass per-nation/territory bbox tiles clipped to OSM admin polygons (Nominatim); endpoint overpass.openstreetmap.fr",
+    "license": "ODbL 1.0",
+    "endpoint": "https://overpass.openstreetmap.fr/api/interpreter",
+    "layer": "hospitals",
+    "count": 1946,
+    "coverage": "Admin-area extract (ENG/SCT/WLS/NIR/IE/IM/GG/JE); IoM≈2; GG≈3; JE≈4; northern France bleed≈0",
+    "region_counts": {
+      "england": 1405,
+      "scotland": 184,
+      "wales": 116,
+      "northern-ireland": 39,
+      "ireland": 192,
+      "isle-of-man": 2,
+      "guernsey": 4,
+      "jersey": 4
+    },
+    "limitations": {
+      "isle_of_man": 2,
+      "channel_islands": 7,
+      "guernsey": 3,
+      "jersey": 4,
+      "northern_france_approx": 0,
+      "ways_as_centre_points": 1704,
+      "pipeline_generic_names": 110,
+      "pipeline_note_repeats_brand": 671,
+      "note_semantics": "pipeline field (brand/operator or 'OpenStreetMap'), not OSM note=*",
+      "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
+      "counting_caveat": "amenity=hospital only; clinics, GPs, and healthcare=hospital without amenity=hospital are omitted"
     }
   }
 }

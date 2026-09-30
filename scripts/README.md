@@ -27,3 +27,14 @@ the same admin-area Overpass + polygon-clip pipeline, querying `power=plant`.
 ```bash
 python3 scripts/extract_osm_power.py
 ```
+
+## `extract_osm_hospitals.py`
+
+Rebuilds `public/data/hospitals.geojson` (and merges into `extract-meta.json`)
+using the same admin-area Overpass + polygon-clip pipeline, querying
+`amenity=hospital` (not clinics or GPs).
+
+```bash
+python3 scripts/extract_osm_hospitals.py
+```
+

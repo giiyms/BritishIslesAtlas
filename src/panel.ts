@@ -44,7 +44,7 @@ export function mountPanel(
   upcomingGrid.setAttribute("aria-describedby", "layer-status");
   const note = document.createElement("p");
   note.className = "panel-note";
-  note.textContent = "Petrol, EV, and power: © OpenStreetMap contributors (ODbL). Other layers are preview geometry.";
+  note.textContent = "Petrol, EV, power, and hospitals: © OpenStreetMap contributors (ODbL). Other layers are preview geometry.";
 
   for (const layer of LAYERS) {
     const button = document.createElement("button");
