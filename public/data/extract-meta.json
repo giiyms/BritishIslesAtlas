@@ -125,5 +125,37 @@
       "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
       "counting_caveat": "amenity=hospital only; clinics, GPs, and healthcare=hospital without amenity=hospital are omitted"
     }
+  },
+  "fire-stations": {
+    "extracted_at": "2026-09-30T23:33:19Z",
+    "method": "Overpass per-nation/territory bbox tiles clipped to OSM admin polygons (Nominatim); endpoint overpass.openstreetmap.fr",
+    "license": "ODbL 1.0",
+    "endpoint": "https://overpass.openstreetmap.fr/api/interpreter",
+    "layer": "fire-stations",
+    "count": 2338,
+    "coverage": "Admin-area extract (ENG/SCT/WLS/NIR/IE/IM/GG/JE); IoM≈6; GG≈2; JE≈4; northern France bleed≈0",
+    "region_counts": {
+      "england": 1523,
+      "scotland": 363,
+      "wales": 150,
+      "northern-ireland": 74,
+      "ireland": 216,
+      "isle-of-man": 6,
+      "guernsey": 2,
+      "jersey": 4
+    },
+    "limitations": {
+      "isle_of_man": 6,
+      "channel_islands": 6,
+      "guernsey": 2,
+      "jersey": 4,
+      "northern_france_approx": 0,
+      "ways_as_centre_points": 2033,
+      "pipeline_generic_names": 411,
+      "pipeline_note_repeats_brand": 1150,
+      "note_semantics": "pipeline field (brand/operator or 'OpenStreetMap'), not OSM note=*",
+      "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
+      "counting_caveat": "amenity=fire_station only; hydrants, ambulance stations, and building=fire_station without amenity=fire_station are omitted"
+    }
   }
 }
