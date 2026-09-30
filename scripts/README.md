@@ -18,3 +18,12 @@ so mainland France is not included. Requires `shapely` and `curl`.
 
 Be polite: default pause between Overpass calls is 6s; raise `--pause` if the
 endpoint rate-limits.
+
+## `extract_osm_power.py`
+
+Rebuilds `public/data/power.geojson` (and merges into `extract-meta.json`) using
+the same admin-area Overpass + polygon-clip pipeline, querying `power=plant`.
+
+```bash
+python3 scripts/extract_osm_power.py
+```

@@ -256,9 +256,9 @@ export function createAtlas(container: HTMLElement): Atlas {
 
   let loaded = false;
   const ordered = [...LAYERS].sort((a, b) => a.z - b.z);
-  const OSM_STATIC = new Set<LayerId>(["petrol", "ev"]);
+  const OSM_STATIC = new Set<LayerId>(["petrol", "ev", "power"]);
   const clustered = new Set<LayerId>([
-    "pubs", "schools", "churches", "post-offices", "mosques", "other-religious", "petrol", "ev",
+    "pubs", "schools", "churches", "post-offices", "mosques", "other-religious", "petrol", "ev", "power",
     "census", "weather", "crime", "legends",
   ]);
   const minZoom = (id: LayerId) => id === "post-offices" ? 7 :
