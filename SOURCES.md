@@ -5,7 +5,9 @@ runs live Overpass (or other) queries while panning.
 
 ## Extract pipeline
 
-The petrol and EV layers are rebuilt by `scripts/extract_osm_fuel_ev.py`:
+The petrol and EV layers are rebuilt by `scripts/extract_osm_fuel_ev.py`; power by
+`scripts/extract_osm_power.py`; hospitals by `scripts/extract_osm_hospitals.py`.
+Shared pipeline:
 
 1. Load OSM admin polygons for England, Scotland, Wales, Northern Ireland,
    Ireland, Isle of Man, Guernsey, and Jersey (via Nominatim; cached under
@@ -101,6 +103,29 @@ Same pipeline fields as petrol/EV (`name`, optional `brand`/`operator`, `osm_id`
 `"Power plant"`. Almost all features are ways stored as centre points
 (2 817 of 2 821).
 
+## Hospitals (`hospitals`)
+
+| | |
+|---|---|
+| **File** | `public/data/hospitals.geojson` |
+| **Features** | 1 946 points (not a round cap) |
+| **Coverage** | Same admin-area footprint: England 1 405, Scotland 184, Wales 116, Northern Ireland 39, Ireland 192, Isle of Man 2, Guernsey 4, Jersey 4. **Northern France bleed ≈ 0**. |
+| **Sample vs full** | Admin-area extract of OSM `amenity=hospital` at extract time. Clinics (`amenity=clinic`), GPs (`amenity=doctors`), and `healthcare=hospital` without `amenity=hospital` are **not** included. |
+| **Source** | [OpenStreetMap](https://www.openstreetmap.org/) via Overpass API |
+| **Query** | `amenity=hospital` nodes and ways (`out center tags`) |
+| **Endpoint used** | `https://overpass.openstreetmap.fr/api/interpreter` |
+| **Extract date (UTC)** | 2026-09-30T23:21:25Z |
+| **Method** | Same admin-area pipeline as petrol/EV/power (`scripts/extract_osm_hospitals.py`) |
+| **License** | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/) — © OpenStreetMap contributors |
+| **Attribution** | © OpenStreetMap contributors |
+
+### Property semantics (pipeline)
+
+Same pipeline fields as petrol/EV/power (`name`, optional `brand`/`operator`, `osm_id`,
+`osm_url`, pipeline `note`, `layer`, `source`). Generic missing names fill as
+`"Hospital"`. Ways as centre points: 1 704 of 1 946. Pipeline-filled generic
+names: 110 (~6%).
+
 ## Remaining honest caveats
 
 - OSM tagging completeness varies; absence of a station on the map is not proof
@@ -109,6 +134,10 @@ Same pipeline fields as petrol/EV (`name`, optional `brand`/`operator`, `osm_id`
 - `name` / `note` generics are pipeline fills, not OSM-verified labels.
 - Guernsey EV count is only 1 in OSM at extract time — likely under-tagged.
 - Power layer is `power=plant` sites only (not every turbine/generator).
+- Hospitals layer is `amenity=hospital` only (not clinics, GPs, or pharmacies).
+- Isle of Man has only 2 OSM hospitals at extract time — likely under-tagged
+  relative to known sites; Channel Islands admin-clip counts are GG 4 / JE 4
+  (hard bbox check slightly lower for Guernsey).
 - Extract uses polygon clip + buffer; stations extremely close to a land border
   could in theory be included or excluded by the ~200 m buffer.
 
