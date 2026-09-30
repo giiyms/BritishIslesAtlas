@@ -3,37 +3,39 @@
 British Isles Atlas ships static GeoJSON under `public/data/` so the map never
 runs live Overpass (or other) queries while panning.
 
-## Known limitations (this extract — re-extract planned)
+## Extract pipeline
 
-This is a **partial** Overpass extract, **not** a complete British Isles survey.
-Until a country-area re-extract lands:
+The petrol and EV layers are rebuilt by `scripts/extract_osm_fuel_ev.py`:
 
-| Issue | Petrol | EV |
-|---|---|---|
-| Feature count | **exactly 10 000** (a round number — **suspected hard cap / truncation**) | 9 202 |
-| Isle of Man | **0** features | **0** |
-| Channel Islands (GG/JE) | **0** | **0** |
-| Northern France bleed (bbox spill) | **~104** | **~202** |
-| Ways represented as centre points | 5 484 | 891 |
-| Pipeline-filled generic names (`"Petrol station"` / `"EV charging"`) | 778 (~7.8%) | 2 369 (~25.7%) |
-| Pipeline `note` that repeats `brand` (or falls back to `"OpenStreetMap"`) | 2 297 | 2 249 |
+1. Load OSM admin polygons for England, Scotland, Wales, Northern Ireland,
+   Ireland, Isle of Man, Guernsey, and Jersey (via Nominatim; cached under
+   `scripts/cache/`, regenerable with `--refresh-polygons`).
+2. Query Overpass **per-region bounding-box tiles** (not one British Isles-wide
+   bbox) on `https://overpass.openstreetmap.fr/api/interpreter`.
+3. **Clip** results to the admin polygon (+ ~200 m buffer) so mainland France
+   and cross-border spill are dropped.
+4. Deduplicate by OSM `type/id`. Ways are stored as **centre points**
+   (`out center`).
 
-The extractor script is **not** in this repo yet. Counts and coverage claims
-below describe what is on disk today, measured against the GeoJSON files.
+Overpass `area["ISO3166-…"]` filters were preferred, but
+`overpass.openstreetmap.fr` currently errors on area queries
+(`area_tags_local.bin` missing). Official DE mirrors were TLS / rate-limit
+unreliable from the extract host. Polygon-clipped regional tiles are the
+practical equivalent; see `scripts/README.md`.
 
 ## Petrol stations (`petrol`)
 
 | | |
 |---|---|
 | **File** | `public/data/petrol.geojson` |
-| **Features** | 10000 points (**suspected ~10k cap** — not proven complete) |
-| **Coverage** | Partial bbox extract over British Isles `HOME_BOUNDS` (~[[-12.2,49.35],[2.35,61.15]]). Spans much of England, Wales, Scotland, Northern Ireland, and Ireland, but **excludes Isle of Man and Channel Islands**, and **includes ~100 points in northern France**. |
-| **Sample vs full** | **Partial extract** — do not treat as a full Isles inventory. Merged from regional Overpass tiles; overlapping tile duplicates removed by OSM id. Truncation at a round 10k is suspected. |
+| **Features** | 10 267 points (not a round cap) |
+| **Coverage** | Full British Isles admin areas: England 6 599, Scotland 818, Wales 529, Northern Ireland 566, Ireland 1 676, Isle of Man 21, Guernsey 26, Jersey 32. **Northern France bleed ≈ 0** (was ~104 on the prior bbox extract). |
+| **Sample vs full** | Admin-area extract intended as a full Isles inventory of OSM `amenity=fuel` at extract time. OSM completeness still varies by region. |
 | **Source** | [OpenStreetMap](https://www.openstreetmap.org/) via Overpass API |
 | **Query** | `amenity=fuel` nodes and ways (`out center tags`) |
 | **Endpoint used** | `https://overpass.openstreetmap.fr/api/interpreter` |
-| **Extract date (UTC)** | 2026-09-28T15:55:19Z |
-| **Method** | `regional Overpass via overpass.openstreetmap.fr` (bbox tiles; not ISO3166 country areas) |
+| **Extract date (UTC)** | 2026-09-30T21:43:32Z |
+| **Method** | Per-nation/territory Overpass bbox tiles, clipped to OSM admin polygons (Nominatim) |
 | **License** | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/) — © OpenStreetMap contributors |
 | **Attribution** | © OpenStreetMap contributors |
 
@@ -42,26 +44,28 @@ below describe what is on disk today, measured against the GeoJSON files.
 | Property | Meaning |
 |---|---|
 | `name` | OSM `name` when present; otherwise a **pipeline generic** (`"Petrol station"`) — not an OSM-verified name |
-| `brand` | OSM `brand` when tagged |
+| `brand` | OSM `brand` or `operator` when tagged |
 | `osm_id` / `osm_url` | Source object id and deep link |
-| `note` | **Pipeline field**, not OSM `note=*`. Usually copies `brand`, else `"OpenStreetMap"` |
+| `note` | **Pipeline field**, not OSM `note=*`. Usually copies `brand`/`operator`, else `"OpenStreetMap"` |
 | `layer` / `source` | App metadata (`petrol` / extract provenance) |
 
-Ways are stored as **centre points** (`out center`), not polygons.
+Ways are stored as **centre points** (`out center`), not polygons
+(5 672 of 10 267). Pipeline-filled generic names: 1 231 (~12%). Pipeline
+`note` copies brand/operator on 8 726 features.
 
 ## EV charging (`ev`)
 
 | | |
 |---|---|
 | **File** | `public/data/ev.geojson` |
-| **Features** | 9202 points |
-| **Coverage** | Same partial bbox footprint as petrol: **no Isle of Man / Channel Islands**, **~200 points in northern France**. |
-| **Sample vs full** | **Partial extract** — same caveats as petrol (no suspected hard 10k cap on this file). |
+| **Features** | 9 420 points |
+| **Coverage** | Same admin-area footprint as petrol: England 6 564, Scotland 1 123, Wales 318, Northern Ireland 252, Ireland 1 096, Isle of Man 60, Guernsey 1, Jersey 6. **Northern France bleed ≈ 0** (was ~202). |
+| **Sample vs full** | Admin-area extract of OSM `amenity=charging_station` at extract time. |
 | **Source** | [OpenStreetMap](https://www.openstreetmap.org/) via Overpass API |
 | **Query** | `amenity=charging_station` nodes and ways (`out center tags`) |
 | **Endpoint used** | `https://overpass.openstreetmap.fr/api/interpreter` |
-| **Extract date (UTC)** | 2026-09-28T15:55:19Z |
-| **Method** | `regional Overpass via overpass.openstreetmap.fr` (bbox tiles; not ISO3166 country areas) |
+| **Extract date (UTC)** | 2026-09-30T21:43:32Z |
+| **Method** | Same as petrol |
 | **License** | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/) — © OpenStreetMap contributors |
 | **Attribution** | © OpenStreetMap contributors |
 
@@ -70,7 +74,19 @@ Ways are stored as **centre points** (`out center`), not polygons.
 Same as petrol, with generic missing names filled as `"EV charging"`.
 
 `amenity=charging_station` objects are sometimes a whole site and sometimes a
-single device, so **feature counts are not site counts**.
+single device, so **feature counts are not site counts**. Ways as centre
+points: 913. Pipeline-filled generic names: 6 697 (~71%) — many chargers are
+untagged for `name` in OSM.
+
+## Remaining honest caveats
+
+- OSM tagging completeness varies; absence of a station on the map is not proof
+  it does not exist on the ground.
+- Ways are centre points, not footprints.
+- `name` / `note` generics are pipeline fills, not OSM-verified labels.
+- Guernsey EV count is only 1 in OSM at extract time — likely under-tagged.
+- Extract uses polygon clip + buffer; stations extremely close to a land border
+  could in theory be included or excluded by the ~200 m buffer.
 
 ## Basemap (unchanged)
 
