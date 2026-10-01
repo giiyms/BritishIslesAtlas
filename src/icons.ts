@@ -83,6 +83,9 @@ export const ICONS = {
   marketplaces: icon(
     `<path d="M4 19.5h16"/><path d="M5.5 16.5V9.5h13v7"/><path d="M5.5 9.5 12 5.5l6.5 4"/><path d="M8 12.5h2.5M13.5 12.5H16"/><path d="M8 15h2.5M13.5 15H16"/>`,
   ),
+  "nature-reserves": icon(
+    `<path d="M4 19.5h16"/><path d="M6 19.5c1.5-4 3.5-7.5 6-10.5 2.5 3 4.5 6.5 6 10.5"/><path d="M9 14.5c1.2-1.8 2.2-2.8 3-3.5 0.8 0.7 1.8 1.7 3 3.5"/><circle cx="12" cy="8" r="1.2"/>`,
+  ),
   churches: icon(
     `<path d="M12 3v3M10.2 4.6h3.6"/><path d="M6 21V11.2L12 7l6 4.2V21"/><path d="M10 21v-4h4v4"/><path d="M4 21h16"/>`,
   ),

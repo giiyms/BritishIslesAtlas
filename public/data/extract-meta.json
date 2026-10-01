@@ -912,5 +912,38 @@
       "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
       "counting_caveat": "amenity=marketplace only; shop=marketplace without amenity=marketplace, street_vendor, shop=convenience, and farmers markets without amenity=marketplace are omitted; feature counts are OSM objects not distinct markets (a complex may be several nodes/ways/relations); disused sites still tagged amenity=marketplace are included; multipolygon relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry amenity=marketplace; unnamed marketplaces keep the generic label Marketplace"
     }
+  },
+  "nature-reserves": {
+    "extracted_at": "2026-10-01T15:55:38Z",
+    "method": "Overpass per-nation/territory bbox tiles clipped to OSM admin polygons (Nominatim); endpoint overpass.openstreetmap.fr",
+    "license": "ODbL 1.0",
+    "endpoint": "https://overpass.openstreetmap.fr/api/interpreter",
+    "layer": "nature-reserves",
+    "count": 4185,
+    "coverage": "Admin-area extract (ENG/SCT/WLS/NIR/IE/IM/GG/JE); IoM≈14; GG≈10; JE≈1; northern France bleed≈0",
+    "region_counts": {
+      "england": 3512,
+      "scotland": 283,
+      "wales": 213,
+      "northern-ireland": 37,
+      "ireland": 115,
+      "isle-of-man": 14,
+      "guernsey": 10,
+      "jersey": 1
+    },
+    "limitations": {
+      "isle_of_man": 14,
+      "channel_islands": 11,
+      "guernsey": 10,
+      "jersey": 1,
+      "northern_france_approx": 0,
+      "ways_as_centre_points": 3339,
+      "relations_as_centre_points": 641,
+      "pipeline_generic_names": 449,
+      "pipeline_note_repeats_brand": 1299,
+      "note_semantics": "pipeline field (brand/operator or 'OpenStreetMap'), not OSM note=*",
+      "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
+      "counting_caveat": "leisure=nature_reserve only; boundary=protected_area alone, leisure=park, boundary=national_park, leisure=wildlife_hide, and tourism=attraction without leisure=nature_reserve are omitted; feature counts are OSM objects not distinct reserves (a complex may be several nodes/ways/relations); disused sites still tagged leisure=nature_reserve are included; multipolygon relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry leisure=nature_reserve; unnamed nature reserves keep the generic label Nature reserve"
+    }
   }
 }
