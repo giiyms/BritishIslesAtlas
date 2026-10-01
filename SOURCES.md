@@ -17,7 +17,8 @@ fire stations by `scripts/extract_osm_fire_stations.py`; police by
 `scripts/extract_osm_ferry_terminals.py`; marinas by
 `scripts/extract_osm_marinas.py`; zoos by
 `scripts/extract_osm_zoos.py`; theatres by
-`scripts/extract_osm_theatres.py`.
+`scripts/extract_osm_theatres.py`; battlefields by
+`scripts/extract_osm_battlefields.py`.
 Shared pipeline:
 
 1. Load OSM admin polygons for England, Scotland, Wales, Northern Ireland,
@@ -28,7 +29,7 @@ Shared pipeline:
 3. **Clip** results to the admin polygon (+ ~200 m buffer) so mainland France
    and cross-border spill are dropped.
 4. Deduplicate by OSM `type/id`. Ways are stored as **centre points**
-   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, and theatres extractors
+   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, and battlefields extractors
    also query **relations** and store them as centre points the same way;
    other layers remain node+way only unless noted.
 
@@ -428,6 +429,29 @@ Same pipeline fields as petrol/EV/power/hospitals/fire/police/castles/libraries/
 `"Theatre"`. Ways as centre points: 1 156 of 1 765; relations as centre points:
 18 of 1 765. Pipeline-filled generic names: 134 (~8%).
 
+## Battlefields (`battlefields`)
+
+| | |
+|---|---|
+| **File** | `public/data/battlefields.geojson` |
+| **Features** | 159 points (not a round cap) |
+| **Coverage** | Same admin-area footprint: England 87, Scotland 40, Wales 6, Northern Ireland 8, Ireland 17, Isle of Man 1, Guernsey 0, Jersey 0. **Northern France bleed ≈ 0**. |
+| **Sample vs full** | Admin-area extract of OSM `historic=battlefield` at extract time (nodes, ways, **and relations**). Memorials, ruins, castles, war memorials, and sites without `historic=battlefield` are **not** included. Commemorative / heritage sites that remain tagged `historic=battlefield` **are** included. **Feature counts are OSM objects, not distinct battles** (a site may appear as several nodes/ways/relations). Large sites mapped as multipolygon relations are included via Overpass centre points (0 relations after admin-clip at this extract; query still includes relations). |
+| **Source** | [OpenStreetMap](https://www.openstreetmap.org/) via Overpass API |
+| **Query** | `historic=battlefield` nodes, ways, and relations (`out center tags`) |
+| **Endpoint used** | `https://overpass.openstreetmap.fr/api/interpreter` |
+| **Extract date (UTC)** | 2026-10-01T02:03:40Z |
+| **Method** | Same admin-area pipeline as aerodromes/ferry terminals/marinas/zoos/theatres (`scripts/extract_osm_battlefields.py`), including OSM relations |
+| **License** | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/) — © OpenStreetMap contributors |
+| **Attribution** | © OpenStreetMap contributors |
+
+### Property semantics (pipeline)
+
+Same pipeline fields as petrol/EV/power/hospitals/fire/police/castles/libraries/universities/museums/railway stations/aerodromes/ferry terminals/marinas/zoos/theatres (`name`, optional `brand`/`operator`, `osm_id`,
+`osm_url`, pipeline `note`, `layer`, `source`). Generic missing names fill as
+`"Battlefield"`. Ways as centre points: 12 of 159; relations as centre points:
+0 of 159. Pipeline-filled generic names: 22 (~14%).
+
 ## Remaining honest caveats
 
 - OSM tagging completeness varies; absence of a station on the map is not proof
@@ -513,6 +537,18 @@ Same pipeline fields as petrol/EV/power/hospitals/fire/police/castles/libraries/
   as member ways/nodes if both carry `amenity=theatre` (dedupe by OSM
   `type/id` only). Counts are OSM objects, not distinct theatres. Isle of
   Man admin-clip is 3; Guernsey Bailiwick admin-clip 1; Jersey 2.
+- Battlefields layer is `historic=battlefield` only (not memorials, ruins,
+  castles, war memorials, or sites without the historic tag). Commemorative
+  / heritage sites still tagged `historic=battlefield` are included. Extract
+  includes **nodes, ways, and relations**; ways and relations are Overpass
+  centre points, not footprints. A site may appear both as a relation and
+  as member ways/nodes if both carry `historic=battlefield` (dedupe by OSM
+  `type/id` only). Counts are OSM objects, not distinct battles. At this
+  extract 0 relations survived admin-clip (bbox probe had ~1 relation in the
+  Isles envelope — outside clip or untagged after refresh). Isle of Man
+  admin-clip is 1; Channel Islands GG 0 / JE 0 (expected under-tagging).
+  OSM inventory is incomplete relative to Historic England / Historic
+  Environment Scotland / Cadw / NIEA battlefield registers.
 - Isle of Man has only 2 OSM hospitals at extract time — likely under-tagged
   relative to known sites; Channel Islands admin-clip counts are GG 4 / JE 4
   (hard bbox check slightly lower for Guernsey). Castles IoM admin-clip is 3;
@@ -526,7 +562,8 @@ Same pipeline fields as petrol/EV/power/hospitals/fire/police/castles/libraries/
   admin-clip is 3; Channel Islands GG 7 / JE 2. Marinas IoM
   admin-clip is 2; Channel Islands GG 6 / JE 11. Zoos IoM
   admin-clip is 1; Channel Islands GG 0 / JE 1. Theatres IoM
-  admin-clip is 3; Channel Islands GG 1 / JE 2.
+  admin-clip is 3; Channel Islands GG 1 / JE 2. Battlefields IoM
+  admin-clip is 1; Channel Islands GG 0 / JE 0.
 - Extract uses polygon clip + buffer; features extremely close to a land border
   could in theory be included or excluded by the ~200 m buffer.
 

@@ -24,7 +24,7 @@ pnpm preview
 
 - Full-bleed [MapLibre GL JS](https://maplibre.org/) map, framed on the British Isles
 - Cool gray altitude basemap: Esri World Hillshade, lightened, with flat water from [OpenFreeMap](https://openfreemap.org/) / OpenMapTiles
-- Multi-select layer chips. Roads, schools, churches, mosques, other religious sites, pubs, post offices, population, and census ship with preview geometry. **Petrol stations, EV charging, power plants, hospitals, fire stations, police, castles, libraries, universities, museums, railway stations, aerodromes, ferry terminals, marinas, zoos, and theatres are real OpenStreetMap layers** (static GeoJSON, off by default). Cemeteries, immigration, crime, health, weather, wind turbines, nuclear, historic, legends, and mountains remain upcoming stubs
+- Multi-select layer chips. Roads, schools, churches, mosques, other religious sites, pubs, post offices, population, and census ship with preview geometry. **Petrol stations, EV charging, power plants, hospitals, fire stations, police, castles, libraries, universities, museums, railway stations, aerodromes, ferry terminals, marinas, zoos, theatres, and battlefields are real OpenStreetMap layers** (static GeoJSON, off by default). Cemeteries, immigration, crime, health, weather, wind turbines, nuclear, historic, legends, and mountains remain upcoming stubs
 - Fixed-width scale track in round kilometres or metres. The fill tracks the current view; the label only uses nice round distances. Zoom level is not printed on the map
 - Place search over the bundled gazetteer, with postcodes.io for UK postcodes and rate-limited OpenStreetMap Nominatim for smaller places
 
