@@ -415,5 +415,38 @@
       "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
       "counting_caveat": "amenity=ferry_terminal only; piers, harbours, route=ferry ways, public_transport=station without ferry_terminal, and ferry=* vehicle tags alone are omitted; feature counts are OSM objects not distinct terminals (a complex may be several nodes/ways/relations); disused sites still tagged amenity=ferry_terminal are included; multipolygon relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry amenity=ferry_terminal"
     }
+  },
+  "marinas": {
+    "extracted_at": "2026-10-01T01:22:39Z",
+    "method": "Overpass per-nation/territory bbox tiles clipped to OSM admin polygons (Nominatim); endpoint overpass.openstreetmap.fr",
+    "license": "ODbL 1.0",
+    "endpoint": "https://overpass.openstreetmap.fr/api/interpreter",
+    "layer": "marinas",
+    "count": 1198,
+    "coverage": "Admin-area extract (ENG/SCT/WLS/NIR/IE/IM/GG/JE); IoM≈2; GG≈5; JE≈11; northern France bleed≈0",
+    "region_counts": {
+      "england": 754,
+      "scotland": 135,
+      "wales": 61,
+      "northern-ireland": 58,
+      "ireland": 171,
+      "isle-of-man": 2,
+      "guernsey": 6,
+      "jersey": 11
+    },
+    "limitations": {
+      "isle_of_man": 2,
+      "channel_islands": 16,
+      "guernsey": 5,
+      "jersey": 11,
+      "northern_france_approx": 0,
+      "ways_as_centre_points": 826,
+      "relations_as_centre_points": 31,
+      "pipeline_generic_names": 286,
+      "pipeline_note_repeats_brand": 119,
+      "note_semantics": "pipeline field (brand/operator or 'OpenStreetMap'), not OSM note=*",
+      "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
+      "counting_caveat": "leisure=marina only; harbours, slipways, boat rentals, piers, leisure=harbour, and seamark marina tags without leisure=marina are omitted; feature counts are OSM objects not distinct marinas (a complex may be several nodes/ways/relations); disused sites still tagged leisure=marina are included; multipolygon relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry leisure=marina"
+    }
   }
 }
