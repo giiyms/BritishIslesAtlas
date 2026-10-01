@@ -679,5 +679,38 @@
       "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
       "counting_caveat": "tourism=viewpoint only; natural=peak and mountain tops without tourism=viewpoint, tourism=attraction, amenity=bench with a view, information=guidepost, and scenic overlooks lacking the tourism tag are omitted; feature counts are OSM objects not distinct scenic spots (a site may be several nodes/ways/relations); orientation/direction=* is unused; ways and rare multipolygon relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry tourism=viewpoint"
     }
+  },
+  "arts-centres": {
+    "extracted_at": "2026-10-01T03:13:21Z",
+    "method": "Overpass per-nation/territory bbox tiles clipped to OSM admin polygons (Nominatim); endpoint overpass.openstreetmap.fr",
+    "license": "ODbL 1.0",
+    "endpoint": "https://overpass.openstreetmap.fr/api/interpreter",
+    "layer": "arts-centres",
+    "count": 870,
+    "coverage": "Admin-area extract (ENG/SCT/WLS/NIR/IE/IM/GG/JE); IoM≈3; GG≈1; JE≈0; northern France bleed≈0",
+    "region_counts": {
+      "england": 601,
+      "scotland": 94,
+      "wales": 46,
+      "northern-ireland": 14,
+      "ireland": 111,
+      "isle-of-man": 3,
+      "guernsey": 1,
+      "jersey": 0
+    },
+    "limitations": {
+      "isle_of_man": 3,
+      "channel_islands": 1,
+      "guernsey": 1,
+      "jersey": 0,
+      "northern_france_approx": 0,
+      "ways_as_centre_points": 481,
+      "relations_as_centre_points": 9,
+      "pipeline_generic_names": 19,
+      "pipeline_note_repeats_brand": 63,
+      "note_semantics": "pipeline field (brand/operator or 'OpenStreetMap'), not OSM note=*",
+      "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
+      "counting_caveat": "amenity=arts_centre only; theatres, cinemas, community centres, museums, galleries, and attractions without amenity=arts_centre are omitted; feature counts are OSM objects not distinct centres (a complex may be several nodes/ways/relations); disused sites still tagged amenity=arts_centre are included; multipolygon relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry amenity=arts_centre"
+    }
   }
 }
