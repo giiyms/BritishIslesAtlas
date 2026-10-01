@@ -56,6 +56,9 @@ export const ICONS = {
   stadiums: icon(
     `<path d="M4 18.5c2.5-2 5-3 8-3s5.5 1 8 3"/><path d="M5.5 15.5c2-1.4 4.2-2.1 6.5-2.1s4.5.7 6.5 2.1"/><path d="M7 12.5c1.5-.9 3.2-1.4 5-1.4s3.5.5 5 1.4"/><path d="M8.5 9.8c1-.6 2.2-.9 3.5-.9s2.5.3 3.5.9"/><path d="M12 4.5v4.4"/><path d="M9.5 6.2 12 4.5l2.5 1.7"/>`,
   ),
+  "theme-parks": icon(
+    `<path d="M4 19.5h16"/><path d="M6.5 19.5V11l5.5-5.5L17.5 11v8.5"/><circle cx="12" cy="13.5" r="2.2"/><path d="M12 5.5V3.5"/><path d="M9.5 7.2 12 5.5l2.5 1.7"/>`,
+  ),
   churches: icon(
     `<path d="M12 3v3M10.2 4.6h3.6"/><path d="M6 21V11.2L12 7l6 4.2V21"/><path d="M10 21v-4h4v4"/><path d="M4 21h16"/>`,
   ),

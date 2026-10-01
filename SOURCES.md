@@ -20,7 +20,8 @@ fire stations by `scripts/extract_osm_fire_stations.py`; police by
 `scripts/extract_osm_theatres.py`; battlefields by
 `scripts/extract_osm_battlefields.py`; cinemas by
 `scripts/extract_osm_cinemas.py`; stadiums by
-`scripts/extract_osm_stadiums.py`.
+`scripts/extract_osm_stadiums.py`; theme parks by
+`scripts/extract_osm_theme_parks.py`.
 Shared pipeline:
 
 1. Load OSM admin polygons for England, Scotland, Wales, Northern Ireland,
@@ -31,7 +32,7 @@ Shared pipeline:
 3. **Clip** results to the admin polygon (+ ~200 m buffer) so mainland France
    and cross-border spill are dropped.
 4. Deduplicate by OSM `type/id`. Ways are stored as **centre points**
-   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, and stadiums extractors
+   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, and theme-parks extractors
    also query **relations** and store them as centre points the same way;
    other layers remain node+way only unless noted.
 
@@ -500,6 +501,29 @@ Same pipeline fields as petrol/EV/power/hospitals/fire/police/castles/libraries/
 `"Stadium"`. Ways as centre points: 615 of 662; relations as centre points:
 35 of 662. Pipeline-filled generic names: 42 (~6%).
 
+## Theme parks (`theme-parks`)
+
+| | |
+|---|---|
+| **File** | `public/data/theme-parks.geojson` |
+| **Features** | 209 points (not a round cap) |
+| **Coverage** | Same admin-area footprint: England 160, Scotland 11, Wales 13, Northern Ireland 7, Ireland 18, Isle of Man 0, Guernsey 0, Jersey 0. **Northern France bleed ≈ 0**. |
+| **Sample vs full** | Admin-area extract of OSM `tourism=theme_park` at extract time (nodes, ways, **and relations**). Generic attractions (`tourism=attraction`), zoos (`tourism=zoo`), water parks (`leisure=water_park`), amusement arcades (`leisure=amusement_arcade`), and fairgrounds without `tourism=theme_park` are **not** included. Disused parks that remain tagged `tourism=theme_park` **are** included. OSM sometimes tags indoor soft-play / activity centres as `tourism=theme_park` — those objects are included when so tagged. **Feature counts are OSM objects, not distinct parks** (a complex may appear as several nodes/ways/relations). Large sites mapped as multipolygon relations are included via Overpass centre points. |
+| **Source** | [OpenStreetMap](https://www.openstreetmap.org/) via Overpass API |
+| **Query** | `tourism=theme_park` nodes, ways, and relations (`out center tags`) |
+| **Endpoint used** | `https://overpass.openstreetmap.fr/api/interpreter` |
+| **Extract date (UTC)** | 2026-10-01T02:45:37Z |
+| **Method** | Same admin-area pipeline as aerodromes/ferry terminals/marinas/zoos/theatres/battlefields/cinemas/stadiums (`scripts/extract_osm_theme_parks.py`), including OSM relations |
+| **License** | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/) — © OpenStreetMap contributors |
+| **Attribution** | © OpenStreetMap contributors |
+
+### Property semantics (pipeline)
+
+Same pipeline fields as petrol/EV/power/hospitals/fire/police/castles/libraries/universities/museums/railway stations/aerodromes/ferry terminals/marinas/zoos/theatres/battlefields/cinemas/stadiums (`name`, optional `brand`/`operator`, `osm_id`,
+`osm_url`, pipeline `note`, `layer`, `source`). Generic missing names fill as
+`"Theme park"`. Ways as centre points: 153 of 209; relations as centre points:
+8 of 209. Pipeline-filled generic names: 8 (~4%).
+
 ## Remaining honest caveats
 
 - OSM tagging completeness varies; absence of a station on the map is not proof
@@ -615,6 +639,17 @@ Same pipeline fields as petrol/EV/power/hospitals/fire/police/castles/libraries/
   if both carry `leisure=stadium` (dedupe by OSM `type/id` only). Counts
   are OSM objects, not distinct stadiums. Isle of Man admin-clip is
   0; Channel Islands GG 2 / JE 1.
+- Theme parks layer is `tourism=theme_park` only (not generic attractions,
+  zoos, water parks, amusement arcades, or fairgrounds without the tourism
+  tag). Disused parks still tagged `tourism=theme_park` are included.
+  Indoor soft-play / activity centres tagged `tourism=theme_park` in OSM
+  **are** included. Extract includes **nodes, ways, and relations**; ways
+  and relations are Overpass centre points, not footprints. A site may
+  appear both as a relation and as member ways/nodes if both carry
+  `tourism=theme_park` (dedupe by OSM `type/id` only). Counts are OSM
+  objects, not distinct parks. Sparse Isles-wide inventory (~209 objects);
+  major parks may still be tagged only as `tourism=attraction`. Isle of Man
+  admin-clip is 0; Channel Islands GG 0 / JE 0 (expected under-tagging).
 - Isle of Man has only 2 OSM hospitals at extract time — likely under-tagged
   relative to known sites; Channel Islands admin-clip counts are GG 4 / JE 4
   (hard bbox check slightly lower for Guernsey). Castles IoM admin-clip is 3;
@@ -630,7 +665,8 @@ Same pipeline fields as petrol/EV/power/hospitals/fire/police/castles/libraries/
   admin-clip is 1; Channel Islands GG 0 / JE 1. Theatres IoM
   admin-clip is 3; Channel Islands GG 1 / JE 2. Battlefields IoM
   admin-clip is 1; Channel Islands GG 0 / JE 0. Stadiums IoM
-  admin-clip is 0; Channel Islands GG 2 / JE 1.
+  admin-clip is 0; Channel Islands GG 2 / JE 1. Theme parks IoM
+  admin-clip is 0; Channel Islands GG 0 / JE 0.
 - Extract uses polygon clip + buffer; features extremely close to a land border
   could in theory be included or excluded by the ~200 m buffer.
 
