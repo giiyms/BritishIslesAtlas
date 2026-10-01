@@ -44,7 +44,7 @@ export function mountPanel(
   upcomingGrid.setAttribute("aria-describedby", "layer-status");
   const note = document.createElement("p");
   note.className = "panel-note";
-  note.textContent = "Petrol, EV, power, hospitals, fire stations, police, castles, libraries, universities, museums, railway stations, aerodromes, ferry terminals, marinas, zoos, and theatres: © OpenStreetMap contributors (ODbL). Other layers are preview geometry.";
+  note.textContent = "Petrol, EV, power, hospitals, fire stations, police, castles, libraries, universities, museums, railway stations, aerodromes, ferry terminals, marinas, zoos, theatres, and battlefields: © OpenStreetMap contributors (ODbL). Other layers are preview geometry.";
 
   for (const layer of LAYERS) {
     const button = document.createElement("button");

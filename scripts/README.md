@@ -179,3 +179,16 @@ Relations included for large theatres mapped as multipolygons
 python3 scripts/extract_osm_theatres.py
 ```
 
+## `extract_osm_battlefields.py`
+
+Rebuilds `public/data/battlefields.geojson` (and merges into `extract-meta.json`)
+using the same admin-area Overpass + polygon-clip pipeline, querying
+`historic=battlefield` on **nodes, ways, and relations** (`out center tags`;
+not memorials, ruins, castles, or sites without `historic=battlefield`).
+Relations included for large battlefields mapped as multipolygons
+(Heathrow lesson).
+
+```bash
+python3 scripts/extract_osm_battlefields.py
+```
+
