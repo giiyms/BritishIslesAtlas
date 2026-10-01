@@ -65,6 +65,9 @@ export const ICONS = {
   "arts-centres": icon(
     `<path d="M4 19.5h16"/><path d="M6 17V9.5l6-4.5 6 4.5V17"/><path d="M9 12.5h6"/><path d="M9 15h6"/><circle cx="12" cy="7.2" r="1.1"/>`,
   ),
+  aquariums: icon(
+    `<path d="M4 16.5c2.2-3.5 5-5.2 8-5.2s5.8 1.7 8 5.2"/><path d="M5.5 12.2c1.8-2.2 4-3.3 6.5-3.3s4.7 1.1 6.5 3.3"/><circle cx="9.2" cy="10.5" r="1.1"/><circle cx="14.8" cy="11.2" r="0.85"/><path d="M12 7.5c0-1.6.7-2.8 1.6-3.2"/>`,
+  ),
   churches: icon(
     `<path d="M12 3v3M10.2 4.6h3.6"/><path d="M6 21V11.2L12 7l6 4.2V21"/><path d="M10 21v-4h4v4"/><path d="M4 21h16"/>`,
   ),
