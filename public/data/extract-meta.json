@@ -745,5 +745,39 @@
       "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
       "counting_caveat": "tourism=aquarium only; zoos, generic attractions, pet shops, and animal boarding without tourism=aquarium are omitted; koi/ornamental shops that carry tourism=aquarium in OSM are included; feature counts are OSM objects not distinct aquariums (a complex may be several nodes/ways/relations); disused sites still tagged tourism=aquarium are included; multipolygon relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry tourism=aquarium"
     }
+  },
+  "piers": {
+    "extracted_at": "2026-10-01T03:38:55Z",
+    "method": "Overpass per-nation/territory bbox tiles clipped to OSM admin polygons (Nominatim); endpoint overpass.openstreetmap.fr",
+    "license": "ODbL 1.0",
+    "endpoint": "https://overpass.openstreetmap.fr/api/interpreter",
+    "layer": "piers",
+    "count": 1340,
+    "coverage": "Admin-area extract (ENG/SCT/WLS/NIR/IE/IM/GG/JE); IoM≈12; GG≈0; JE≈2; northern France bleed≈0",
+    "region_counts": {
+      "england": 723,
+      "scotland": 161,
+      "wales": 71,
+      "northern-ireland": 33,
+      "ireland": 338,
+      "isle-of-man": 12,
+      "guernsey": 0,
+      "jersey": 2
+    },
+    "limitations": {
+      "isle_of_man": 12,
+      "channel_islands": 2,
+      "guernsey": 0,
+      "jersey": 2,
+      "northern_france_approx": 0,
+      "ways_as_centre_points": 1317,
+      "relations_as_centre_points": 14,
+      "pipeline_generic_names": 1,
+      "pipeline_note_repeats_brand": 50,
+      "note_semantics": "pipeline field (brand/operator or 'OpenStreetMap'), not OSM note=*",
+      "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
+      "counting_caveat": "man_made=pier WITH name=* only; unnamed pier/jetty segments, man_made=jetty/breakwater/groyne, marinas, ferry terminals, and pier=* without man_made=pier are omitted; feature counts are OSM objects not distinct piers (a complex may be several nodes/ways/relations); disused sites still tagged man_made=pier with name are included; multipolygon relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry man_made=pier+name",
+      "name_filter": "require name=* (unnamed piers omitted)"
+    }
   }
 }
