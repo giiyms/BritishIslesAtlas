@@ -22,7 +22,8 @@ fire stations by `scripts/extract_osm_fire_stations.py`; police by
 `scripts/extract_osm_cinemas.py`; stadiums by
 `scripts/extract_osm_stadiums.py`; theme parks by
 `scripts/extract_osm_theme_parks.py`; viewpoints by
-`scripts/extract_osm_viewpoints.py`.
+`scripts/extract_osm_viewpoints.py`; arts centres by
+`scripts/extract_osm_arts_centres.py`.
 Shared pipeline:
 
 1. Load OSM admin polygons for England, Scotland, Wales, Northern Ireland,
@@ -33,7 +34,7 @@ Shared pipeline:
 3. **Clip** results to the admin polygon (+ ~200 m buffer) so mainland France
    and cross-border spill are dropped.
 4. Deduplicate by OSM `type/id`. Ways are stored as **centre points**
-   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme-parks, and viewpoints extractors
+   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme-parks, viewpoints, and arts-centres extractors
    also query **relations** and store them as centre points the same way;
    other layers remain node+way only unless noted.
 
@@ -549,6 +550,29 @@ Same pipeline fields as petrol/EV/power/hospitals/fire/police/castles/libraries/
 1 of 5 823. Pipeline-filled generic names: 4 221 (~72%) — many viewpoints are
 untagged for `name` in OSM.
 
+## Arts centres (`arts-centres`)
+
+| | |
+|---|---|
+| **File** | `public/data/arts-centres.geojson` |
+| **Features** | 870 points (not a round cap) |
+| **Coverage** | Same admin-area footprint: England 601, Scotland 94, Wales 46, Northern Ireland 14, Ireland 111, Isle of Man 3, Guernsey 1, Jersey 0. **Northern France bleed ≈ 0**. |
+| **Sample vs full** | Admin-area extract of OSM `amenity=arts_centre` at extract time (nodes, ways, **and relations**). Theatres (`amenity=theatre`), cinemas (`amenity=cinema`), community centres (`amenity=community_centre`), museums (`tourism=museum`), galleries (`tourism=gallery`), and attractions without `amenity=arts_centre` are **not** included. Disused centres that remain tagged `amenity=arts_centre` **are** included. **Feature counts are OSM objects, not distinct centres** (a complex may appear as several nodes/ways/relations). Large sites mapped as multipolygon relations are included via Overpass centre points. |
+| **Source** | [OpenStreetMap](https://www.openstreetmap.org/) via Overpass API |
+| **Query** | `amenity=arts_centre` nodes, ways, and relations (`out center tags`) |
+| **Endpoint used** | `https://overpass.openstreetmap.fr/api/interpreter` |
+| **Extract date (UTC)** | 2026-10-01T03:13:21Z |
+| **Method** | Same admin-area pipeline as aerodromes/ferry terminals/marinas/zoos/theatres/battlefields/cinemas/stadiums/theme parks/viewpoints (`scripts/extract_osm_arts_centres.py`), including OSM relations |
+| **License** | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/) — © OpenStreetMap contributors |
+| **Attribution** | © OpenStreetMap contributors |
+
+### Property semantics (pipeline)
+
+Same pipeline fields as petrol/EV/power/hospitals/fire/police/castles/libraries/universities/museums/railway stations/aerodromes/ferry terminals/marinas/zoos/theatres/battlefields/cinemas/stadiums/theme parks/viewpoints (`name`, optional `brand`/`operator`, `osm_id`,
+`osm_url`, pipeline `note`, `layer`, `source`). Generic missing names fill as
+`"Arts centre"`. Ways as centre points: 481 of 870; relations as centre points:
+9 of 870. Pipeline-filled generic names: 19 (~2%).
+
 ## Remaining honest caveats
 
 - OSM tagging completeness varies; absence of a station on the map is not proof
@@ -686,6 +710,15 @@ untagged for `name` in OSM.
   scenic spots. Many objects lack `name` (~72% pipeline generics at extract).
   Isle of Man admin-clip is 26; Guernsey Bailiwick admin-clip 43 vs hard
   main-island bbox ≈ 30 (outer Bailiwick); Jersey 41.
+- Arts centres layer is `amenity=arts_centre` only (not theatres, cinemas,
+  community centres, museums, galleries, or attractions without the amenity
+  tag). Disused centres still tagged `amenity=arts_centre` are included.
+  Extract includes **nodes, ways, and relations**; ways and relations are
+  Overpass centre points, not footprints. A site may appear both as a
+  relation and as member ways/nodes if both carry `amenity=arts_centre`
+  (dedupe by OSM `type/id` only). Counts are OSM objects, not distinct
+  centres. Isle of Man admin-clip is 3; Guernsey Bailiwick admin-clip 1;
+  Jersey 0 (expected under-tagging).
 - Isle of Man has only 2 OSM hospitals at extract time — likely under-tagged
   relative to known sites; Channel Islands admin-clip counts are GG 4 / JE 4
   (hard bbox check slightly lower for Guernsey). Castles IoM admin-clip is 3;
@@ -703,7 +736,8 @@ untagged for `name` in OSM.
   admin-clip is 1; Channel Islands GG 0 / JE 0. Stadiums IoM
   admin-clip is 0; Channel Islands GG 2 / JE 1. Theme parks IoM
   admin-clip is 0; Channel Islands GG 0 / JE 0. Viewpoints IoM
-  admin-clip is 26; Channel Islands GG 43 / JE 41.
+  admin-clip is 26; Channel Islands GG 43 / JE 41. Arts centres IoM
+  admin-clip is 3; Channel Islands GG 1 / JE 0.
 - Extract uses polygon clip + buffer; features extremely close to a land border
   could in theory be included or excluded by the ~200 m buffer.
 

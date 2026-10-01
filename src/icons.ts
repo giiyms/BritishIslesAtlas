@@ -62,6 +62,9 @@ export const ICONS = {
   viewpoints: icon(
     `<circle cx="12" cy="12" r="3.2"/><path d="M12 3.5v3.2M12 17.3v3.2M3.5 12h3.2M17.3 12h3.2"/><path d="m6.2 6.2 2.2 2.2M15.6 15.6l2.2 2.2M17.8 6.2l-2.2 2.2M8.4 15.6l-2.2 2.2"/>`,
   ),
+  "arts-centres": icon(
+    `<path d="M4 19.5h16"/><path d="M6 17V9.5l6-4.5 6 4.5V17"/><path d="M9 12.5h6"/><path d="M9 15h6"/><circle cx="12" cy="7.2" r="1.1"/>`,
+  ),
   churches: icon(
     `<path d="M12 3v3M10.2 4.6h3.6"/><path d="M6 21V11.2L12 7l6 4.2V21"/><path d="M10 21v-4h4v4"/><path d="M4 21h16"/>`,
   ),
