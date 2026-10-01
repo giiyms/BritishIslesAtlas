@@ -481,5 +481,38 @@
       "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
       "counting_caveat": "tourism=zoo only; aquariums, wildlife parks, animal shelters/boarding, theme parks, and safari/farm parks without tourism=zoo are omitted; feature counts are OSM objects not distinct zoos (a complex may be several nodes/ways/relations); disused sites still tagged tourism=zoo are included; multipolygon relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry tourism=zoo"
     }
+  },
+  "theatres": {
+    "extracted_at": "2026-10-01T01:49:57Z",
+    "method": "Overpass per-nation/territory bbox tiles clipped to OSM admin polygons (Nominatim); endpoint overpass.openstreetmap.fr",
+    "license": "ODbL 1.0",
+    "endpoint": "https://overpass.openstreetmap.fr/api/interpreter",
+    "layer": "theatres",
+    "count": 1765,
+    "coverage": "Admin-area extract (ENG/SCT/WLS/NIR/IE/IM/GG/JE); IoM≈3; GG≈1; JE≈2; northern France bleed≈0",
+    "region_counts": {
+      "england": 1340,
+      "scotland": 153,
+      "wales": 82,
+      "northern-ireland": 32,
+      "ireland": 152,
+      "isle-of-man": 3,
+      "guernsey": 1,
+      "jersey": 2
+    },
+    "limitations": {
+      "isle_of_man": 3,
+      "channel_islands": 3,
+      "guernsey": 1,
+      "jersey": 2,
+      "northern_france_approx": 0,
+      "ways_as_centre_points": 1156,
+      "relations_as_centre_points": 18,
+      "pipeline_generic_names": 134,
+      "pipeline_note_repeats_brand": 247,
+      "note_semantics": "pipeline field (brand/operator or 'OpenStreetMap'), not OSM note=*",
+      "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
+      "counting_caveat": "amenity=theatre only; cinemas, arts centres, community centres, nightclubs, and attractions without amenity=theatre are omitted; feature counts are OSM objects not distinct theatres (a complex may be several nodes/ways/relations); disused sites still tagged amenity=theatre are included; multipolygon relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry amenity=theatre"
+    }
   }
 }

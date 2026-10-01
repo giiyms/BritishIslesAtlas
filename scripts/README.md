@@ -164,3 +164,18 @@ Relations included for large zoos mapped as multipolygons
 ```bash
 python3 scripts/extract_osm_zoos.py
 ```
+
+## `extract_osm_theatres.py`
+
+Rebuilds `public/data/theatres.geojson` (and merges into `extract-meta.json`)
+using the same admin-area Overpass + polygon-clip pipeline, querying
+`amenity=theatre` on **nodes, ways, and relations** (`out center tags`;
+not cinemas, arts centres, community centres, nightclubs, or attractions
+without `amenity=theatre`).
+Relations included for large theatres mapped as multipolygons
+(Heathrow lesson).
+
+```bash
+python3 scripts/extract_osm_theatres.py
+```
+

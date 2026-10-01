@@ -44,6 +44,9 @@ export const ICONS = {
   zoos: icon(
     `<circle cx="9" cy="11" r="3"/><circle cx="15.5" cy="12.5" r="2.4"/><path d="M7.2 9.2 6 6.5M10.8 9.2 12 6.5"/><path d="M14.2 10.8 13.2 8.2M16.8 10.8 17.8 8.2"/><path d="M5 19.5c1.2-3.2 2.8-4.5 4-4.5s2.8 1.3 4 4.5"/><path d="M12.5 19.5c.8-2.4 1.8-3.4 3-3.4s2.2 1 3 3.4"/>`,
   ),
+  theatres: icon(
+    `<path d="M4 19.5h16"/><path d="M6 17V9.5l6-4.5 6 4.5V17"/><path d="M9 17v-3.5h6V17"/><path d="M8.5 11.5h7"/><circle cx="12" cy="7.2" r="1.1"/>`,
+  ),
   churches: icon(
     `<path d="M12 3v3M10.2 4.6h3.6"/><path d="M6 21V11.2L12 7l6 4.2V21"/><path d="M10 21v-4h4v4"/><path d="M4 21h16"/>`,
   ),
