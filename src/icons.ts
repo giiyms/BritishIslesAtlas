@@ -35,6 +35,9 @@ export const ICONS = {
   aerodromes: icon(
     `<path d="M12 3.5v4"/><path d="M4.5 12.5 12 9.5l7.5 3"/><path d="M6.5 19.5 12 14.5l5.5 5"/><path d="M12 9.5V19.5"/>`,
   ),
+  "ferry-terminals": icon(
+    `<path d="M4 18.5h16"/><path d="M6.5 18.5 8 12.5h8l1.5 6"/><path d="M7.5 12.5 12 7l4.5 5.5"/><path d="M12 7V4.5"/><path d="M9.5 15.5h5"/>`,
+  ),
   churches: icon(
     `<path d="M12 3v3M10.2 4.6h3.6"/><path d="M6 21V11.2L12 7l6 4.2V21"/><path d="M10 21v-4h4v4"/><path d="M4 21h16"/>`,
   ),

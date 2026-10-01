@@ -13,7 +13,8 @@ fire stations by `scripts/extract_osm_fire_stations.py`; police by
 `scripts/extract_osm_universities.py`; museums by
 `scripts/extract_osm_museums.py`; railway stations by
 `scripts/extract_osm_railway_stations.py`; aerodromes by
-`scripts/extract_osm_aerodromes.py`.
+`scripts/extract_osm_aerodromes.py`; ferry terminals by
+`scripts/extract_osm_ferry_terminals.py`.
 Shared pipeline:
 
 1. Load OSM admin polygons for England, Scotland, Wales, Northern Ireland,
@@ -24,9 +25,9 @@ Shared pipeline:
 3. **Clip** results to the admin polygon (+ ~200 m buffer) so mainland France
    and cross-border spill are dropped.
 4. Deduplicate by OSM `type/id`. Ways are stored as **centre points**
-   (`out center`). The aerodromes extractor also queries **relations** and
-   stores them as centre points the same way; other layers remain
-   node+way only unless noted.
+   (`out center`). The aerodromes and ferry-terminals extractors also query
+   **relations** and store them as centre points the same way; other layers
+   remain node+way only unless noted.
 
 Overpass `area["ISO3166-…"]` filters were preferred, but
 `overpass.openstreetmap.fr` currently errors on area queries
@@ -332,6 +333,29 @@ Same pipeline fields as petrol/EV/power/hospitals/fire/police/castles/libraries/
 `"Aerodrome"`. Ways as centre points: 379 of 910; relations as centre points:
 25 of 910. Pipeline-filled generic names: 1 (~0%).
 
+## Ferry terminals (`ferry-terminals`)
+
+| | |
+|---|---|
+| **File** | `public/data/ferry-terminals.geojson` |
+| **Features** | 834 points (not a round cap) |
+| **Coverage** | Same admin-area footprint: England 435, Scotland 242, Wales 29, Northern Ireland 17, Ireland 99, Isle of Man 3, Guernsey 7, Jersey 2. **Northern France bleed ≈ 0**. |
+| **Sample vs full** | Admin-area extract of OSM `amenity=ferry_terminal` at extract time (nodes, ways, **and relations**). Piers (`man_made=pier`), harbours, `route=ferry` ways, `public_transport=station` without `ferry_terminal`, and `ferry=*` vehicle tags alone are **not** included. Disused terminals that remain tagged `amenity=ferry_terminal` **are** included. **Feature counts are OSM objects, not distinct terminals** (a complex may appear as several nodes/ways/relations — e.g. Dover berths). Large sites mapped as multipolygon relations are included via Overpass centre points. |
+| **Source** | [OpenStreetMap](https://www.openstreetmap.org/) via Overpass API |
+| **Query** | `amenity=ferry_terminal` nodes, ways, and relations (`out center tags`) |
+| **Endpoint used** | `https://overpass.openstreetmap.fr/api/interpreter` |
+| **Extract date (UTC)** | 2026-10-01T01:09:48Z |
+| **Method** | Same admin-area pipeline as aerodromes (`scripts/extract_osm_ferry_terminals.py`), including OSM relations |
+| **License** | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/) — © OpenStreetMap contributors |
+| **Attribution** | © OpenStreetMap contributors |
+
+### Property semantics (pipeline)
+
+Same pipeline fields as petrol/EV/power/hospitals/fire/police/castles/libraries/universities/museums/railway stations/aerodromes (`name`, optional `brand`/`operator`, `osm_id`,
+`osm_url`, pipeline `note`, `layer`, `source`). Generic missing names fill as
+`"Ferry terminal"`. Ways as centre points: 109 of 834; relations as centre points:
+3 of 834. Pipeline-filled generic names: 302 (~36%).
+
 ## Remaining honest caveats
 
 - OSM tagging completeness varies; absence of a station on the map is not proof
@@ -377,6 +401,18 @@ Same pipeline fields as petrol/EV/power/hospitals/fire/police/castles/libraries/
   ICAO). Counts are OSM objects, not distinct airports. Isle of Man
   admin-clip is 4; Guernsey Bailiwick admin-clip 2 vs hard main-island bbox
   ≈ 1 (outer Bailiwick, e.g. Alderney); Jersey 1 (Jersey Airport).
+- Ferry terminals layer is `amenity=ferry_terminal` only (not piers,
+  harbours, `route=ferry` ways, `public_transport=station` without the
+  amenity tag, or `ferry=*` vehicle tags alone). Disused terminals still
+  tagged `amenity=ferry_terminal` are included. Extract includes **nodes,
+  ways, and relations**; ways and relations are Overpass centre points, not
+  footprints. A site may appear both as a relation and as member ways/nodes
+  if both carry `amenity=ferry_terminal` (dedupe by OSM `type/id` only).
+  Counts are OSM objects, not distinct terminals (Dover has multiple berth
+  objects). OSM completeness varies — e.g. Larne Harbour area may lack the
+  amenity tag at extract time even when Holyhead / Rosslare / Douglas are
+  present. Isle of Man admin-clip is 3; Guernsey Bailiwick admin-clip 7 vs
+  hard main-island bbox ≈ 5 (outer Bailiwick); Jersey 2.
 - Isle of Man has only 2 OSM hospitals at extract time — likely under-tagged
   relative to known sites; Channel Islands admin-clip counts are GG 4 / JE 4
   (hard bbox check slightly lower for Guernsey). Castles IoM admin-clip is 3;
@@ -386,7 +422,8 @@ Same pipeline fields as petrol/EV/power/hospitals/fire/police/castles/libraries/
   admin-clip is 2; Channel Islands GG 0 / JE 0. Museums IoM
   admin-clip is 24; Channel Islands GG 14 / JE 16. Railway stations IoM
   admin-clip is 13; Channel Islands GG 2 / JE 0. Aerodromes IoM
-  admin-clip is 4; Channel Islands GG 2 / JE 1.
+  admin-clip is 4; Channel Islands GG 2 / JE 1. Ferry terminals IoM
+  admin-clip is 3; Channel Islands GG 7 / JE 2.
 - Extract uses polygon clip + buffer; features extremely close to a land border
   could in theory be included or excluded by the ~200 m buffer.
 
