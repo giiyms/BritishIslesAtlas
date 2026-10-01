@@ -19,7 +19,8 @@ fire stations by `scripts/extract_osm_fire_stations.py`; police by
 `scripts/extract_osm_zoos.py`; theatres by
 `scripts/extract_osm_theatres.py`; battlefields by
 `scripts/extract_osm_battlefields.py`; cinemas by
-`scripts/extract_osm_cinemas.py`.
+`scripts/extract_osm_cinemas.py`; stadiums by
+`scripts/extract_osm_stadiums.py`.
 Shared pipeline:
 
 1. Load OSM admin polygons for England, Scotland, Wales, Northern Ireland,
@@ -30,7 +31,7 @@ Shared pipeline:
 3. **Clip** results to the admin polygon (+ ~200 m buffer) so mainland France
    and cross-border spill are dropped.
 4. Deduplicate by OSM `type/id`. Ways are stored as **centre points**
-   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, and cinemas extractors
+   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, and stadiums extractors
    also query **relations** and store them as centre points the same way;
    other layers remain node+way only unless noted.
 
@@ -476,6 +477,29 @@ Same pipeline fields as petrol/EV/power/hospitals/fire/police/castles/libraries/
 `"Cinema"`. Ways as centre points: 451 of 924; relations as centre points:
 2 of 924. Pipeline-filled generic names: 20 (~2%).
 
+## Stadiums (`stadiums`)
+
+| | |
+|---|---|
+| **File** | `public/data/stadiums.geojson` |
+| **Features** | 662 points (not a round cap) |
+| **Coverage** | Same admin-area footprint: England 442, Scotland 66, Wales 42, Northern Ireland 24, Ireland 85, Isle of Man 0, Guernsey 2, Jersey 1. **Northern France bleed ≈ 0**. |
+| **Sample vs full** | Admin-area extract of OSM `leisure=stadium` at extract time (nodes, ways, **and relations**). Sports centres (`leisure=sports_centre`), pitches (`leisure=pitch`), tracks (`leisure=track`), and `building=stadium` without `leisure=stadium` are **not** included. Disused stadiums that remain tagged `leisure=stadium` **are** included. **Feature counts are OSM objects, not distinct stadiums** (a complex may appear as several nodes/ways/relations). Large sites mapped as multipolygon relations are included via Overpass centre points. |
+| **Source** | [OpenStreetMap](https://www.openstreetmap.org/) via Overpass API |
+| **Query** | `leisure=stadium` nodes, ways, and relations (`out center tags`) |
+| **Endpoint used** | `https://overpass.openstreetmap.fr/api/interpreter` |
+| **Extract date (UTC)** | 2026-10-01T02:28:10Z |
+| **Method** | Same admin-area pipeline as aerodromes/ferry terminals/marinas/zoos/theatres/battlefields/cinemas (`scripts/extract_osm_stadiums.py`), including OSM relations |
+| **License** | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/) — © OpenStreetMap contributors |
+| **Attribution** | © OpenStreetMap contributors |
+
+### Property semantics (pipeline)
+
+Same pipeline fields as petrol/EV/power/hospitals/fire/police/castles/libraries/universities/museums/railway stations/aerodromes/ferry terminals/marinas/zoos/theatres/battlefields/cinemas (`name`, optional `brand`/`operator`, `osm_id`,
+`osm_url`, pipeline `note`, `layer`, `source`). Generic missing names fill as
+`"Stadium"`. Ways as centre points: 615 of 662; relations as centre points:
+35 of 662. Pipeline-filled generic names: 42 (~6%).
+
 ## Remaining honest caveats
 
 - OSM tagging completeness varies; absence of a station on the map is not proof
@@ -583,6 +607,14 @@ Same pipeline fields as petrol/EV/power/hospitals/fire/police/castles/libraries/
   complexes may be several objects). Isle of Man admin-clip is 1; Guernsey
   Bailiwick admin-clip 2 vs hard main-island bbox ≈ 1 (outer Bailiwick);
   Jersey 1.
+- Stadiums layer is `leisure=stadium` only (not sports centres, pitches,
+  tracks, or `building=stadium` without the leisure tag). Disused stadiums
+  still tagged `leisure=stadium` are included. Extract includes **nodes,
+  ways, and relations**; ways and relations are Overpass centre points, not
+  footprints. A site may appear both as a relation and as member ways/nodes
+  if both carry `leisure=stadium` (dedupe by OSM `type/id` only). Counts
+  are OSM objects, not distinct stadiums. Isle of Man admin-clip is
+  0; Channel Islands GG 2 / JE 1.
 - Isle of Man has only 2 OSM hospitals at extract time — likely under-tagged
   relative to known sites; Channel Islands admin-clip counts are GG 4 / JE 4
   (hard bbox check slightly lower for Guernsey). Castles IoM admin-clip is 3;
@@ -597,7 +629,8 @@ Same pipeline fields as petrol/EV/power/hospitals/fire/police/castles/libraries/
   admin-clip is 2; Channel Islands GG 6 / JE 11. Zoos IoM
   admin-clip is 1; Channel Islands GG 0 / JE 1. Theatres IoM
   admin-clip is 3; Channel Islands GG 1 / JE 2. Battlefields IoM
-  admin-clip is 1; Channel Islands GG 0 / JE 0.
+  admin-clip is 1; Channel Islands GG 0 / JE 0. Stadiums IoM
+  admin-clip is 0; Channel Islands GG 2 / JE 1.
 - Extract uses polygon clip + buffer; features extremely close to a land border
   could in theory be included or excluded by the ~200 m buffer.
 

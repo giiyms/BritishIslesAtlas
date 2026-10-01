@@ -205,3 +205,17 @@ Relations included for large cinemas mapped as multipolygons
 ```bash
 python3 scripts/extract_osm_cinemas.py
 ```
+
+## `extract_osm_stadiums.py`
+
+Rebuilds `public/data/stadiums.geojson` (and merges into `extract-meta.json`)
+using the same admin-area Overpass + polygon-clip pipeline, querying
+`leisure=stadium` on **nodes, ways, and relations** (`out center tags`;
+not sports centres, pitches, tracks, or `building=stadium` without
+`leisure=stadium`).
+Relations included for large stadiums mapped as multipolygons
+(Heathrow lesson).
+
+```bash
+python3 scripts/extract_osm_stadiums.py
+```
