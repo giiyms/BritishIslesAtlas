@@ -613,5 +613,38 @@
       "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
       "counting_caveat": "leisure=stadium only; sports centres, pitches, tracks, and building=stadium without leisure=stadium are omitted; feature counts are OSM objects not distinct stadiums (a complex may be several nodes/ways/relations); disused sites still tagged leisure=stadium are included; multipolygon relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry leisure=stadium"
     }
+  },
+  "theme-parks": {
+    "extracted_at": "2026-10-01T02:45:37Z",
+    "method": "Overpass per-nation/territory bbox tiles clipped to OSM admin polygons (Nominatim); endpoint overpass.openstreetmap.fr",
+    "license": "ODbL 1.0",
+    "endpoint": "https://overpass.openstreetmap.fr/api/interpreter",
+    "layer": "theme-parks",
+    "count": 209,
+    "coverage": "Admin-area extract (ENG/SCT/WLS/NIR/IE/IM/GG/JE); IoM≈0; GG≈0; JE≈0; northern France bleed≈0",
+    "region_counts": {
+      "england": 160,
+      "scotland": 11,
+      "wales": 13,
+      "northern-ireland": 7,
+      "ireland": 18,
+      "isle-of-man": 0,
+      "guernsey": 0,
+      "jersey": 0
+    },
+    "limitations": {
+      "isle_of_man": 0,
+      "channel_islands": 0,
+      "guernsey": 0,
+      "jersey": 0,
+      "northern_france_approx": 0,
+      "ways_as_centre_points": 153,
+      "relations_as_centre_points": 8,
+      "pipeline_generic_names": 8,
+      "pipeline_note_repeats_brand": 29,
+      "note_semantics": "pipeline field (brand/operator or 'OpenStreetMap'), not OSM note=*",
+      "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
+      "counting_caveat": "tourism=theme_park only; generic attractions, zoos, water parks, amusement arcades, and fairgrounds without tourism=theme_park are omitted; feature counts are OSM objects not distinct parks (a complex may be several nodes/ways/relations); disused sites still tagged tourism=theme_park are included; indoor soft-play / activity centres tagged theme_park in OSM are included; multipolygon relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry tourism=theme_park"
+    }
   }
 }

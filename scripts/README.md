@@ -219,3 +219,19 @@ Relations included for large stadiums mapped as multipolygons
 ```bash
 python3 scripts/extract_osm_stadiums.py
 ```
+
+## `extract_osm_theme_parks.py`
+
+Rebuilds `public/data/theme-parks.geojson` (and merges into `extract-meta.json`)
+using the same admin-area Overpass + polygon-clip pipeline, querying
+`tourism=theme_park` on **nodes, ways, and relations** (`out center tags`;
+not generic attractions, zoos, water parks, amusement arcades, or fairgrounds
+without `tourism=theme_park`). OSM sometimes tags indoor soft-play / activity
+centres as theme parks — those are included when so tagged.
+Relations included for large parks mapped as multipolygons
+(Heathrow lesson).
+
+```bash
+python3 scripts/extract_osm_theme_parks.py
+```
+
