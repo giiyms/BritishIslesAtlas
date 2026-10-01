@@ -189,5 +189,37 @@
       "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
       "counting_caveat": "amenity=police only; police boxes, cameras, and building=police without amenity=police are omitted"
     }
+  },
+  "castles": {
+    "extracted_at": "2026-09-30T23:57:36Z",
+    "method": "Overpass per-nation/territory bbox tiles clipped to OSM admin polygons (Nominatim); endpoint overpass.openstreetmap.fr",
+    "license": "ODbL 1.0",
+    "endpoint": "https://overpass.openstreetmap.fr/api/interpreter",
+    "layer": "castles",
+    "count": 2265,
+    "coverage": "Admin-area extract (ENG/SCT/WLS/NIR/IE/IM/GG/JE); IoM≈3; GG≈8; JE≈8; northern France bleed≈0",
+    "region_counts": {
+      "england": 503,
+      "scotland": 458,
+      "wales": 126,
+      "northern-ireland": 89,
+      "ireland": 1059,
+      "isle-of-man": 3,
+      "guernsey": 19,
+      "jersey": 8
+    },
+    "limitations": {
+      "isle_of_man": 3,
+      "channel_islands": 16,
+      "guernsey": 8,
+      "jersey": 8,
+      "northern_france_approx": 0,
+      "ways_as_centre_points": 2017,
+      "pipeline_generic_names": 334,
+      "pipeline_note_repeats_brand": 144,
+      "note_semantics": "pipeline field (brand/operator or 'OpenStreetMap'), not OSM note=*",
+      "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
+      "counting_caveat": "historic=castle only; forts, manors, towers, ruins without castle tag, and archaeological sites are omitted; ruined castles still tagged historic=castle are included"
+    }
   }
 }

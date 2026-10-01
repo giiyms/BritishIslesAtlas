@@ -8,7 +8,7 @@ runs live Overpass (or other) queries while panning.
 The petrol and EV layers are rebuilt by `scripts/extract_osm_fuel_ev.py`; power by
 `scripts/extract_osm_power.py`; hospitals by `scripts/extract_osm_hospitals.py`;
 fire stations by `scripts/extract_osm_fire_stations.py`; police by
-`scripts/extract_osm_police.py`.
+`scripts/extract_osm_police.py`; castles by `scripts/extract_osm_castles.py`.
 Shared pipeline:
 
 1. Load OSM admin polygons for England, Scotland, Wales, Northern Ireland,
@@ -175,6 +175,31 @@ Same pipeline fields as petrol/EV/power/hospitals/fire (`name`, optional `brand`
 `"Police station"`. Ways as centre points: 1 589 of 2 298. Pipeline-filled generic
 names: 482 (~21%).
 
+
+
+## Castles (`castles`)
+
+| | |
+|---|---|
+| **File** | `public/data/castles.geojson` |
+| **Features** | 2 265 points (not a round cap) |
+| **Coverage** | Same admin-area footprint: England 503, Scotland 458, Wales 126, Northern Ireland 89, Ireland 1 059, Isle of Man 3, Guernsey 19, Jersey 8. **Northern France bleed ≈ 0**. |
+| **Sample vs full** | Admin-area extract of OSM `historic=castle` at extract time. Forts (`historic=fort`), manors, towers, archaeological sites, and ruins **without** `historic=castle` are **not** included. Ruined castles that remain tagged `historic=castle` **are** included (common OSM usage). Ireland’s high count reflects many tower houses tagged as castles. |
+| **Source** | [OpenStreetMap](https://www.openstreetmap.org/) via Overpass API |
+| **Query** | `historic=castle` nodes and ways (`out center tags`) |
+| **Endpoint used** | `https://overpass.openstreetmap.fr/api/interpreter` |
+| **Extract date (UTC)** | 2026-09-30T23:57:36Z |
+| **Method** | Same admin-area pipeline as petrol/EV/power/hospitals/fire/police (`scripts/extract_osm_castles.py`) |
+| **License** | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/) — © OpenStreetMap contributors |
+| **Attribution** | © OpenStreetMap contributors |
+
+### Property semantics (pipeline)
+
+Same pipeline fields as petrol/EV/power/hospitals/fire/police (`name`, optional `brand`/`operator`, `osm_id`,
+`osm_url`, pipeline `note`, `layer`, `source`). Generic missing names fill as
+`"Castle"`. Ways as centre points: 2 017 of 2 265. Pipeline-filled generic
+names: 334 (~15%).
+
 ## Remaining honest caveats
 
 - OSM tagging completeness varies; absence of a station on the map is not proof
@@ -186,9 +211,15 @@ names: 482 (~21%).
 - Hospitals layer is `amenity=hospital` only (not clinics, GPs, or pharmacies).
 - Fire stations layer is `amenity=fire_station` only (not hydrants or ambulance stations).
 - Police layer is `amenity=police` only (not police boxes or cameras).
+- Castles layer is `historic=castle` only (not forts, manors, towers, or
+  ruins without the castle tag). Ruined castles still tagged `historic=castle`
+  are included. Ireland’s admin-clip count (1 059) is high because many tower
+  houses are tagged as castles in OSM — not an inventory of “great castles”.
 - Isle of Man has only 2 OSM hospitals at extract time — likely under-tagged
   relative to known sites; Channel Islands admin-clip counts are GG 4 / JE 4
-  (hard bbox check slightly lower for Guernsey).
+  (hard bbox check slightly lower for Guernsey). Castles IoM admin-clip is 3;
+  Guernsey Bailiwick admin-clip 19 vs hard main-island bbox ≈ 8 (Alderney /
+  Sark / Herm fortifications included in Bailiwick polygon).
 - Extract uses polygon clip + buffer; stations extremely close to a land border
   could in theory be included or excluded by the ~200 m buffer.
 
