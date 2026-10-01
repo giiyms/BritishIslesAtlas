@@ -88,3 +88,13 @@ using the same admin-area Overpass + polygon-clip pipeline, querying
 python3 scripts/extract_osm_universities.py
 ```
 
+
+## `extract_osm_museums.py`
+
+Rebuilds `public/data/museums.geojson` (and merges into `extract-meta.json`)
+using the same admin-area Overpass + polygon-clip pipeline, querying
+`tourism=museum` (not galleries, attractions, or arts centres).
+
+```bash
+python3 scripts/extract_osm_museums.py
+```

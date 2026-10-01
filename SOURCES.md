@@ -10,7 +10,8 @@ The petrol and EV layers are rebuilt by `scripts/extract_osm_fuel_ev.py`; power 
 fire stations by `scripts/extract_osm_fire_stations.py`; police by
 `scripts/extract_osm_police.py`; castles by `scripts/extract_osm_castles.py`; libraries by
 `scripts/extract_osm_libraries.py`; universities by
-`scripts/extract_osm_universities.py`.
+`scripts/extract_osm_universities.py`; museums by
+`scripts/extract_osm_museums.py`.
 Shared pipeline:
 
 1. Load OSM admin polygons for England, Scotland, Wales, Northern Ireland,
@@ -252,6 +253,31 @@ Same pipeline fields as petrol/EV/power/hospitals/fire/police/castles/libraries 
 `"University"`. Ways as centre points: 813 of 986. Pipeline-filled generic
 names: 60 (~6%).
 
+
+
+## Museums (`museums`)
+
+| | |
+|---|---|
+| **File** | `public/data/museums.geojson` |
+| **Features** | 3 315 points (not a round cap) |
+| **Coverage** | Same admin-area footprint: England 2 233, Scotland 465, Wales 235, Northern Ireland 72, Ireland 256, Isle of Man 24, Guernsey 14, Jersey 16. **Northern France bleed ≈ 0**. |
+| **Sample vs full** | Admin-area extract of OSM `tourism=museum` at extract time. Galleries (`tourism=gallery`), generic attractions (`tourism=attraction`), arts centres (`amenity=arts_centre`), antique shops, `historic=*` without `tourism=museum`, and `building=museum` without the tourism tag are **not** included. **Feature counts are OSM objects, not distinct institutions** (one museum may appear as several ways/nodes). |
+| **Source** | [OpenStreetMap](https://www.openstreetmap.org/) via Overpass API |
+| **Query** | `tourism=museum` nodes and ways (`out center tags`) |
+| **Endpoint used** | `https://overpass.openstreetmap.fr/api/interpreter` |
+| **Extract date (UTC)** | 2026-10-01T00:29:59Z |
+| **Method** | Same admin-area pipeline as petrol/EV/power/hospitals/fire/police/castles/libraries/universities (`scripts/extract_osm_museums.py`) |
+| **License** | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/) — © OpenStreetMap contributors |
+| **Attribution** | © OpenStreetMap contributors |
+
+### Property semantics (pipeline)
+
+Same pipeline fields as petrol/EV/power/hospitals/fire/police/castles/libraries/universities (`name`, optional `brand`/`operator`, `osm_id`,
+`osm_url`, pipeline `note`, `layer`, `source`). Generic missing names fill as
+`"Museum"`. Ways as centre points: 1 858 of 3 315. Pipeline-filled generic
+names: 92 (~3%).
+
 ## Remaining honest caveats
 
 - OSM tagging completeness varies; absence of a station on the map is not proof
@@ -274,13 +300,19 @@ names: 60 (~6%).
   campus/site objects, not distinct institutions. Wales admin-clip is only 5
   at extract time — likely under-tagged relative to known HE providers.
   Channel Islands have 0 tagged universities (expected for GG/JE); IoM has 2.
+- Museums layer is `tourism=museum` only (not galleries, generic attractions,
+  arts centres, antique shops, or `building=museum` / `historic=*` without the
+  tourism tag). Counts are OSM objects, not distinct institutions. Guernsey
+  Bailiwick admin-clip is 14 vs hard main-island bbox ≈ 12 (Alderney / Sark /
+  Herm sites included in Bailiwick polygon).
 - Isle of Man has only 2 OSM hospitals at extract time — likely under-tagged
   relative to known sites; Channel Islands admin-clip counts are GG 4 / JE 4
   (hard bbox check slightly lower for Guernsey). Castles IoM admin-clip is 3;
   Guernsey Bailiwick admin-clip 19 vs hard main-island bbox ≈ 8 (Alderney /
   Sark / Herm fortifications included in Bailiwick polygon). Libraries IoM
   admin-clip is 7; Channel Islands GG 3 / JE 1. Universities IoM
-  admin-clip is 2; Channel Islands GG 0 / JE 0.
+  admin-clip is 2; Channel Islands GG 0 / JE 0. Museums IoM
+  admin-clip is 24; Channel Islands GG 14 / JE 16.
 - Extract uses polygon clip + buffer; stations extremely close to a land border
   could in theory be included or excluded by the ~200 m buffer.
 
