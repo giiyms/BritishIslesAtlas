@@ -12,7 +12,8 @@ fire stations by `scripts/extract_osm_fire_stations.py`; police by
 `scripts/extract_osm_libraries.py`; universities by
 `scripts/extract_osm_universities.py`; museums by
 `scripts/extract_osm_museums.py`; railway stations by
-`scripts/extract_osm_railway_stations.py`.
+`scripts/extract_osm_railway_stations.py`; aerodromes by
+`scripts/extract_osm_aerodromes.py`.
 Shared pipeline:
 
 1. Load OSM admin polygons for England, Scotland, Wales, Northern Ireland,
@@ -23,7 +24,9 @@ Shared pipeline:
 3. **Clip** results to the admin polygon (+ ~200 m buffer) so mainland France
    and cross-border spill are dropped.
 4. Deduplicate by OSM `type/id`. Ways are stored as **centre points**
-   (`out center`).
+   (`out center`). The aerodromes extractor also queries **relations** and
+   stores them as centre points the same way; other layers remain
+   node+way only unless noted.
 
 Overpass `area["ISO3166-…"]` filters were preferred, but
 `overpass.openstreetmap.fr` currently errors on area queries
@@ -304,6 +307,31 @@ Same pipeline fields as petrol/EV/power/hospitals/fire/police/castles/libraries/
 `"Railway station"`. Ways as centre points: 14 of 3 822. Pipeline-filled generic
 names: 44 (~1%).
 
+
+
+## Aerodromes (`aerodromes`)
+
+| | |
+|---|---|
+| **File** | `public/data/aerodromes.geojson` |
+| **Features** | 910 points (not a round cap) |
+| **Coverage** | Same admin-area footprint: England 654, Scotland 89, Wales 36, Northern Ireland 28, Ireland 96, Isle of Man 4, Guernsey 2, Jersey 1. **Northern France bleed ≈ 0**. |
+| **Sample vs full** | Admin-area extract of OSM `aeroway=aerodrome` at extract time (nodes, ways, **and relations**). Helipads (`aeroway=helipad`), airstrips tagged only as `aeroway=airstrip` (not `aerodrome`), runways, taxiways, hangars, terminals (`aeroway=terminal`), and gates are **not** included. Military / disused sites that remain tagged `aeroway=aerodrome` **are** included. **Feature counts are OSM objects, not distinct airports** (a complex may appear as several nodes/ways/relations). Major sites mapped only as multipolygon relations (e.g. London Heathrow Airport `relation/14001268`) are included via Overpass centre points. |
+| **Source** | [OpenStreetMap](https://www.openstreetmap.org/) via Overpass API |
+| **Query** | `aeroway=aerodrome` nodes, ways, and relations (`out center tags`) |
+| **Endpoint used** | `https://overpass.openstreetmap.fr/api/interpreter` |
+| **Extract date (UTC)** | 2026-10-01T01:01:25Z |
+| **Method** | Same admin-area pipeline as petrol/EV/power/hospitals/fire/police/castles/libraries/universities/museums/railway stations (`scripts/extract_osm_aerodromes.py`), extended to include OSM relations |
+| **License** | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/) — © OpenStreetMap contributors |
+| **Attribution** | © OpenStreetMap contributors |
+
+### Property semantics (pipeline)
+
+Same pipeline fields as petrol/EV/power/hospitals/fire/police/castles/libraries/universities/museums/railway stations (`name`, optional `brand`/`operator`, `osm_id`,
+`osm_url`, pipeline `note`, `layer`, `source`). Generic missing names fill as
+`"Aerodrome"`. Ways as centre points: 379 of 910; relations as centre points:
+25 of 910. Pipeline-filled generic names: 1 (~0%).
+
 ## Remaining honest caveats
 
 - OSM tagging completeness varies; absence of a station on the map is not proof
@@ -339,6 +367,16 @@ names: 44 (~1%).
   hard main-island bbox ≈ 0 (outer Bailiwick sites); Jersey 0 (no active
   mainline; expected). Isle of Man admin-clip is 13 (heritage lines such as
   the Steam Railway / MER are commonly tagged `railway=station`).
+- Aerodromes layer is `aeroway=aerodrome` only (not helipads, airstrips
+  tagged only `aeroway=airstrip`, runways, taxiways, hangars, terminals, or
+  gates). Military / disused sites still tagged `aeroway=aerodrome` are
+  included. Extract includes **nodes, ways, and relations**; ways and
+  relations are Overpass centre points, not footprints. A site may appear
+  both as a relation and as member ways/nodes if both carry
+  `aeroway=aerodrome` (dedupe is by OSM `type/id` only — not by name or
+  ICAO). Counts are OSM objects, not distinct airports. Isle of Man
+  admin-clip is 4; Guernsey Bailiwick admin-clip 2 vs hard main-island bbox
+  ≈ 1 (outer Bailiwick, e.g. Alderney); Jersey 1 (Jersey Airport).
 - Isle of Man has only 2 OSM hospitals at extract time — likely under-tagged
   relative to known sites; Channel Islands admin-clip counts are GG 4 / JE 4
   (hard bbox check slightly lower for Guernsey). Castles IoM admin-clip is 3;
@@ -347,8 +385,9 @@ names: 44 (~1%).
   admin-clip is 7; Channel Islands GG 3 / JE 1. Universities IoM
   admin-clip is 2; Channel Islands GG 0 / JE 0. Museums IoM
   admin-clip is 24; Channel Islands GG 14 / JE 16. Railway stations IoM
-  admin-clip is 13; Channel Islands GG 2 / JE 0.
-- Extract uses polygon clip + buffer; stations extremely close to a land border
+  admin-clip is 13; Channel Islands GG 2 / JE 0. Aerodromes IoM
+  admin-clip is 4; Channel Islands GG 2 / JE 1.
+- Extract uses polygon clip + buffer; features extremely close to a land border
   could in theory be included or excluded by the ~200 m buffer.
 
 ## Basemap (unchanged)
