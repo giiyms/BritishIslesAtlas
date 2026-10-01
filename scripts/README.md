@@ -98,3 +98,15 @@ using the same admin-area Overpass + polygon-clip pipeline, querying
 ```bash
 python3 scripts/extract_osm_museums.py
 ```
+
+
+## `extract_osm_railway_stations.py`
+
+Rebuilds `public/data/railway-stations.geojson` (and merges into `extract-meta.json`)
+using the same admin-area Overpass + polygon-clip pipeline, querying
+`railway=station` (not halts, subway entrances, or tram stops).
+
+```bash
+python3 scripts/extract_osm_railway_stations.py
+```
+

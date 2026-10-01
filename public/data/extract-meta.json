@@ -317,5 +317,37 @@
       "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
       "counting_caveat": "tourism=museum only; galleries, generic attractions, arts centres, antique shops, historic=* without tourism=museum, and building=museum without the tourism tag are omitted; feature counts are OSM objects not distinct institutions (one museum may be several ways/nodes)"
     }
+  },
+  "railway-stations": {
+    "extracted_at": "2026-10-01T00:39:16Z",
+    "method": "Overpass per-nation/territory bbox tiles clipped to OSM admin polygons (Nominatim); endpoint overpass.openstreetmap.fr",
+    "license": "ODbL 1.0",
+    "endpoint": "https://overpass.openstreetmap.fr/api/interpreter",
+    "layer": "railway-stations",
+    "count": 3822,
+    "coverage": "Admin-area extract (ENG/SCT/WLS/NIR/IE/IM/GG/JE); IoM≈13; GG≈0; JE≈0; northern France bleed≈0",
+    "region_counts": {
+      "england": 2842,
+      "scotland": 412,
+      "wales": 329,
+      "northern-ireland": 65,
+      "ireland": 159,
+      "isle-of-man": 13,
+      "guernsey": 2,
+      "jersey": 0
+    },
+    "limitations": {
+      "isle_of_man": 13,
+      "channel_islands": 0,
+      "guernsey": 0,
+      "jersey": 0,
+      "northern_france_approx": 0,
+      "ways_as_centre_points": 14,
+      "pipeline_generic_names": 44,
+      "pipeline_note_repeats_brand": 3375,
+      "note_semantics": "pipeline field (brand/operator or 'OpenStreetMap'), not OSM note=*",
+      "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
+      "counting_caveat": "railway=station only; halts, subway entrances, tram stops, bus stations, public_transport=station without railway=station, and building=train_station without the railway tag are omitted; feature counts are OSM objects not distinct stations (a complex may be several ways/nodes); heritage / disused stations still tagged railway=station are included"
+    }
   }
 }
