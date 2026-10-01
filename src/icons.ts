@@ -71,6 +71,9 @@ export const ICONS = {
   piers: icon(
     `<path d="M4 19.5h16"/><path d="M6 16.5V9.5h12v7"/><path d="M8 9.5V6.5M12 9.5V5.5M16 9.5V6.5"/><path d="M7 12.5h10"/><path d="M7 15h10"/>`,
   ),
+  ruins: icon(
+    `<path d="M4 19.5h16"/><path d="M5.5 19.5V11.5L8 8.5l2.5 2V19.5"/><path d="M10.5 19.5V10l3.5-4 4 3.5v10"/><path d="M8 14.5h2.5M14 13.5h3"/>`,
+  ),
   churches: icon(
     `<path d="M12 3v3M10.2 4.6h3.6"/><path d="M6 21V11.2L12 7l6 4.2V21"/><path d="M10 21v-4h4v4"/><path d="M4 21h16"/>`,
   ),
