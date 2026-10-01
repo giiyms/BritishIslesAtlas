@@ -694,7 +694,7 @@ const builders: Record<LayerId, () => Feature[]> = {
   power: () => [],
   wind: windLayer,
   nuclear: () => namedLayer("nuclear", "Preview nuclear site"),
-  castles: () => namedLayer("castles", "Preview castle"),
+  castles: () => [],
   historic: () => namedLayer("historic", "Preview historic site"),
   legends: () => namedLayer("legends", "Preview legend"),
   mountains: () => namedLayer("mountains", "Preview summit"),

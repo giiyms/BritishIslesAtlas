@@ -57,3 +57,13 @@ using the same admin-area Overpass + polygon-clip pipeline, querying
 ```bash
 python3 scripts/extract_osm_police.py
 ```
+
+## `extract_osm_castles.py`
+
+Rebuilds `public/data/castles.geojson` (and merges into `extract-meta.json`)
+using the same admin-area Overpass + polygon-clip pipeline, querying
+`historic=castle` (not forts, manors, or ruins without the castle tag).
+
+```bash
+python3 scripts/extract_osm_castles.py
+```
