@@ -945,5 +945,38 @@
       "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
       "counting_caveat": "leisure=nature_reserve only; boundary=protected_area alone, leisure=park, boundary=national_park, leisure=wildlife_hide, and tourism=attraction without leisure=nature_reserve are omitted; feature counts are OSM objects not distinct reserves (a complex may be several nodes/ways/relations); disused sites still tagged leisure=nature_reserve are included; multipolygon relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry leisure=nature_reserve; unnamed nature reserves keep the generic label Nature reserve"
     }
+  },
+  "camp-sites": {
+    "extracted_at": "2026-10-01T16:08:59Z",
+    "method": "Overpass per-nation/territory bbox tiles clipped to OSM admin polygons (Nominatim); endpoint overpass.openstreetmap.fr",
+    "license": "ODbL 1.0",
+    "endpoint": "https://overpass.openstreetmap.fr/api/interpreter",
+    "layer": "camp-sites",
+    "count": 4155,
+    "coverage": "Admin-area extract (ENG/SCT/WLS/NIR/IE/IM/GG/JE); IoM≈20; GG≈7; JE≈6; northern France bleed≈0",
+    "region_counts": {
+      "england": 2844,
+      "scotland": 468,
+      "wales": 575,
+      "northern-ireland": 57,
+      "ireland": 174,
+      "isle-of-man": 20,
+      "guernsey": 11,
+      "jersey": 6
+    },
+    "limitations": {
+      "isle_of_man": 20,
+      "channel_islands": 13,
+      "guernsey": 7,
+      "jersey": 6,
+      "northern_france_approx": 0,
+      "ways_as_centre_points": 3020,
+      "relations_as_centre_points": 78,
+      "pipeline_generic_names": 870,
+      "pipeline_note_repeats_brand": 556,
+      "note_semantics": "pipeline field (brand/operator or 'OpenStreetMap'), not OSM note=*",
+      "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
+      "counting_caveat": "tourism=camp_site only; tourism=caravan_site, tourism=camp_pitch, tourism=hostel, and amenity=shelter without tourism=camp_site are omitted (caravan sites are a separate OSM tag and excluded); feature counts are OSM objects not distinct campsites (a complex may be several nodes/ways/relations); disused sites still tagged tourism=camp_site are included; multipolygon / site relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry tourism=camp_site; unnamed camp sites keep the generic label Camp site"
+    }
   }
 }
