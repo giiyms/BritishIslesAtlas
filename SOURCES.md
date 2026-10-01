@@ -28,7 +28,8 @@ fire stations by `scripts/extract_osm_fire_stations.py`; police by
 `scripts/extract_osm_piers.py`; ruins by
 `scripts/extract_osm_ruins.py`; golf courses by
 `scripts/extract_osm_golf_courses.py`; galleries by
-`scripts/extract_osm_galleries.py`.
+`scripts/extract_osm_galleries.py`; marketplaces by
+`scripts/extract_osm_marketplaces.py`.
 Shared pipeline:
 
 1. Load OSM admin polygons for England, Scotland, Wales, Northern Ireland,
@@ -39,7 +40,7 @@ Shared pipeline:
 3. **Clip** results to the admin polygon (+ ~200 m buffer) so mainland France
    and cross-border spill are dropped.
 4. Deduplicate by OSM `type/id`. Ways are stored as **centre points**
-   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme-parks, viewpoints, arts-centres, aquariums, piers, ruins, golf-courses, and galleries extractors
+   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme-parks, viewpoints, arts-centres, aquariums, piers, ruins, golf-courses, galleries, and marketplaces extractors
    also query **relations** and store them as centre points the same way;
    other layers remain node+way only unless noted.
 
@@ -698,6 +699,31 @@ Same pipeline fields as petrol/EV/power/hospitals/fire/police/castles/libraries/
 3 of 1390. Pipeline-filled generic names: 99 (~7.1%).
 
 
+
+## Marketplaces (`marketplaces`)
+
+| | |
+|---|---|
+| **File** | `public/data/marketplaces.geojson` |
+| **Features** | 943 points (not a round cap) |
+| **Coverage** | Same admin-area footprint: England 747, Scotland 44, Wales 45, Northern Ireland 13, Ireland 90, Isle of Man 1, Guernsey 1, Jersey 2. **Northern France bleed ≈ 0**. |
+| **Sample vs full** | Admin-area extract of OSM `amenity=marketplace` at extract time (nodes, ways, **and relations**). `shop=marketplace` without `amenity=marketplace`, `highway=street_vendor` / street-vendor amenities, `shop=convenience`, and farmers markets / car-boot sales **not** tagged `amenity=marketplace` are **not** included. Disused markets that remain tagged `amenity=marketplace` **are** included. Unnamed marketplaces keep the generic label `"Marketplace"`. **Feature counts are OSM objects, not distinct markets** (a complex may appear as several nodes/ways/relations). Large sites mapped as multipolygon / site relations are included via Overpass centre points (Heathrow lesson — markets are often multipolygon). Default regional tiling `--max-span 2.0`. |
+| **Source** | [OpenStreetMap](https://www.openstreetmap.org/) via Overpass API |
+| **Query** | `amenity=marketplace` nodes, ways, and relations (`out center tags`) |
+| **Endpoint used** | `https://overpass.openstreetmap.fr/api/interpreter` |
+| **Extract date (UTC)** | 2026-10-01T15:39:44Z |
+| **Method** | Same admin-area pipeline as aerodromes/ferry terminals/marinas/zoos/theatres/battlefields/cinemas/stadiums/theme parks/viewpoints/arts centres/aquariums/piers/ruins/golf courses/galleries (`scripts/extract_osm_marketplaces.py`), including OSM relations; default tile span 2.0° |
+| **License** | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/) — © OpenStreetMap contributors |
+| **Attribution** | © OpenStreetMap contributors |
+
+### Property semantics (pipeline)
+
+Same pipeline fields as petrol/EV/power/hospitals/fire/police/castles/libraries/universities/museums/railway stations/aerodromes/ferry terminals/marinas/zoos/theatres/battlefields/cinemas/stadiums/theme parks/viewpoints/arts centres/aquariums/piers/ruins/golf courses/galleries (`name`, optional `brand`/`operator`, `osm_id`,
+`osm_url`, pipeline `note`, `layer`, `source`). Generic missing names fill as
+`"Marketplace"`. Ways as centre points: 538 of 943; relations as centre points:
+15 of 943. Pipeline-filled generic names: 80 (~8.5%).
+
+
 ## Remaining honest caveats
 
 - OSM tagging completeness varies; absence of a station on the map is not proof
@@ -904,6 +930,17 @@ Same pipeline fields as petrol/EV/power/hospitals/fire/police/castles/libraries/
   objects, not distinct galleries. Isle of Man admin-clip is 1; Channel
   Islands GG 3 / JE 7 (Guernsey Bailiwick admin-clip 3 vs hard main-island
   bbox ≈ 1).
+- Marketplaces layer is `amenity=marketplace` only (not `shop=marketplace`
+  without the amenity tag, street vendors, `shop=convenience`, or farmers
+  markets / outdoor markets that lack `amenity=marketplace`). Disused markets
+  still tagged `amenity=marketplace` are included. Unnamed marketplaces keep
+  the generic label `"Marketplace"`. Extract includes **nodes, ways, and
+  relations**; ways and relations are Overpass centre points, not footprints
+  (Heathrow lesson — markets are often multipolygon). A site may appear both
+  as a relation and as member ways/nodes if both carry `amenity=marketplace`
+  (dedupe by OSM `type/id` only). Counts are OSM objects, not distinct
+  markets. Isle of Man admin-clip is 1; Channel Islands GG 1 / JE 2
+  (hard main-island bbox ≈ GG 1 / JE 2).
 - Isle of Man has only 2 OSM hospitals at extract time — likely under-tagged
   relative to known sites; Channel Islands admin-clip counts are GG 4 / JE 4
   (hard bbox check slightly lower for Guernsey). Castles IoM admin-clip is 3;
@@ -927,7 +964,8 @@ Same pipeline fields as petrol/EV/power/hospitals/fire/police/castles/libraries/
   admin-clip is 12; Channel Islands GG 0 / JE 2. Ruins IoM
   admin-clip is 73; Channel Islands GG 9 / JE 4. Golf courses IoM
   admin-clip is 9; Channel Islands GG 5 / JE 7. Galleries IoM
-  admin-clip is 1; Channel Islands GG 3 / JE 7.
+  admin-clip is 1; Channel Islands GG 3 / JE 7. Marketplaces IoM
+  admin-clip is 1; Channel Islands GG 1 / JE 2.
 - Extract uses polygon clip + buffer; features extremely close to a land border
   could in theory be included or excluded by the ~200 m buffer.
 
