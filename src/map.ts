@@ -256,13 +256,13 @@ export function createAtlas(container: HTMLElement): Atlas {
 
   let loaded = false;
   const ordered = [...LAYERS].sort((a, b) => a.z - b.z);
-  const OSM_STATIC = new Set<LayerId>(["petrol", "ev", "power", "hospitals", "fire-stations", "police", "castles", "libraries"]);
+  const OSM_STATIC = new Set<LayerId>(["petrol", "ev", "power", "hospitals", "fire-stations", "police", "castles", "libraries", "universities"]);
   const clustered = new Set<LayerId>([
-    "pubs", "schools", "churches", "post-offices", "mosques", "other-religious", "petrol", "ev", "power", "hospitals", "fire-stations", "police", "castles", "libraries",
+    "pubs", "schools", "churches", "post-offices", "mosques", "other-religious", "petrol", "ev", "power", "hospitals", "fire-stations", "police", "castles", "libraries", "universities",
     "census", "weather", "crime", "legends",
   ]);
   const minZoom = (id: LayerId) => id === "post-offices" ? 7 :
-    ["pubs", "schools", "churches", "other-religious", "mosques", "petrol", "ev", "libraries"].includes(id) ? 6 : 0;
+    ["pubs", "schools", "churches", "other-religious", "mosques", "petrol", "ev", "libraries", "universities"].includes(id) ? 6 : 0;
   const layerIds = (id: LayerId) => id === "roads" ? [id, "roads-hit"] :
     clustered.has(id) ? [id, `${id}-cluster`, `${id}-cluster-count`] : [id];
   const beforeFor = (z: number): string | undefined => {
