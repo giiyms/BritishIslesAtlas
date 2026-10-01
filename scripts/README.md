@@ -78,3 +78,13 @@ using the same admin-area Overpass + polygon-clip pipeline, querying
 python3 scripts/extract_osm_libraries.py
 ```
 
+## `extract_osm_universities.py`
+
+Rebuilds `public/data/universities.geojson` (and merges into `extract-meta.json`)
+using the same admin-area Overpass + polygon-clip pipeline, querying
+`amenity=university` (not colleges or schools).
+
+```bash
+python3 scripts/extract_osm_universities.py
+```
+

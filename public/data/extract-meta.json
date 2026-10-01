@@ -253,5 +253,37 @@
       "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
       "counting_caveat": "amenity=library only; universities, colleges, schools, bookshops, building=library without amenity=library, and mobile libraries without the tag are omitted"
     }
+  },
+  "universities": {
+    "extracted_at": "2026-10-01T00:18:50Z",
+    "method": "Overpass per-nation/territory bbox tiles clipped to OSM admin polygons (Nominatim); endpoint overpass.openstreetmap.fr",
+    "license": "ODbL 1.0",
+    "endpoint": "https://overpass.openstreetmap.fr/api/interpreter",
+    "layer": "universities",
+    "count": 986,
+    "coverage": "Admin-area extract (ENG/SCT/WLS/NIR/IE/IM/GG/JE); IoM≈2; GG≈0; JE≈0; northern France bleed≈0",
+    "region_counts": {
+      "england": 775,
+      "scotland": 84,
+      "wales": 5,
+      "northern-ireland": 14,
+      "ireland": 106,
+      "isle-of-man": 2,
+      "guernsey": 0,
+      "jersey": 0
+    },
+    "limitations": {
+      "isle_of_man": 2,
+      "channel_islands": 0,
+      "guernsey": 0,
+      "jersey": 0,
+      "northern_france_approx": 0,
+      "ways_as_centre_points": 813,
+      "pipeline_generic_names": 60,
+      "pipeline_note_repeats_brand": 502,
+      "note_semantics": "pipeline field (brand/operator or 'OpenStreetMap'), not OSM note=*",
+      "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
+      "counting_caveat": "amenity=university only; colleges, schools, libraries, building=university without amenity=university, and faculties tagged only as amenity=college are omitted; feature counts are campus/site objects not institution counts"
+    }
   }
 }
