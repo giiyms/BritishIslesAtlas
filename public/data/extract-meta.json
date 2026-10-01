@@ -448,5 +448,38 @@
       "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
       "counting_caveat": "leisure=marina only; harbours, slipways, boat rentals, piers, leisure=harbour, and seamark marina tags without leisure=marina are omitted; feature counts are OSM objects not distinct marinas (a complex may be several nodes/ways/relations); disused sites still tagged leisure=marina are included; multipolygon relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry leisure=marina"
     }
+  },
+  "zoos": {
+    "extracted_at": "2026-10-01T01:35:17Z",
+    "method": "Overpass per-nation/territory bbox tiles clipped to OSM admin polygons (Nominatim); endpoint overpass.openstreetmap.fr",
+    "license": "ODbL 1.0",
+    "endpoint": "https://overpass.openstreetmap.fr/api/interpreter",
+    "layer": "zoos",
+    "count": 309,
+    "coverage": "Admin-area extract (ENG/SCT/WLS/NIR/IE/IM/GG/JE); IoM≈1; GG≈0; JE≈1; northern France bleed≈0",
+    "region_counts": {
+      "england": 231,
+      "scotland": 31,
+      "wales": 16,
+      "northern-ireland": 7,
+      "ireland": 22,
+      "isle-of-man": 1,
+      "guernsey": 0,
+      "jersey": 1
+    },
+    "limitations": {
+      "isle_of_man": 1,
+      "channel_islands": 1,
+      "guernsey": 0,
+      "jersey": 1,
+      "northern_france_approx": 0,
+      "ways_as_centre_points": 237,
+      "relations_as_centre_points": 16,
+      "pipeline_generic_names": 20,
+      "pipeline_note_repeats_brand": 45,
+      "note_semantics": "pipeline field (brand/operator or 'OpenStreetMap'), not OSM note=*",
+      "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
+      "counting_caveat": "tourism=zoo only; aquariums, wildlife parks, animal shelters/boarding, theme parks, and safari/farm parks without tourism=zoo are omitted; feature counts are OSM objects not distinct zoos (a complex may be several nodes/ways/relations); disused sites still tagged tourism=zoo are included; multipolygon relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry tourism=zoo"
+    }
   }
 }

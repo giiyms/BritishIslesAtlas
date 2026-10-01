@@ -15,7 +15,8 @@ fire stations by `scripts/extract_osm_fire_stations.py`; police by
 `scripts/extract_osm_railway_stations.py`; aerodromes by
 `scripts/extract_osm_aerodromes.py`; ferry terminals by
 `scripts/extract_osm_ferry_terminals.py`; marinas by
-`scripts/extract_osm_marinas.py`.
+`scripts/extract_osm_marinas.py`; zoos by
+`scripts/extract_osm_zoos.py`.
 Shared pipeline:
 
 1. Load OSM admin polygons for England, Scotland, Wales, Northern Ireland,
@@ -26,7 +27,7 @@ Shared pipeline:
 3. **Clip** results to the admin polygon (+ ~200 m buffer) so mainland France
    and cross-border spill are dropped.
 4. Deduplicate by OSM `type/id`. Ways are stored as **centre points**
-   (`out center`). The aerodromes, ferry-terminals, and marinas extractors
+   (`out center`). The aerodromes, ferry-terminals, marinas, and zoos extractors
    also query **relations** and store them as centre points the same way;
    other layers remain node+way only unless noted.
 
@@ -380,6 +381,29 @@ Same pipeline fields as petrol/EV/power/hospitals/fire/police/castles/libraries/
 `"Marina"`. Ways as centre points: 826 of 1 198; relations as centre points:
 31 of 1 198. Pipeline-filled generic names: 286 (~24%).
 
+## Zoos (`zoos`)
+
+| | |
+|---|---|
+| **File** | `public/data/zoos.geojson` |
+| **Features** | 309 points (not a round cap) |
+| **Coverage** | Same admin-area footprint: England 231, Scotland 31, Wales 16, Northern Ireland 7, Ireland 22, Isle of Man 1, Guernsey 0, Jersey 1. **Northern France bleed ≈ 0**. |
+| **Sample vs full** | Admin-area extract of OSM `tourism=zoo` at extract time (nodes, ways, **and relations**). Aquariums (`tourism=aquarium`), wildlife parks without `tourism=zoo`, animal shelters/boarding, theme parks, and safari/farm parks lacking the zoo tag are **not** included. Disused zoos that remain tagged `tourism=zoo` **are** included. OSM often tags petting / children's farms as `tourism=zoo` — those objects are included when so tagged. **Feature counts are OSM objects, not distinct zoos** (a complex may appear as several nodes/ways/relations). Large sites mapped as multipolygon relations are included via Overpass centre points. |
+| **Source** | [OpenStreetMap](https://www.openstreetmap.org/) via Overpass API |
+| **Query** | `tourism=zoo` nodes, ways, and relations (`out center tags`) |
+| **Endpoint used** | `https://overpass.openstreetmap.fr/api/interpreter` |
+| **Extract date (UTC)** | 2026-10-01T01:35:17Z |
+| **Method** | Same admin-area pipeline as aerodromes/ferry terminals/marinas (`scripts/extract_osm_zoos.py`), including OSM relations |
+| **License** | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/) — © OpenStreetMap contributors |
+| **Attribution** | © OpenStreetMap contributors |
+
+### Property semantics (pipeline)
+
+Same pipeline fields as petrol/EV/power/hospitals/fire/police/castles/libraries/universities/museums/railway stations/aerodromes/ferry terminals/marinas (`name`, optional `brand`/`operator`, `osm_id`,
+`osm_url`, pipeline `note`, `layer`, `source`). Generic missing names fill as
+`"Zoo"`. Ways as centre points: 237 of 309; relations as centre points:
+16 of 309. Pipeline-filled generic names: 20 (~6%).
+
 ## Remaining honest caveats
 
 - OSM tagging completeness varies; absence of a station on the map is not proof
@@ -446,6 +470,17 @@ Same pipeline fields as petrol/EV/power/hospitals/fire/police/castles/libraries/
   `leisure=marina` (dedupe by OSM `type/id` only). Counts are OSM objects,
   not distinct marinas. Isle of Man admin-clip is 2; Guernsey Bailiwick
   admin-clip 6 vs hard main-island bbox ≈ 5 (outer Bailiwick); Jersey 11.
+- Zoos layer is `tourism=zoo` only (not aquariums, wildlife parks without
+  the zoo tag, animal shelters/boarding, theme parks, or safari/farm parks
+  lacking `tourism=zoo`). Petting / children's farms tagged `tourism=zoo`
+  in OSM **are** included. Disused zoos still tagged `tourism=zoo` are
+  included. Extract includes **nodes, ways, and relations**; ways and
+  relations are Overpass centre points, not footprints. A site may appear
+  both as a relation and as member ways/nodes if both carry `tourism=zoo`
+  (dedupe by OSM `type/id` only). Counts are OSM objects, not distinct
+  zoos. Isle of Man admin-clip is 1; Guernsey Bailiwick admin-clip 0;
+  Jersey 1 (Jersey Zoo). Hard main-island bbox checks match admin-clip
+  for IoM/GG/JE at extract time.
 - Isle of Man has only 2 OSM hospitals at extract time — likely under-tagged
   relative to known sites; Channel Islands admin-clip counts are GG 4 / JE 4
   (hard bbox check slightly lower for Guernsey). Castles IoM admin-clip is 3;
@@ -457,7 +492,8 @@ Same pipeline fields as petrol/EV/power/hospitals/fire/police/castles/libraries/
   admin-clip is 13; Channel Islands GG 2 / JE 0. Aerodromes IoM
   admin-clip is 4; Channel Islands GG 2 / JE 1. Ferry terminals IoM
   admin-clip is 3; Channel Islands GG 7 / JE 2. Marinas IoM
-  admin-clip is 2; Channel Islands GG 6 / JE 11.
+  admin-clip is 2; Channel Islands GG 6 / JE 11. Zoos IoM
+  admin-clip is 1; Channel Islands GG 0 / JE 1.
 - Extract uses polygon clip + buffer; features extremely close to a land border
   could in theory be included or excluded by the ~200 m buffer.
 

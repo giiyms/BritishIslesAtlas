@@ -150,3 +150,17 @@ Relations included for large marinas mapped as multipolygons
 ```bash
 python3 scripts/extract_osm_marinas.py
 ```
+
+## `extract_osm_zoos.py`
+
+Rebuilds `public/data/zoos.geojson` (and merges into `extract-meta.json`)
+using the same admin-area Overpass + polygon-clip pipeline, querying
+`tourism=zoo` on **nodes, ways, and relations** (`out center tags`;
+not aquariums, wildlife parks, animal shelters/boarding, or theme parks
+without `tourism=zoo`).
+Relations included for large zoos mapped as multipolygons
+(Heathrow lesson).
+
+```bash
+python3 scripts/extract_osm_zoos.py
+```
