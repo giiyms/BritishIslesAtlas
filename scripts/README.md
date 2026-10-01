@@ -137,3 +137,16 @@ the amenity tag). Relations included for large terminals mapped as multipolygons
 python3 scripts/extract_osm_ferry_terminals.py
 ```
 
+
+## `extract_osm_marinas.py`
+
+Rebuilds `public/data/marinas.geojson` (and merges into `extract-meta.json`)
+using the same admin-area Overpass + polygon-clip pipeline, querying
+`leisure=marina` on **nodes, ways, and relations** (`out center tags`;
+not harbours, slipways, boat rentals, or piers without `leisure=marina`).
+Relations included for large marinas mapped as multipolygons
+(Heathrow lesson).
+
+```bash
+python3 scripts/extract_osm_marinas.py
+```

@@ -38,6 +38,9 @@ export const ICONS = {
   "ferry-terminals": icon(
     `<path d="M4 18.5h16"/><path d="M6.5 18.5 8 12.5h8l1.5 6"/><path d="M7.5 12.5 12 7l4.5 5.5"/><path d="M12 7V4.5"/><path d="M9.5 15.5h5"/>`,
   ),
+  marinas: icon(
+    `<path d="M4 19.5h16"/><path d="M6 16.5c2.2-1.8 4.2-2.8 6-2.8s3.8 1 6 2.8"/><path d="M12 4.5v9.2"/><path d="M9.2 7.2 12 4.5l2.8 2.7"/><circle cx="12" cy="14.2" r="1.3"/>`,
+  ),
   churches: icon(
     `<path d="M12 3v3M10.2 4.6h3.6"/><path d="M6 21V11.2L12 7l6 4.2V21"/><path d="M10 21v-4h4v4"/><path d="M4 21h16"/>`,
   ),
