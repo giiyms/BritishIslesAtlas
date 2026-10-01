@@ -675,6 +675,7 @@ const builders: Record<LayerId, () => Feature[]> = {
   roads: roadLayer,
   pubs: () => scatterLayer("pubs"),
   schools: () => scatterLayer("schools"),
+  libraries: () => [],
   hospitals: () => [],
   "fire-stations": () => [],
   police: () => [],

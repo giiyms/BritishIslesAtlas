@@ -221,5 +221,37 @@
       "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
       "counting_caveat": "historic=castle only; forts, manors, towers, ruins without castle tag, and archaeological sites are omitted; ruined castles still tagged historic=castle are included"
     }
+  },
+  "libraries": {
+    "extracted_at": "2026-10-01T00:08:36Z",
+    "method": "Overpass per-nation/territory bbox tiles clipped to OSM admin polygons (Nominatim); endpoint overpass.openstreetmap.fr",
+    "license": "ODbL 1.0",
+    "endpoint": "https://overpass.openstreetmap.fr/api/interpreter",
+    "layer": "libraries",
+    "count": 4293,
+    "coverage": "Admin-area extract (ENG/SCT/WLS/NIR/IE/IM/GG/JE); IoM≈7; GG≈3; JE≈1; northern France bleed≈0",
+    "region_counts": {
+      "england": 3110,
+      "scotland": 468,
+      "wales": 247,
+      "northern-ireland": 109,
+      "ireland": 348,
+      "isle-of-man": 7,
+      "guernsey": 3,
+      "jersey": 1
+    },
+    "limitations": {
+      "isle_of_man": 7,
+      "channel_islands": 4,
+      "guernsey": 3,
+      "jersey": 1,
+      "northern_france_approx": 0,
+      "ways_as_centre_points": 2591,
+      "pipeline_generic_names": 374,
+      "pipeline_note_repeats_brand": 1543,
+      "note_semantics": "pipeline field (brand/operator or 'OpenStreetMap'), not OSM note=*",
+      "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
+      "counting_caveat": "amenity=library only; universities, colleges, schools, bookshops, building=library without amenity=library, and mobile libraries without the tag are omitted"
+    }
   }
 }
