@@ -813,5 +813,38 @@
       "counting_caveat": "historic=ruins WITH name=* only; unnamed ruin fragments, historic=castle/archaeological_site/monument, ruins=yes on other keys, and building=ruins without historic=ruins are omitted; feature counts are OSM objects not distinct sites (a complex may be several nodes/ways/relations); disused sites still tagged historic=ruins with name are included; multipolygon relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry historic=ruins+name; raw unfiltered historic=ruins is timeout-prone Isles-wide so this extract uses name=* and fine regional tiling",
       "name_filter": "require name=* (unnamed ruins omitted)"
     }
+  },
+  "golf-courses": {
+    "extracted_at": "2026-10-01T05:12:01Z",
+    "method": "Overpass per-nation/territory bbox tiles clipped to OSM admin polygons (Nominatim); endpoint overpass.openstreetmap.fr",
+    "license": "ODbL 1.0",
+    "endpoint": "https://overpass.openstreetmap.fr/api/interpreter",
+    "layer": "golf-courses",
+    "count": 3759,
+    "coverage": "Admin-area extract (ENG/SCT/WLS/NIR/IE/IM/GG/JE); IoM≈9; GG≈4; JE≈7; northern France bleed≈0",
+    "region_counts": {
+      "england": 2266,
+      "scotland": 603,
+      "wales": 207,
+      "northern-ireland": 113,
+      "ireland": 549,
+      "isle-of-man": 9,
+      "guernsey": 5,
+      "jersey": 7
+    },
+    "limitations": {
+      "isle_of_man": 9,
+      "channel_islands": 11,
+      "guernsey": 4,
+      "jersey": 7,
+      "northern_france_approx": 0,
+      "ways_as_centre_points": 3211,
+      "relations_as_centre_points": 499,
+      "pipeline_generic_names": 275,
+      "pipeline_note_repeats_brand": 313,
+      "note_semantics": "pipeline field (brand/operator or 'OpenStreetMap'), not OSM note=*",
+      "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
+      "counting_caveat": "leisure=golf_course only; driving ranges without leisure=golf_course, leisure=sports_centre, leisure=pitch, leisure=miniature_golf, and golf=* without leisure=golf_course are omitted; feature counts are OSM objects not distinct courses (a complex may be several nodes/ways/relations); disused sites still tagged leisure=golf_course are included; multipolygon relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry leisure=golf_course; unnamed courses keep the generic label Golf course"
+    }
   }
 }
