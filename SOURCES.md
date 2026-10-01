@@ -11,7 +11,8 @@ fire stations by `scripts/extract_osm_fire_stations.py`; police by
 `scripts/extract_osm_police.py`; castles by `scripts/extract_osm_castles.py`; libraries by
 `scripts/extract_osm_libraries.py`; universities by
 `scripts/extract_osm_universities.py`; museums by
-`scripts/extract_osm_museums.py`.
+`scripts/extract_osm_museums.py`; railway stations by
+`scripts/extract_osm_railway_stations.py`.
 Shared pipeline:
 
 1. Load OSM admin polygons for England, Scotland, Wales, Northern Ireland,
@@ -278,6 +279,31 @@ Same pipeline fields as petrol/EV/power/hospitals/fire/police/castles/libraries/
 `"Museum"`. Ways as centre points: 1 858 of 3 315. Pipeline-filled generic
 names: 92 (~3%).
 
+
+
+## Railway stations (`railway-stations`)
+
+| | |
+|---|---|
+| **File** | `public/data/railway-stations.geojson` |
+| **Features** | 3 822 points (not a round cap) |
+| **Coverage** | Same admin-area footprint: England 2 842, Scotland 412, Wales 329, Northern Ireland 65, Ireland 159, Isle of Man 13, Guernsey 2, Jersey 0. **Northern France bleed ≈ 0**. |
+| **Sample vs full** | Admin-area extract of OSM `railway=station` at extract time. Halts (`railway=halt`), subway entrances (`railway=subway_entrance`), tram stops (`railway=tram_stop`), bus stations (`amenity=bus_station`), `public_transport=station` without `railway=station`, and `building=train_station` without the railway tag are **not** included. Heritage / disused stations that remain tagged `railway=station` **are** included. **Feature counts are OSM objects, not distinct stations** (a complex may appear as several ways/nodes). |
+| **Source** | [OpenStreetMap](https://www.openstreetmap.org/) via Overpass API |
+| **Query** | `railway=station` nodes and ways (`out center tags`) |
+| **Endpoint used** | `https://overpass.openstreetmap.fr/api/interpreter` |
+| **Extract date (UTC)** | 2026-10-01T00:39:16Z |
+| **Method** | Same admin-area pipeline as petrol/EV/power/hospitals/fire/police/castles/libraries/universities/museums (`scripts/extract_osm_railway_stations.py`) |
+| **License** | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/) — © OpenStreetMap contributors |
+| **Attribution** | © OpenStreetMap contributors |
+
+### Property semantics (pipeline)
+
+Same pipeline fields as petrol/EV/power/hospitals/fire/police/castles/libraries/universities/museums (`name`, optional `brand`/`operator`, `osm_id`,
+`osm_url`, pipeline `note`, `layer`, `source`). Generic missing names fill as
+`"Railway station"`. Ways as centre points: 14 of 3 822. Pipeline-filled generic
+names: 44 (~1%).
+
 ## Remaining honest caveats
 
 - OSM tagging completeness varies; absence of a station on the map is not proof
@@ -305,6 +331,14 @@ names: 92 (~3%).
   tourism tag). Counts are OSM objects, not distinct institutions. Guernsey
   Bailiwick admin-clip is 14 vs hard main-island bbox ≈ 12 (Alderney / Sark /
   Herm sites included in Bailiwick polygon).
+- Railway stations layer is `railway=station` only (not halts, subway
+  entrances, tram stops, bus stations, or `public_transport=station` /
+  `building=train_station` without the railway tag). Heritage / disused
+  stations still tagged `railway=station` are included. Counts are OSM
+  objects, not distinct stations. Guernsey Bailiwick admin-clip is 2 vs
+  hard main-island bbox ≈ 0 (outer Bailiwick sites); Jersey 0 (no active
+  mainline; expected). Isle of Man admin-clip is 13 (heritage lines such as
+  the Steam Railway / MER are commonly tagged `railway=station`).
 - Isle of Man has only 2 OSM hospitals at extract time — likely under-tagged
   relative to known sites; Channel Islands admin-clip counts are GG 4 / JE 4
   (hard bbox check slightly lower for Guernsey). Castles IoM admin-clip is 3;
@@ -312,7 +346,8 @@ names: 92 (~3%).
   Sark / Herm fortifications included in Bailiwick polygon). Libraries IoM
   admin-clip is 7; Channel Islands GG 3 / JE 1. Universities IoM
   admin-clip is 2; Channel Islands GG 0 / JE 0. Museums IoM
-  admin-clip is 24; Channel Islands GG 14 / JE 16.
+  admin-clip is 24; Channel Islands GG 14 / JE 16. Railway stations IoM
+  admin-clip is 13; Channel Islands GG 2 / JE 0.
 - Extract uses polygon clip + buffer; stations extremely close to a land border
   could in theory be included or excluded by the ~200 m buffer.
 
