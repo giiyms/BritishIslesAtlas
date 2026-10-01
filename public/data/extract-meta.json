@@ -846,5 +846,38 @@
       "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
       "counting_caveat": "leisure=golf_course only; driving ranges without leisure=golf_course, leisure=sports_centre, leisure=pitch, leisure=miniature_golf, and golf=* without leisure=golf_course are omitted; feature counts are OSM objects not distinct courses (a complex may be several nodes/ways/relations); disused sites still tagged leisure=golf_course are included; multipolygon relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry leisure=golf_course; unnamed courses keep the generic label Golf course"
     }
+  },
+  "galleries": {
+    "extracted_at": "2026-10-01T15:24:23Z",
+    "method": "Overpass per-nation/territory bbox tiles clipped to OSM admin polygons (Nominatim); endpoint overpass.openstreetmap.fr",
+    "license": "ODbL 1.0",
+    "endpoint": "https://overpass.openstreetmap.fr/api/interpreter",
+    "layer": "galleries",
+    "count": 1390,
+    "coverage": "Admin-area extract (ENG/SCT/WLS/NIR/IE/IM/GG/JE); IoM≈1; GG≈1; JE≈7; northern France bleed≈0",
+    "region_counts": {
+      "england": 1014,
+      "scotland": 160,
+      "wales": 81,
+      "northern-ireland": 18,
+      "ireland": 106,
+      "isle-of-man": 1,
+      "guernsey": 3,
+      "jersey": 7
+    },
+    "limitations": {
+      "isle_of_man": 1,
+      "channel_islands": 8,
+      "guernsey": 1,
+      "jersey": 7,
+      "northern_france_approx": 0,
+      "ways_as_centre_points": 434,
+      "relations_as_centre_points": 3,
+      "pipeline_generic_names": 99,
+      "pipeline_note_repeats_brand": 119,
+      "note_semantics": "pipeline field (brand/operator or 'OpenStreetMap'), not OSM note=*",
+      "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
+      "counting_caveat": "tourism=gallery only; tourism=museum, amenity=arts_centre, shop=art without tourism=gallery, and tourism=attraction without tourism=gallery are omitted; complements museums layer which excludes galleries; feature counts are OSM objects not distinct galleries (a complex may be several nodes/ways/relations); disused sites still tagged tourism=gallery are included; multipolygon relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry tourism=gallery; unnamed galleries keep the generic label Gallery"
+    }
   }
 }
