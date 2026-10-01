@@ -23,7 +23,8 @@ fire stations by `scripts/extract_osm_fire_stations.py`; police by
 `scripts/extract_osm_stadiums.py`; theme parks by
 `scripts/extract_osm_theme_parks.py`; viewpoints by
 `scripts/extract_osm_viewpoints.py`; arts centres by
-`scripts/extract_osm_arts_centres.py`.
+`scripts/extract_osm_arts_centres.py`; aquariums by
+`scripts/extract_osm_aquariums.py`.
 Shared pipeline:
 
 1. Load OSM admin polygons for England, Scotland, Wales, Northern Ireland,
@@ -34,7 +35,7 @@ Shared pipeline:
 3. **Clip** results to the admin polygon (+ ~200 m buffer) so mainland France
    and cross-border spill are dropped.
 4. Deduplicate by OSM `type/id`. Ways are stored as **centre points**
-   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme-parks, viewpoints, and arts-centres extractors
+   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme-parks, viewpoints, arts-centres, and aquariums extractors
    also query **relations** and store them as centre points the same way;
    other layers remain node+way only unless noted.
 
@@ -573,6 +574,30 @@ Same pipeline fields as petrol/EV/power/hospitals/fire/police/castles/libraries/
 `"Arts centre"`. Ways as centre points: 481 of 870; relations as centre points:
 9 of 870. Pipeline-filled generic names: 19 (~2%).
 
+
+## Aquariums (`aquariums`)
+
+| | |
+|---|---|
+| **File** | `public/data/aquariums.geojson` |
+| **Features** | 52 points (not a round cap) |
+| **Coverage** | Same admin-area footprint: England 41, Scotland 5, Wales 2, Northern Ireland 1, Ireland 3, Isle of Man 0, Guernsey 0, Jersey 0. **Northern France bleed ≈ 0**. |
+| **Sample vs full** | Admin-area extract of OSM `tourism=aquarium` at extract time (nodes, ways, **and relations**). Zoos (`tourism=zoo`), generic attractions (`tourism=attraction`), pet shops, and animal boarding without `tourism=aquarium` are **not** included. Koi / ornamental fish shops that carry `tourism=aquarium` in OSM **are** included (tagging noise). Disused sites that remain tagged `tourism=aquarium` **are** included. **Feature counts are OSM objects, not distinct aquariums** (a complex may appear as several nodes/ways/relations). Large sites mapped as multipolygon relations are included via Overpass centre points. Sparse Isles-wide inventory (~52 objects); major sites may still be tagged only as `tourism=attraction` or `tourism=zoo`. |
+| **Source** | [OpenStreetMap](https://www.openstreetmap.org/) via Overpass API |
+| **Query** | `tourism=aquarium` nodes, ways, and relations (`out center tags`) |
+| **Endpoint used** | `https://overpass.openstreetmap.fr/api/interpreter` |
+| **Extract date (UTC)** | 2026-10-01T03:27:43Z |
+| **Method** | Same admin-area pipeline as aerodromes/ferry terminals/marinas/zoos/theatres/battlefields/cinemas/stadiums/theme parks/viewpoints/arts centres (`scripts/extract_osm_aquariums.py`), including OSM relations |
+| **License** | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/) — © OpenStreetMap contributors |
+| **Attribution** | © OpenStreetMap contributors |
+
+### Property semantics (pipeline)
+
+Same pipeline fields as petrol/EV/power/hospitals/fire/police/castles/libraries/universities/museums/railway stations/aerodromes/ferry terminals/marinas/zoos/theatres/battlefields/cinemas/stadiums/theme parks/viewpoints/arts centres (`name`, optional `brand`/`operator`, `osm_id`,
+`osm_url`, pipeline `note`, `layer`, `source`). Generic missing names fill as
+`"Aquarium"`. Ways as centre points: 38 of 52; relations as centre points:
+1 of 52. Pipeline-filled generic names: 5 (~10%).
+
 ## Remaining honest caveats
 
 - OSM tagging completeness varies; absence of a station on the map is not proof
@@ -719,6 +744,16 @@ Same pipeline fields as petrol/EV/power/hospitals/fire/police/castles/libraries/
   (dedupe by OSM `type/id` only). Counts are OSM objects, not distinct
   centres. Isle of Man admin-clip is 3; Guernsey Bailiwick admin-clip 1;
   Jersey 0 (expected under-tagging).
+- Aquariums layer is `tourism=aquarium` only (not zoos, generic attractions,
+  pet shops, or animal boarding without the tourism tag). Koi / ornamental
+  fish shops that carry `tourism=aquarium` in OSM **are** included. Disused
+  sites still tagged `tourism=aquarium` are included. Extract includes
+  **nodes, ways, and relations**; ways and relations are Overpass centre
+  points, not footprints. A site may appear both as a relation and as member
+  ways/nodes if both carry `tourism=aquarium` (dedupe by OSM `type/id` only).
+  Counts are OSM objects, not distinct aquariums. Sparse Isles-wide inventory
+  (~52 objects); major sites may still lack the tag. Isle of Man admin-clip
+  is 0; Channel Islands GG 0 / JE 0 (expected under-tagging).
 - Isle of Man has only 2 OSM hospitals at extract time — likely under-tagged
   relative to known sites; Channel Islands admin-clip counts are GG 4 / JE 4
   (hard bbox check slightly lower for Guernsey). Castles IoM admin-clip is 3;
@@ -737,7 +772,8 @@ Same pipeline fields as petrol/EV/power/hospitals/fire/police/castles/libraries/
   admin-clip is 0; Channel Islands GG 2 / JE 1. Theme parks IoM
   admin-clip is 0; Channel Islands GG 0 / JE 0. Viewpoints IoM
   admin-clip is 26; Channel Islands GG 43 / JE 41. Arts centres IoM
-  admin-clip is 3; Channel Islands GG 1 / JE 0.
+  admin-clip is 3; Channel Islands GG 1 / JE 0. Aquariums IoM
+  admin-clip is 0; Channel Islands GG 0 / JE 0.
 - Extract uses polygon clip + buffer; features extremely close to a land border
   could in theory be included or excluded by the ~200 m buffer.
 

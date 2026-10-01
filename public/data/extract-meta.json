@@ -712,5 +712,38 @@
       "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
       "counting_caveat": "amenity=arts_centre only; theatres, cinemas, community centres, museums, galleries, and attractions without amenity=arts_centre are omitted; feature counts are OSM objects not distinct centres (a complex may be several nodes/ways/relations); disused sites still tagged amenity=arts_centre are included; multipolygon relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry amenity=arts_centre"
     }
+  },
+  "aquariums": {
+    "extracted_at": "2026-10-01T03:27:43Z",
+    "method": "Overpass per-nation/territory bbox tiles clipped to OSM admin polygons (Nominatim); endpoint overpass.openstreetmap.fr",
+    "license": "ODbL 1.0",
+    "endpoint": "https://overpass.openstreetmap.fr/api/interpreter",
+    "layer": "aquariums",
+    "count": 52,
+    "coverage": "Admin-area extract (ENG/SCT/WLS/NIR/IE/IM/GG/JE); IoM≈0; GG≈0; JE≈0; northern France bleed≈0",
+    "region_counts": {
+      "england": 41,
+      "scotland": 5,
+      "wales": 2,
+      "northern-ireland": 1,
+      "ireland": 3,
+      "isle-of-man": 0,
+      "guernsey": 0,
+      "jersey": 0
+    },
+    "limitations": {
+      "isle_of_man": 0,
+      "channel_islands": 0,
+      "guernsey": 0,
+      "jersey": 0,
+      "northern_france_approx": 0,
+      "ways_as_centre_points": 38,
+      "relations_as_centre_points": 1,
+      "pipeline_generic_names": 5,
+      "pipeline_note_repeats_brand": 10,
+      "note_semantics": "pipeline field (brand/operator or 'OpenStreetMap'), not OSM note=*",
+      "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
+      "counting_caveat": "tourism=aquarium only; zoos, generic attractions, pet shops, and animal boarding without tourism=aquarium are omitted; koi/ornamental shops that carry tourism=aquarium in OSM are included; feature counts are OSM objects not distinct aquariums (a complex may be several nodes/ways/relations); disused sites still tagged tourism=aquarium are included; multipolygon relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry tourism=aquarium"
+    }
   }
 }
