@@ -879,5 +879,38 @@
       "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
       "counting_caveat": "tourism=gallery only; tourism=museum, amenity=arts_centre, shop=art without tourism=gallery, and tourism=attraction without tourism=gallery are omitted; complements museums layer which excludes galleries; feature counts are OSM objects not distinct galleries (a complex may be several nodes/ways/relations); disused sites still tagged tourism=gallery are included; multipolygon relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry tourism=gallery; unnamed galleries keep the generic label Gallery"
     }
+  },
+  "marketplaces": {
+    "extracted_at": "2026-10-01T15:39:44Z",
+    "method": "Overpass per-nation/territory bbox tiles clipped to OSM admin polygons (Nominatim); endpoint overpass.openstreetmap.fr",
+    "license": "ODbL 1.0",
+    "endpoint": "https://overpass.openstreetmap.fr/api/interpreter",
+    "layer": "marketplaces",
+    "count": 943,
+    "coverage": "Admin-area extract (ENG/SCT/WLS/NIR/IE/IM/GG/JE); IoM≈1; GG≈1; JE≈2; northern France bleed≈0",
+    "region_counts": {
+      "england": 747,
+      "scotland": 44,
+      "wales": 45,
+      "northern-ireland": 13,
+      "ireland": 90,
+      "isle-of-man": 1,
+      "guernsey": 1,
+      "jersey": 2
+    },
+    "limitations": {
+      "isle_of_man": 1,
+      "channel_islands": 3,
+      "guernsey": 1,
+      "jersey": 2,
+      "northern_france_approx": 0,
+      "ways_as_centre_points": 538,
+      "relations_as_centre_points": 15,
+      "pipeline_generic_names": 80,
+      "pipeline_note_repeats_brand": 131,
+      "note_semantics": "pipeline field (brand/operator or 'OpenStreetMap'), not OSM note=*",
+      "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
+      "counting_caveat": "amenity=marketplace only; shop=marketplace without amenity=marketplace, street_vendor, shop=convenience, and farmers markets without amenity=marketplace are omitted; feature counts are OSM objects not distinct markets (a complex may be several nodes/ways/relations); disused sites still tagged amenity=marketplace are included; multipolygon relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry amenity=marketplace; unnamed marketplaces keep the generic label Marketplace"
+    }
   }
 }
