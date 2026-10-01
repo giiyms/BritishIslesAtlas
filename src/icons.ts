@@ -26,6 +26,9 @@ export const ICONS = {
   universities: icon(
     `<path d="M3 10 12 4l9 6"/><path d="M5 10.5V20h14v-9.5"/><path d="M9 20v-5h6v5"/><path d="M12 10.5v2"/>`,
   ),
+  museums: icon(
+    `<path d="M3 10 12 4l9 6"/><path d="M5 10.5V20h14v-9.5"/><path d="M4 20h16"/><path d="M8 14h2v4H8zM14 14h2v4h-2zM11 12h2v6h-2z"/>`,
+  ),
   churches: icon(
     `<path d="M12 3v3M10.2 4.6h3.6"/><path d="M6 21V11.2L12 7l6 4.2V21"/><path d="M10 21v-4h4v4"/><path d="M4 21h16"/>`,
   ),
