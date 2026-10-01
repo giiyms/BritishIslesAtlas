@@ -24,7 +24,9 @@ Shared pipeline:
 3. **Clip** results to the admin polygon (+ ~200 m buffer) so mainland France
    and cross-border spill are dropped.
 4. Deduplicate by OSM `type/id`. Ways are stored as **centre points**
-   (`out center`).
+   (`out center`). The aerodromes extractor also queries **relations** and
+   stores them as centre points the same way; other layers remain
+   node+way only unless noted.
 
 Overpass `area["ISO3166-…"]` filters were preferred, but
 `overpass.openstreetmap.fr` currently errors on area queries
@@ -312,14 +314,14 @@ names: 44 (~1%).
 | | |
 |---|---|
 | **File** | `public/data/aerodromes.geojson` |
-| **Features** | 885 points (not a round cap) |
-| **Coverage** | Same admin-area footprint: England 639, Scotland 86, Wales 35, Northern Ireland 26, Ireland 92, Isle of Man 4, Guernsey 2, Jersey 1. **Northern France bleed ≈ 0**. |
-| **Sample vs full** | Admin-area extract of OSM `aeroway=aerodrome` at extract time. Helipads (`aeroway=helipad`), airstrips tagged only as `aeroway=airstrip` (not `aerodrome`), runways, taxiways, hangars, terminals (`aeroway=terminal`), and gates are **not** included. Military / disused sites that remain tagged `aeroway=aerodrome` **are** included. **Feature counts are OSM objects, not distinct airports** (a complex may appear as several ways/nodes). |
+| **Features** | 910 points (not a round cap) |
+| **Coverage** | Same admin-area footprint: England 654, Scotland 89, Wales 36, Northern Ireland 28, Ireland 96, Isle of Man 4, Guernsey 2, Jersey 1. **Northern France bleed ≈ 0**. |
+| **Sample vs full** | Admin-area extract of OSM `aeroway=aerodrome` at extract time (nodes, ways, **and relations**). Helipads (`aeroway=helipad`), airstrips tagged only as `aeroway=airstrip` (not `aerodrome`), runways, taxiways, hangars, terminals (`aeroway=terminal`), and gates are **not** included. Military / disused sites that remain tagged `aeroway=aerodrome` **are** included. **Feature counts are OSM objects, not distinct airports** (a complex may appear as several nodes/ways/relations). Major sites mapped only as multipolygon relations (e.g. London Heathrow Airport `relation/14001268`) are included via Overpass centre points. |
 | **Source** | [OpenStreetMap](https://www.openstreetmap.org/) via Overpass API |
-| **Query** | `aeroway=aerodrome` nodes and ways (`out center tags`) |
+| **Query** | `aeroway=aerodrome` nodes, ways, and relations (`out center tags`) |
 | **Endpoint used** | `https://overpass.openstreetmap.fr/api/interpreter` |
-| **Extract date (UTC)** | 2026-10-01T00:49:25Z |
-| **Method** | Same admin-area pipeline as petrol/EV/power/hospitals/fire/police/castles/libraries/universities/museums/railway stations (`scripts/extract_osm_aerodromes.py`) |
+| **Extract date (UTC)** | 2026-10-01T01:01:25Z |
+| **Method** | Same admin-area pipeline as petrol/EV/power/hospitals/fire/police/castles/libraries/universities/museums/railway stations (`scripts/extract_osm_aerodromes.py`), extended to include OSM relations |
 | **License** | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/) — © OpenStreetMap contributors |
 | **Attribution** | © OpenStreetMap contributors |
 
@@ -327,8 +329,8 @@ names: 44 (~1%).
 
 Same pipeline fields as petrol/EV/power/hospitals/fire/police/castles/libraries/universities/museums/railway stations (`name`, optional `brand`/`operator`, `osm_id`,
 `osm_url`, pipeline `note`, `layer`, `source`). Generic missing names fill as
-`"Aerodrome"`. Ways as centre points: 379 of 885. Pipeline-filled generic
-names: 1 (~0%).
+`"Aerodrome"`. Ways as centre points: 379 of 910; relations as centre points:
+25 of 910. Pipeline-filled generic names: 1 (~0%).
 
 ## Remaining honest caveats
 
@@ -368,7 +370,11 @@ names: 1 (~0%).
 - Aerodromes layer is `aeroway=aerodrome` only (not helipads, airstrips
   tagged only `aeroway=airstrip`, runways, taxiways, hangars, terminals, or
   gates). Military / disused sites still tagged `aeroway=aerodrome` are
-  included. Counts are OSM objects, not distinct airports. Isle of Man
+  included. Extract includes **nodes, ways, and relations**; ways and
+  relations are Overpass centre points, not footprints. A site may appear
+  both as a relation and as member ways/nodes if both carry
+  `aeroway=aerodrome` (dedupe is by OSM `type/id` only — not by name or
+  ICAO). Counts are OSM objects, not distinct airports. Isle of Man
   admin-clip is 4; Guernsey Bailiwick admin-clip 2 vs hard main-island bbox
   ≈ 1 (outer Bailiwick, e.g. Alderney); Jersey 1 (Jersey Airport).
 - Isle of Man has only 2 OSM hospitals at extract time — likely under-tagged

@@ -115,8 +115,10 @@ python3 scripts/extract_osm_railway_stations.py
 
 Rebuilds `public/data/aerodromes.geojson` (and merges into `extract-meta.json`)
 using the same admin-area Overpass + polygon-clip pipeline, querying
-`aeroway=aerodrome` (not helipads, airstrips tagged `aeroway=airstrip`,
-runways, taxiways, hangars, or terminals).
+`aeroway=aerodrome` on **nodes, ways, and relations** (`out center tags`;
+not helipads, airstrips tagged `aeroway=airstrip`, runways, taxiways,
+hangars, or terminals). Relations are required for major sites mapped only
+as multipolygons (e.g. Heathrow).
 
 ```bash
 python3 scripts/extract_osm_aerodromes.py

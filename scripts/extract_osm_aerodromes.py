@@ -5,11 +5,12 @@ Same admin-area pipeline as extract_osm_railway_stations.py / museums:
 per-region Overpass bbox tiles clipped to OSM admin polygons
 (ENG/SCT/WLS/NIR/IE/IM/GG/JE).
 
-Tight scope: aeroway=aerodrome only. Does NOT include aeroway=helipad,
-aeroway=airstrip, aeroway=runway, aeroway=taxiway, aeroway=hangar,
-aeroway=terminal, or aeroway=gate. Military airfields still tagged
-aeroway=aerodrome ARE included. Disused/closed sites retaining the tag
-are included.
+Tight scope: aeroway=aerodrome only (nodes, ways, and relations;
+relations use Overpass centre points like ways). Does NOT include
+aeroway=helipad, aeroway=airstrip, aeroway=runway, aeroway=taxiway,
+aeroway=hangar, aeroway=terminal, or aeroway=gate. Military airfields
+still tagged aeroway=aerodrome ARE included. Disused/closed sites
+retaining the tag are included.
 """
 
 from __future__ import annotations
@@ -138,6 +139,7 @@ def fetch_bbox(
 (
   node["{tag_key}"="{tag_value}"]({south},{west},{north},{east});
   way["{tag_key}"="{tag_value}"]({south},{west},{north},{east});
+  relation["{tag_key}"="{tag_value}"]({south},{west},{north},{east});
 );
 out center tags;
 """
@@ -166,12 +168,13 @@ out center tags;
 def element_point(el: dict[str, Any]) -> tuple[str, str, float, float, dict[str, str]] | None:
     etype = el.get("type")
     eid = el.get("id")
-    if etype not in ("node", "way") or eid is None:
+    if etype not in ("node", "way", "relation") or eid is None:
         return None
     tags = el.get("tags") or {}
     if etype == "node":
         lon, lat = el.get("lon"), el.get("lat")
     else:
+        # Ways and relations: Overpass `out center` supplies a centroid.
         center = el.get("center") or {}
         lon, lat = center.get("lon"), center.get("lat")
     if lon is None or lat is None:
@@ -276,11 +279,13 @@ def extract_layer(
         )
 
     features: list[dict[str, Any]] = []
-    ways = generic = france = iom = gg = je = 0
+    ways = relations = generic = france = iom = gg = je = 0
     for feat in by_id.values():
         etype = feat.pop("_etype")
         if etype == "way":
             ways += 1
+        elif etype == "relation":
+            relations += 1
         props = feat["properties"]
         if props["name"] == cfg["generic_name"]:
             generic += 1
@@ -310,6 +315,7 @@ def extract_layer(
         "count": len(features),
         "region_counts": region_counts,
         "ways_as_centre_points": ways,
+        "relations_as_centre_points": relations,
         "pipeline_generic_names": generic,
         "pipeline_note_brand_or_osm": note_brand,
         "isle_of_man_bbox_count": iom,
@@ -413,6 +419,7 @@ def main() -> int:
             "jersey": stats["jersey_bbox_count"],
             "northern_france_approx": stats["northern_france_bleed_approx"],
             "ways_as_centre_points": stats["ways_as_centre_points"],
+            "relations_as_centre_points": stats["relations_as_centre_points"],
             "pipeline_generic_names": stats["pipeline_generic_names"],
             "pipeline_note_repeats_brand": stats["pipeline_note_brand_or_osm"],
             "note_semantics": "pipeline field (brand/operator or 'OpenStreetMap'), not OSM note=*",
@@ -424,8 +431,11 @@ def main() -> int:
                 "aeroway=airstrip (not aerodrome), runways, taxiways, "
                 "hangars, terminals, and gates are omitted; feature counts "
                 "are OSM objects not distinct airports (a complex may be "
-                "several ways/nodes); military / disused sites still tagged "
-                "aeroway=aerodrome are included"
+                "several nodes/ways/relations); military / disused sites "
+                "still tagged aeroway=aerodrome are included; multipolygon "
+                "relations use Overpass centre points (not footprints), and "
+                "a site may appear both as a relation and as member ways if "
+                "both carry aeroway=aerodrome"
             )
 
         all_meta[layer_name] = {

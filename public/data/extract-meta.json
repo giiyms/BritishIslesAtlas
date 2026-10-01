@@ -351,19 +351,19 @@
     }
   },
   "aerodromes": {
-    "extracted_at": "2026-10-01T00:49:25Z",
+    "extracted_at": "2026-10-01T01:01:25Z",
     "method": "Overpass per-nation/territory bbox tiles clipped to OSM admin polygons (Nominatim); endpoint overpass.openstreetmap.fr",
     "license": "ODbL 1.0",
     "endpoint": "https://overpass.openstreetmap.fr/api/interpreter",
     "layer": "aerodromes",
-    "count": 885,
+    "count": 910,
     "coverage": "Admin-area extract (ENG/SCT/WLS/NIR/IE/IM/GG/JE); IoM≈4; GG≈1; JE≈1; northern France bleed≈0",
     "region_counts": {
-      "england": 639,
-      "scotland": 86,
-      "wales": 35,
-      "northern-ireland": 26,
-      "ireland": 92,
+      "england": 654,
+      "scotland": 89,
+      "wales": 36,
+      "northern-ireland": 28,
+      "ireland": 96,
       "isle-of-man": 4,
       "guernsey": 2,
       "jersey": 1
@@ -375,11 +375,12 @@
       "jersey": 1,
       "northern_france_approx": 0,
       "ways_as_centre_points": 379,
+      "relations_as_centre_points": 25,
       "pipeline_generic_names": 1,
-      "pipeline_note_repeats_brand": 184,
+      "pipeline_note_repeats_brand": 199,
       "note_semantics": "pipeline field (brand/operator or 'OpenStreetMap'), not OSM note=*",
       "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
-      "counting_caveat": "aeroway=aerodrome only; helipads, airstrips tagged aeroway=airstrip (not aerodrome), runways, taxiways, hangars, terminals, and gates are omitted; feature counts are OSM objects not distinct airports (a complex may be several ways/nodes); military / disused sites still tagged aeroway=aerodrome are included"
+      "counting_caveat": "aeroway=aerodrome only; helipads, airstrips tagged aeroway=airstrip (not aerodrome), runways, taxiways, hangars, terminals, and gates are omitted; feature counts are OSM objects not distinct airports (a complex may be several nodes/ways/relations); military / disused sites still tagged aeroway=aerodrome are included; multipolygon relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry aeroway=aerodrome"
     }
   }
 }
