@@ -235,3 +235,15 @@ Relations included for large parks mapped as multipolygons
 python3 scripts/extract_osm_theme_parks.py
 ```
 
+## `extract_osm_viewpoints.py`
+
+Rebuilds `public/data/viewpoints.geojson` (and merges into `extract-meta.json`)
+using the same admin-area Overpass + polygon-clip pipeline, querying
+`tourism=viewpoint` on **nodes, ways, and relations** (`out center tags`;
+not peaks without `tourism=viewpoint`, attractions, benches with a view, or
+guideposts). Relations included for rare multipolygon viewpoints
+(Heathrow lesson).
+
+```bash
+python3 scripts/extract_osm_viewpoints.py
+```

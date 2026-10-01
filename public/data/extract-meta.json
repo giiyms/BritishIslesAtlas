@@ -646,5 +646,38 @@
       "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
       "counting_caveat": "tourism=theme_park only; generic attractions, zoos, water parks, amusement arcades, and fairgrounds without tourism=theme_park are omitted; feature counts are OSM objects not distinct parks (a complex may be several nodes/ways/relations); disused sites still tagged tourism=theme_park are included; indoor soft-play / activity centres tagged theme_park in OSM are included; multipolygon relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry tourism=theme_park"
     }
+  },
+  "viewpoints": {
+    "extracted_at": "2026-10-01T03:01:07Z",
+    "method": "Overpass per-nation/territory bbox tiles clipped to OSM admin polygons (Nominatim); endpoint overpass.openstreetmap.fr",
+    "license": "ODbL 1.0",
+    "endpoint": "https://overpass.openstreetmap.fr/api/interpreter",
+    "layer": "viewpoints",
+    "count": 5823,
+    "coverage": "Admin-area extract (ENG/SCT/WLS/NIR/IE/IM/GG/JE); IoM≈26; GG≈30; JE≈41; northern France bleed≈0",
+    "region_counts": {
+      "england": 3168,
+      "scotland": 1179,
+      "wales": 455,
+      "northern-ireland": 192,
+      "ireland": 719,
+      "isle-of-man": 26,
+      "guernsey": 43,
+      "jersey": 41
+    },
+    "limitations": {
+      "isle_of_man": 26,
+      "channel_islands": 71,
+      "guernsey": 30,
+      "jersey": 41,
+      "northern_france_approx": 0,
+      "ways_as_centre_points": 122,
+      "relations_as_centre_points": 1,
+      "pipeline_generic_names": 4221,
+      "pipeline_note_repeats_brand": 38,
+      "note_semantics": "pipeline field (brand/operator or 'OpenStreetMap'), not OSM note=*",
+      "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
+      "counting_caveat": "tourism=viewpoint only; natural=peak and mountain tops without tourism=viewpoint, tourism=attraction, amenity=bench with a view, information=guidepost, and scenic overlooks lacking the tourism tag are omitted; feature counts are OSM objects not distinct scenic spots (a site may be several nodes/ways/relations); orientation/direction=* is unused; ways and rare multipolygon relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry tourism=viewpoint"
+    }
   }
 }

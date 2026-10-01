@@ -21,7 +21,8 @@ fire stations by `scripts/extract_osm_fire_stations.py`; police by
 `scripts/extract_osm_battlefields.py`; cinemas by
 `scripts/extract_osm_cinemas.py`; stadiums by
 `scripts/extract_osm_stadiums.py`; theme parks by
-`scripts/extract_osm_theme_parks.py`.
+`scripts/extract_osm_theme_parks.py`; viewpoints by
+`scripts/extract_osm_viewpoints.py`.
 Shared pipeline:
 
 1. Load OSM admin polygons for England, Scotland, Wales, Northern Ireland,
@@ -32,7 +33,7 @@ Shared pipeline:
 3. **Clip** results to the admin polygon (+ ~200 m buffer) so mainland France
    and cross-border spill are dropped.
 4. Deduplicate by OSM `type/id`. Ways are stored as **centre points**
-   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, and theme-parks extractors
+   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme-parks, and viewpoints extractors
    also query **relations** and store them as centre points the same way;
    other layers remain node+way only unless noted.
 
@@ -524,6 +525,30 @@ Same pipeline fields as petrol/EV/power/hospitals/fire/police/castles/libraries/
 `"Theme park"`. Ways as centre points: 153 of 209; relations as centre points:
 8 of 209. Pipeline-filled generic names: 8 (~4%).
 
+## Viewpoints (`viewpoints`)
+
+| | |
+|---|---|
+| **File** | `public/data/viewpoints.geojson` |
+| **Features** | 5 823 points (not a round cap) |
+| **Coverage** | Same admin-area footprint: England 3 168, Scotland 1 179, Wales 455, Northern Ireland 192, Ireland 719, Isle of Man 26, Guernsey 43, Jersey 41. **Northern France bleed ≈ 0**. |
+| **Sample vs full** | Admin-area extract of OSM `tourism=viewpoint` at extract time (nodes, ways, **and relations**). Peaks / mountain tops without `tourism=viewpoint`, generic attractions (`tourism=attraction`), benches with a view (`amenity=bench`), guideposts (`information=guidepost`), and scenic overlooks lacking the tourism tag are **not** included. Orientation / `direction=*` tags are unused for geometry. **Feature counts are OSM objects, not distinct scenic spots** (a site may appear as several nodes/ways/relations). Rare multipolygon relations are included via Overpass centre points. |
+| **Source** | [OpenStreetMap](https://www.openstreetmap.org/) via Overpass API |
+| **Query** | `tourism=viewpoint` nodes, ways, and relations (`out center tags`) |
+| **Endpoint used** | `https://overpass.openstreetmap.fr/api/interpreter` |
+| **Extract date (UTC)** | 2026-10-01T03:01:07Z |
+| **Method** | Same admin-area pipeline as aerodromes/ferry terminals/marinas/zoos/theatres/battlefields/cinemas/stadiums/theme parks (`scripts/extract_osm_viewpoints.py`), including OSM relations |
+| **License** | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/) — © OpenStreetMap contributors |
+| **Attribution** | © OpenStreetMap contributors |
+
+### Property semantics (pipeline)
+
+Same pipeline fields as petrol/EV/power/hospitals/fire/police/castles/libraries/universities/museums/railway stations/aerodromes/ferry terminals/marinas/zoos/theatres/battlefields/cinemas/stadiums/theme parks (`name`, optional `brand`/`operator`, `osm_id`,
+`osm_url`, pipeline `note`, `layer`, `source`). Generic missing names fill as
+`"Viewpoint"`. Ways as centre points: 122 of 5 823; relations as centre points:
+1 of 5 823. Pipeline-filled generic names: 4 221 (~72%) — many viewpoints are
+untagged for `name` in OSM.
+
 ## Remaining honest caveats
 
 - OSM tagging completeness varies; absence of a station on the map is not proof
@@ -650,6 +675,17 @@ Same pipeline fields as petrol/EV/power/hospitals/fire/police/castles/libraries/
   objects, not distinct parks. Sparse Isles-wide inventory (~209 objects);
   major parks may still be tagged only as `tourism=attraction`. Isle of Man
   admin-clip is 0; Channel Islands GG 0 / JE 0 (expected under-tagging).
+- Viewpoints layer is `tourism=viewpoint` only (not `natural=peak` /
+  mountain tops without the tourism tag, `tourism=attraction`,
+  `amenity=bench` with a view, `information=guidepost`, or scenic overlooks
+  lacking `tourism=viewpoint`). Orientation / `direction=*` is unused.
+  Extract includes **nodes, ways, and relations**; ways and relations are
+  Overpass centre points, not footprints. A site may appear both as a
+  relation and as member ways/nodes if both carry `tourism=viewpoint`
+  (dedupe by OSM `type/id` only). Counts are OSM objects, not distinct
+  scenic spots. Many objects lack `name` (~72% pipeline generics at extract).
+  Isle of Man admin-clip is 26; Guernsey Bailiwick admin-clip 43 vs hard
+  main-island bbox ≈ 30 (outer Bailiwick); Jersey 41.
 - Isle of Man has only 2 OSM hospitals at extract time — likely under-tagged
   relative to known sites; Channel Islands admin-clip counts are GG 4 / JE 4
   (hard bbox check slightly lower for Guernsey). Castles IoM admin-clip is 3;
@@ -666,7 +702,8 @@ Same pipeline fields as petrol/EV/power/hospitals/fire/police/castles/libraries/
   admin-clip is 3; Channel Islands GG 1 / JE 2. Battlefields IoM
   admin-clip is 1; Channel Islands GG 0 / JE 0. Stadiums IoM
   admin-clip is 0; Channel Islands GG 2 / JE 1. Theme parks IoM
-  admin-clip is 0; Channel Islands GG 0 / JE 0.
+  admin-clip is 0; Channel Islands GG 0 / JE 0. Viewpoints IoM
+  admin-clip is 26; Channel Islands GG 43 / JE 41.
 - Extract uses polygon clip + buffer; features extremely close to a land border
   could in theory be included or excluded by the ~200 m buffer.
 
