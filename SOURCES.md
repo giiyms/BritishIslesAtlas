@@ -27,7 +27,8 @@ fire stations by `scripts/extract_osm_fire_stations.py`; police by
 `scripts/extract_osm_aquariums.py`; piers by
 `scripts/extract_osm_piers.py`; ruins by
 `scripts/extract_osm_ruins.py`; golf courses by
-`scripts/extract_osm_golf_courses.py`.
+`scripts/extract_osm_golf_courses.py`; galleries by
+`scripts/extract_osm_galleries.py`.
 Shared pipeline:
 
 1. Load OSM admin polygons for England, Scotland, Wales, Northern Ireland,
@@ -38,7 +39,7 @@ Shared pipeline:
 3. **Clip** results to the admin polygon (+ ~200 m buffer) so mainland France
    and cross-border spill are dropped.
 4. Deduplicate by OSM `type/id`. Ways are stored as **centre points**
-   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme-parks, viewpoints, arts-centres, aquariums, piers, ruins, and golf-courses extractors
+   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme-parks, viewpoints, arts-centres, aquariums, piers, ruins, golf-courses, and galleries extractors
    also query **relations** and store them as centre points the same way;
    other layers remain node+way only unless noted.
 
@@ -673,6 +674,30 @@ Same pipeline fields as petrol/EV/power/hospitals/fire/police/castles/libraries/
 499 of 3759. Pipeline-filled generic names: 275 (~7.3%).
 
 
+## Galleries (`galleries`)
+
+| | |
+|---|---|
+| **File** | `public/data/galleries.geojson` |
+| **Features** | 1390 points (not a round cap) |
+| **Coverage** | Same admin-area footprint: England 1014, Scotland 160, Wales 81, Northern Ireland 18, Ireland 106, Isle of Man 1, Guernsey 3, Jersey 7. **Northern France bleed ≈ 0**. |
+| **Sample vs full** | Admin-area extract of OSM `tourism=gallery` at extract time (nodes, ways, **and relations**). Museums (`tourism=museum`), arts centres (`amenity=arts_centre`), art shops (`shop=art`) without `tourism=gallery`, and generic attractions (`tourism=attraction`) without `tourism=gallery` are **not** included. This layer is the complement to the museums layer, which already excludes galleries in its sample-vs-full note. Disused galleries that remain tagged `tourism=gallery` **are** included. Unnamed galleries keep the generic label `"Gallery"`. **Feature counts are OSM objects, not distinct galleries** (a complex may appear as several nodes/ways/relations). Large sites mapped as multipolygon / site relations are included via Overpass centre points (Heathrow lesson). Default regional tiling `--max-span 2.0`. |
+| **Source** | [OpenStreetMap](https://www.openstreetmap.org/) via Overpass API |
+| **Query** | `tourism=gallery` nodes, ways, and relations (`out center tags`) |
+| **Endpoint used** | `https://overpass.openstreetmap.fr/api/interpreter` |
+| **Extract date (UTC)** | 2026-10-01T15:24:23Z |
+| **Method** | Same admin-area pipeline as aerodromes/ferry terminals/marinas/zoos/theatres/battlefields/cinemas/stadiums/theme parks/viewpoints/arts centres/aquariums/piers/ruins/golf courses (`scripts/extract_osm_galleries.py`), including OSM relations; default tile span 2.0° |
+| **License** | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/) — © OpenStreetMap contributors |
+| **Attribution** | © OpenStreetMap contributors |
+
+### Property semantics (pipeline)
+
+Same pipeline fields as petrol/EV/power/hospitals/fire/police/castles/libraries/universities/museums/railway stations/aerodromes/ferry terminals/marinas/zoos/theatres/battlefields/cinemas/stadiums/theme parks/viewpoints/arts centres/aquariums/piers/ruins/golf courses (`name`, optional `brand`/`operator`, `osm_id`,
+`osm_url`, pipeline `note`, `layer`, `source`). Generic missing names fill as
+`"Gallery"`. Ways as centre points: 434 of 1390; relations as centre points:
+3 of 1390. Pipeline-filled generic names: 99 (~7.1%).
+
+
 ## Remaining honest caveats
 
 - OSM tagging completeness varies; absence of a station on the map is not proof
@@ -697,9 +722,10 @@ Same pipeline fields as petrol/EV/power/hospitals/fire/police/castles/libraries/
   Channel Islands have 0 tagged universities (expected for GG/JE); IoM has 2.
 - Museums layer is `tourism=museum` only (not galleries, generic attractions,
   arts centres, antique shops, or `building=museum` / `historic=*` without the
-  tourism tag). Counts are OSM objects, not distinct institutions. Guernsey
-  Bailiwick admin-clip is 14 vs hard main-island bbox ≈ 12 (Alderney / Sark /
-  Herm sites included in Bailiwick polygon).
+  tourism tag). Galleries are covered by the separate `tourism=gallery`
+  layer (complement). Counts are OSM objects, not distinct institutions.
+  Guernsey Bailiwick admin-clip is 14 vs hard main-island bbox ≈ 12
+  (Alderney / Sark / Herm sites included in Bailiwick polygon).
 - Railway stations layer is `railway=station` only (not halts, subway
   entrances, tram stops, bus stations, or `public_transport=station` /
   `building=train_station` without the railway tag). Heritage / disused
@@ -866,6 +892,18 @@ Same pipeline fields as petrol/EV/power/hospitals/fire/police/castles/libraries/
   OSM `type/id` only). Counts are OSM objects, not distinct courses. Isle
   of Man admin-clip is 9; Channel Islands GG 5 / JE 7 (Guernsey Bailiwick
   admin-clip 5 vs hard main-island bbox ≈ 4).
+- Galleries layer is `tourism=gallery` only (not `tourism=museum`,
+  `amenity=arts_centre`, `shop=art` without `tourism=gallery`, or
+  `tourism=attraction` without `tourism=gallery`). Complements the museums
+  layer, which excludes galleries. Disused galleries still tagged
+  `tourism=gallery` are included. Unnamed galleries keep the generic label
+  `"Gallery"`. Extract includes **nodes, ways, and relations**; ways and
+  relations are Overpass centre points, not footprints (Heathrow lesson).
+  A site may appear both as a relation and as member ways/nodes if both
+  carry `tourism=gallery` (dedupe by OSM `type/id` only). Counts are OSM
+  objects, not distinct galleries. Isle of Man admin-clip is 1; Channel
+  Islands GG 3 / JE 7 (Guernsey Bailiwick admin-clip 3 vs hard main-island
+  bbox ≈ 1).
 - Isle of Man has only 2 OSM hospitals at extract time — likely under-tagged
   relative to known sites; Channel Islands admin-clip counts are GG 4 / JE 4
   (hard bbox check slightly lower for Guernsey). Castles IoM admin-clip is 3;
@@ -888,7 +926,8 @@ Same pipeline fields as petrol/EV/power/hospitals/fire/police/castles/libraries/
   admin-clip is 0; Channel Islands GG 0 / JE 0. Piers IoM
   admin-clip is 12; Channel Islands GG 0 / JE 2. Ruins IoM
   admin-clip is 73; Channel Islands GG 9 / JE 4. Golf courses IoM
-  admin-clip is 9; Channel Islands GG 5 / JE 7.
+  admin-clip is 9; Channel Islands GG 5 / JE 7. Galleries IoM
+  admin-clip is 1; Channel Islands GG 3 / JE 7.
 - Extract uses polygon clip + buffer; features extremely close to a land border
   could in theory be included or excluded by the ~200 m buffer.
 

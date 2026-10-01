@@ -77,6 +77,9 @@ export const ICONS = {
   "golf-courses": icon(
     `<circle cx="12" cy="17.5" r="2.2"/><path d="M12 15.3V5.5"/><path d="M12 5.5c3.2 0 5.5 1.4 5.5 3.2S15.2 12 12 12"/><path d="M12 5.5c-1.2.4-2 1.2-2 2.2"/>`,
   ),
+  galleries: icon(
+    `<rect x="3.5" y="5.5" width="17" height="13" rx="1.4"/><path d="M7 14.5 9.5 10l2.2 3.2L14.5 9l2.5 5.5"/><circle cx="8.2" cy="8.2" r="1.1"/>`,
+  ),
   churches: icon(
     `<path d="M12 3v3M10.2 4.6h3.6"/><path d="M6 21V11.2L12 7l6 4.2V21"/><path d="M10 21v-4h4v4"/><path d="M4 21h16"/>`,
   ),
