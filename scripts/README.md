@@ -110,3 +110,15 @@ using the same admin-area Overpass + polygon-clip pipeline, querying
 python3 scripts/extract_osm_railway_stations.py
 ```
 
+
+## `extract_osm_aerodromes.py`
+
+Rebuilds `public/data/aerodromes.geojson` (and merges into `extract-meta.json`)
+using the same admin-area Overpass + polygon-clip pipeline, querying
+`aeroway=aerodrome` (not helipads, airstrips tagged `aeroway=airstrip`,
+runways, taxiways, hangars, or terminals).
+
+```bash
+python3 scripts/extract_osm_aerodromes.py
+```
+
