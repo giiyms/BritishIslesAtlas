@@ -124,3 +124,16 @@ as multipolygons (e.g. Heathrow).
 python3 scripts/extract_osm_aerodromes.py
 ```
 
+## `extract_osm_ferry_terminals.py`
+
+Rebuilds `public/data/ferry-terminals.geojson` (and merges into `extract-meta.json`)
+using the same admin-area Overpass + polygon-clip pipeline, querying
+`amenity=ferry_terminal` on **nodes, ways, and relations** (`out center tags`;
+not piers, harbours, `route=ferry` ways, or `public_transport=station` without
+the amenity tag). Relations included for large terminals mapped as multipolygons
+(Heathrow lesson).
+
+```bash
+python3 scripts/extract_osm_ferry_terminals.py
+```
+

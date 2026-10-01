@@ -382,5 +382,38 @@
       "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
       "counting_caveat": "aeroway=aerodrome only; helipads, airstrips tagged aeroway=airstrip (not aerodrome), runways, taxiways, hangars, terminals, and gates are omitted; feature counts are OSM objects not distinct airports (a complex may be several nodes/ways/relations); military / disused sites still tagged aeroway=aerodrome are included; multipolygon relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry aeroway=aerodrome"
     }
+  },
+  "ferry-terminals": {
+    "extracted_at": "2026-10-01T01:09:48Z",
+    "method": "Overpass per-nation/territory bbox tiles clipped to OSM admin polygons (Nominatim); endpoint overpass.openstreetmap.fr",
+    "license": "ODbL 1.0",
+    "endpoint": "https://overpass.openstreetmap.fr/api/interpreter",
+    "layer": "ferry-terminals",
+    "count": 834,
+    "coverage": "Admin-area extract (ENG/SCT/WLS/NIR/IE/IM/GG/JE); IoM≈3; GG≈5; JE≈2; northern France bleed≈0",
+    "region_counts": {
+      "england": 435,
+      "scotland": 242,
+      "wales": 29,
+      "northern-ireland": 17,
+      "ireland": 99,
+      "isle-of-man": 3,
+      "guernsey": 7,
+      "jersey": 2
+    },
+    "limitations": {
+      "isle_of_man": 3,
+      "channel_islands": 7,
+      "guernsey": 5,
+      "jersey": 2,
+      "northern_france_approx": 0,
+      "ways_as_centre_points": 109,
+      "relations_as_centre_points": 3,
+      "pipeline_generic_names": 302,
+      "pipeline_note_repeats_brand": 169,
+      "note_semantics": "pipeline field (brand/operator or 'OpenStreetMap'), not OSM note=*",
+      "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
+      "counting_caveat": "amenity=ferry_terminal only; piers, harbours, route=ferry ways, public_transport=station without ferry_terminal, and ferry=* vehicle tags alone are omitted; feature counts are OSM objects not distinct terminals (a complex may be several nodes/ways/relations); disused sites still tagged amenity=ferry_terminal are included; multipolygon relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry amenity=ferry_terminal"
+    }
   }
 }
