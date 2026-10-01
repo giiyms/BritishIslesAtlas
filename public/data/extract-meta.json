@@ -547,5 +547,38 @@
       "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
       "counting_caveat": "historic=battlefield only; memorials, ruins, castles, and sites without historic=battlefield are omitted; feature counts are OSM objects not distinct battles (a site may be several nodes/ways/relations); commemorative / heritage sites still tagged historic=battlefield are included; multipolygon relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry historic=battlefield"
     }
+  },
+  "cinemas": {
+    "extracted_at": "2026-10-01T02:14:42Z",
+    "method": "Overpass per-nation/territory bbox tiles clipped to OSM admin polygons (Nominatim); endpoint overpass.openstreetmap.fr",
+    "license": "ODbL 1.0",
+    "endpoint": "https://overpass.openstreetmap.fr/api/interpreter",
+    "layer": "cinemas",
+    "count": 924,
+    "coverage": "Admin-area extract (ENG/SCT/WLS/NIR/IE/IM/GG/JE); IoM≈1; GG≈1; JE≈1; northern France bleed≈0",
+    "region_counts": {
+      "england": 681,
+      "scotland": 69,
+      "wales": 44,
+      "northern-ireland": 39,
+      "ireland": 87,
+      "isle-of-man": 1,
+      "guernsey": 2,
+      "jersey": 1
+    },
+    "limitations": {
+      "isle_of_man": 1,
+      "channel_islands": 2,
+      "guernsey": 1,
+      "jersey": 1,
+      "northern_france_approx": 0,
+      "ways_as_centre_points": 451,
+      "relations_as_centre_points": 2,
+      "pipeline_generic_names": 20,
+      "pipeline_note_repeats_brand": 509,
+      "note_semantics": "pipeline field (brand/operator or 'OpenStreetMap'), not OSM note=*",
+      "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
+      "counting_caveat": "amenity=cinema only; theatres, arts centres, community centres, nightclubs, and attractions without amenity=cinema are omitted; feature counts are OSM objects not distinct cinemas (a multiplex may be several nodes/ways/relations); disused sites still tagged amenity=cinema are included; multipolygon relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry amenity=cinema"
+    }
   }
 }

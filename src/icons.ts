@@ -50,6 +50,9 @@ export const ICONS = {
   battlefields: icon(
     `<path d="M6.5 20.5 12 4.5l5.5 16"/><path d="M8.2 14.5h7.6"/><path d="M12 4.5V3"/><circle cx="12" cy="18.5" r="1.2"/>`,
   ),
+  cinemas: icon(
+    `<rect x="3.5" y="6" width="17" height="12" rx="1.5"/><path d="M7 9.5h2.5M7 12h3.5M7 14.5h2.5"/><circle cx="15.5" cy="12" r="2.2"/><path d="M14.2 12h2.6"/>`,
+  ),
   churches: icon(
     `<path d="M12 3v3M10.2 4.6h3.6"/><path d="M6 21V11.2L12 7l6 4.2V21"/><path d="M10 21v-4h4v4"/><path d="M4 21h16"/>`,
   ),
