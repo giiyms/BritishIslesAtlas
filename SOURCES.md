@@ -33,7 +33,9 @@ fire stations by `scripts/extract_osm_fire_stations.py`; police by
 `scripts/extract_osm_nature_reserves.py`; camp sites by
 `scripts/extract_osm_camp_sites.py`; memorials by
 `scripts/extract_osm_memorials.py`.
-Shared pipeline:
+Westminster constituencies (GB) are ingested separately by
+`scripts/ingest_ons_pcon2024.py` from the ONS ArcGIS FeatureServer (not Overpass).
+Shared OSM pipeline:
 
 1. Load OSM admin polygons for England, Scotland, Wales, Northern Ireland,
    Ireland, Isle of Man, Guernsey, and Jersey (via Nominatim; cached under
@@ -800,8 +802,44 @@ a pipeline diagnostic. Ways as centre points: 792 of 14 851; relations as centre
 20 of 14 851; pipeline generic names: 5.
 
 
+## Constituencies (`constituencies`)
+
+| | |
+|---|---|
+| **File** | `public/data/constituencies-gb-2024.geojson` |
+| **Features** | **632** polygons (GB Westminster only) |
+| **Coverage** | England 543 + Scotland 57 + Wales 32 = **632**. Northern Ireland 18 seats **dropped** for v1 (different party system; deferred). Republic of Ireland, Isle of Man, and Channel Islands have no Westminster seats and are out of scope. Source download is the full UK set (650); ingest filters to GB. |
+| **Sample vs full** | Full ONS July 2024 Westminster Parliamentary Constituency boundaries (BGC), filtered to Great Britain. BGC is generalised (~20 m) and clipped to Mean High Water — suitable for web MapLibre; not survey-grade cadastral edges. |
+| **Source** | [Office for National Statistics](https://www.ons.gov.uk/) Open Geography Portal — Westminster Parliamentary Constituencies (July 2024) Boundaries UK **BGC** |
+| **As-of** | 4 July 2024 (post-2023 Boundary Commission review; used for the 2024 general election) |
+| **Endpoint used** | ArcGIS FeatureServer GeoJSON (WGS84 `outSR=4326`): `https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/Westminster_Parliamentary_Constituencies_July_2024_Boundaries_UK_BGC/FeatureServer/0/query` |
+| **Hub** | [data.gov.uk BGC](https://www.data.gov.uk/dataset/7165b3a0-a1f2-40ff-a8e0-cfc2a573be30/westminster-parliamentary-constituencies-july-2024-boundaries-uk-bgc) · [Open Geography Portal](https://geoportal.statistics.gov.uk/datasets/ons::westminster-parliamentary-constituencies-july-2024-boundaries-uk-bgc-2/about) |
+| **Extract date (UTC)** | 2026-10-02T19:21:57Z |
+| **Method** | `scripts/ingest_ons_pcon2024.py` — download FeatureServer GeoJSON with `resultOffset` pagination, keep `PCON24CD` / `PCON24NM`, drop NI codes (`PCON24CD` starting with `N`), assert exactly 632 GB features |
+| **File size** | ~20.5 MB GeoJSON (minified). Prefer GeoJSON for v1; TopoJSON/PMTiles deferred if mobile load becomes painful |
+| **License** | [Open Government Licence v3.0](https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/) — contains Ordnance Survey **and** ONS IPR |
+| **Attribution** | Contains Ordnance Survey data © Crown copyright and database right 2024. Contains National Statistics data © Crown copyright and database right 2024. |
+
+### Property semantics (pipeline)
+
+| Property | Meaning |
+|---|---|
+| `name` / `PCON24NM` | Official constituency name |
+| `PCON24CD` | ONS constituency code (stable join key) |
+| `layer` / `source` | App metadata (`constituencies` / `ONS`) |
+
+Popup shows **name + PCON24CD only** in this PR — no candidates, polls, or endorse UI.
+
+### Honest caveats
+
+- Boundaries are **BGC** (~20 m generalisation), not full-resolution BFC/BFE.
+- **GB-only**: NI 18 seats deferred; Ireland / IoM / CI out.
+- No party colours, endorse badges, candidates, or polling in this layer yet.
+
+
 ## Remaining honest caveats
 
+- Constituencies layer is ONS BGC GB-only (632); NI deferred; no endorse/polling UI yet.
 - OSM tagging completeness varies; absence of a station on the map is not proof
   it does not exist on the ground.
 - Ways are centre points, not footprints.

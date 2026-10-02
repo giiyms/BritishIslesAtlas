@@ -1,5 +1,20 @@
 # Extract scripts
 
+## `ingest_ons_pcon2024.py`
+
+Downloads ONS July 2024 Westminster PCON **BGC** boundaries (WGS84 GeoJSON) from
+the ArcGIS FeatureServer, drops Northern Ireland (18 seats), and writes
+`public/data/constituencies-gb-2024.geojson` (632 GB features) plus a
+`constituencies` entry in `public/data/extract-meta.json`.
+
+```bash
+python3 scripts/ingest_ons_pcon2024.py
+```
+
+License: Open Government Licence v3.0 (OS + ONS Crown copyright attribution
+required). See `SOURCES.md`.
+
+
 ## `extract_osm_fuel_ev.py`
 
 Rebuilds `public/data/petrol.geojson`, `public/data/ev.geojson`, and

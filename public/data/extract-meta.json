@@ -1012,5 +1012,24 @@
       "counting_caveat": "historic=memorial WITH name=* only; unnamed plaques and memorial noise, historic=monument, historic=war_memorial without historic=memorial, memorial=yes on other keys, and tourism=attraction without historic=memorial are omitted; war memorials tagged historic=memorial ARE included; feature counts are OSM objects not distinct sites (a complex may be several nodes/ways/relations); disused sites still tagged historic=memorial with name are included; multipolygon relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry historic=memorial+name; raw unfiltered historic=memorial is notoriously dense/timeout-prone Isles-wide so this extract uses name=* and fine regional tiling",
       "name_filter": "require name=* (unnamed memorials omitted)"
     }
+  },
+  "constituencies": {
+    "extracted_at": "2026-10-02T19:21:57Z",
+    "method": "ONS ArcGIS FeatureServer GeoJSON (WGS84 outSR=4326); filter GB-only by dropping NI PCON24CD (N*); paginated resultOffset",
+    "license": "OGL v3.0",
+    "endpoint": "https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/Westminster_Parliamentary_Constituencies_July_2024_Boundaries_UK_BGC/FeatureServer/0/query",
+    "source_url": "https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/Westminster_Parliamentary_Constituencies_July_2024_Boundaries_UK_BGC/FeatureServer/0/query?where=1%3D1&outFields=*&outSR=4326&f=geojson",
+    "dataset": "Westminster Parliamentary Constituencies July 2024 Boundaries UK BGC",
+    "publisher": "Office for National Statistics (Open Geography Portal)",
+    "as_of": "2024-07-04",
+    "generalisation": "BGC ~20 m, clipped to Mean High Water",
+    "layer": "constituencies",
+    "file": "constituencies-gb-2024.geojson",
+    "count": 632,
+    "uk_count_downloaded": 650,
+    "ni_dropped": 18,
+    "coverage": "GB Westminster only: England+Scotland+Wales = 632; Northern Ireland 18 deferred; Ireland/IoM/CI have no Westminster seats",
+    "attribution": "Contains Ordnance Survey data © Crown copyright and database right 2024. Contains National Statistics data © Crown copyright and database right 2024.",
+    "size_bytes": 20474485
   }
 }
