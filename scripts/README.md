@@ -484,3 +484,23 @@ coast) was ~9.1k objects (nodes 357 + ways 8216 + relations 567), inside the
 (nodes 201 + ways 1607 + relations 197); dropping unnamed beaches would omit
 most of the layer, so unnamed sites keep the generic label `Beach`. Admin
 polygons clip coastal France.
+
+
+## `extract_osm_swimming_pools.py`
+
+Rebuilds `public/data/swimming-pools.geojson` (and merges into `extract-meta.json`)
+using the same admin-area Overpass + polygon-clip pipeline, querying
+`leisure=swimming_pool` (nodes, ways, and relations; `out center`). Does **not**
+include `leisure=water_park`, `amenity=public_bath`, `sport=swimming` without
+`leisure=swimming_pool`, or `natural=water`.
+
+```bash
+python3 scripts/extract_osm_swimming_pools.py
+```
+
+Default `--max-span 2.0`. **Named-only** (`name=*` required) because an
+England-alone Overpass count without `name=*` (bbox roughly 49.9–55.8°N,
+−6.5–2.0°E, not admin-clipped) was ~23.7k (nodes 366 + ways 23312 + relations
+20), far past the ~8–10k soft guideline — mostly unnamed private backyard
+pools. The same England bbox with `name=*` was 478 (nodes 151 + ways 324 +
+relations 3). Unnamed pools are omitted.
