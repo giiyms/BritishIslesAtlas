@@ -33,7 +33,9 @@ fire stations by `scripts/extract_osm_fire_stations.py`; police by
 `scripts/extract_osm_nature_reserves.py`; camp sites by
 `scripts/extract_osm_camp_sites.py`; memorials by
 `scripts/extract_osm_memorials.py`; sports centres by
-`scripts/extract_osm_sports_centres.py`.
+`scripts/extract_osm_sports_centres.py`; caravan sites by
+`scripts/extract_osm_caravan_sites.py`; fitness centres by
+`scripts/extract_osm_fitness_centres.py`.
 Westminster constituencies (GB) are ingested separately by
 `scripts/ingest_ons_pcon2024.py` from the ONS ArcGIS FeatureServer (not Overpass).
 Shared OSM pipeline:
@@ -46,7 +48,7 @@ Shared OSM pipeline:
 3. **Clip** results to the admin polygon (+ ~200 m buffer) so mainland France
    and cross-border spill are dropped.
 4. Deduplicate by OSM `type/id`. Ways are stored as **centre points**
-   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme-parks, viewpoints, arts-centres, aquariums, piers, ruins, golf-courses, galleries, marketplaces, nature-reserves, camp-sites, memorials, sports-centres, and caravan-sites extractors
+   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme-parks, viewpoints, arts-centres, aquariums, piers, ruins, golf-courses, galleries, marketplaces, nature-reserves, camp-sites, memorials, sports-centres, caravan-sites, and fitness-centres extractors
    also query **relations** and store them as centre points the same way;
    other layers remain node+way only unless noted.
 
@@ -852,6 +854,31 @@ Same pipeline fields as the other OSM layers (`name`, optional `brand`/`operator
 89 of 5017; nodes: 474 of 5017. Pipeline-filled generic names: 1639 (~32.7%).
 
 
+## Fitness centres (`fitness-centres`)
+
+| | |
+|---|---|
+| **File** | `public/data/fitness-centres.geojson` |
+| **Features** | 6463 points (not a round cap) |
+| **Coverage** | Same admin-area footprint: England 4184, Scotland 411, Wales 191, Northern Ireland 102, Ireland 1544, Isle of Man 17, Guernsey 6, Jersey 8. **Northern France bleed ≈ 0** (hard bbox checks: IoM ≈ 17, GG ≈ 6, JE ≈ 8). |
+| **Sample vs full** | Admin-area extract of OSM `leisure=fitness_centre` at extract time (nodes, ways, **and relations**). `leisure=sports_centre` (already a separate sports-centres layer), `leisure=stadium`, `leisure=pitch` alone, and `amenity=gym` without `leisure=fitness_centre` are **not** included — this layer **complements** sports centres, which already excludes `leisure=fitness_centre` without `leisure=sports_centre`. Disused sites that remain tagged `leisure=fitness_centre` **are** included. Unnamed sites keep the generic label `"Fitness centre"` (no `name=*` filter — density ~6.5k is under the ~8–10k named-only threshold). **Feature counts are OSM objects, not distinct centres** (a complex may appear as several nodes/ways/relations). Large sites mapped as multipolygon / site relations are included via Overpass centre points (Heathrow lesson — fitness centres are often ways/relations). Default regional tiling `--max-span 2.0`. |
+| **Source** | [OpenStreetMap](https://www.openstreetmap.org/) via Overpass API |
+| **Query** | `leisure=fitness_centre` nodes, ways, and relations (`out center tags`) |
+| **Endpoint used** | `https://overpass.openstreetmap.fr/api/interpreter` |
+| **Extract date (UTC)** | 2026-10-02T19:57:20Z |
+| **Method** | Same admin-area pipeline as caravan sites / sports centres / camp sites (`scripts/extract_osm_fitness_centres.py`), including OSM relations; default tile span 2.0° |
+| **License** | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/) — © OpenStreetMap contributors |
+| **Attribution** | © OpenStreetMap contributors |
+
+### Property semantics (pipeline)
+
+Same pipeline fields as the other OSM layers (`name`, optional `brand`/`operator`, `osm_id`,
+`osm_url`, pipeline `note`, `layer`, `source`). Generic missing names fill as
+`"Fitness centre"`. Ways as centre points: 2134 of 6463; relations as centre points:
+17 of 6463; nodes: 4312 of 6463. Pipeline-filled generic names: 312 (~4.8%).
+
+
+
 ## Constituencies (`constituencies`)
 
 | | |
@@ -1162,6 +1189,20 @@ Popup shows **name + PCON24CD only** in this PR — no candidates, polls, or end
   `tourism=caravan_site` (dedupe by OSM `type/id` only). Counts are OSM objects,
   not distinct sites. Isle of Man admin-clip is 2; Channel Islands GG 0 / JE 0
   (hard main-island bbox ≈ GG 0 / JE 0) — likely under-tagged on GG/JE.
+- Fitness centres layer is `leisure=fitness_centre` only (not `leisure=sports_centre`
+  — already a separate sports-centres layer — `leisure=stadium`, `leisure=pitch`
+  alone, or `amenity=gym` without `leisure=fitness_centre`). Complements sports
+  centres, which already excludes `leisure=fitness_centre` without
+  `leisure=sports_centre`. Disused sites still tagged `leisure=fitness_centre`
+  are included. Unnamed centres keep the generic label `"Fitness centre"` (no
+  `name=*` filter unless density forces it). Extract includes **nodes, ways, and
+  relations**; ways and relations are Overpass centre points, not footprints
+  (Heathrow lesson — fitness centres are often ways/relations). A site may
+  appear both as a relation and as member ways/nodes if both carry
+  `leisure=fitness_centre` (dedupe by OSM `type/id` only). Counts are OSM
+  objects, not distinct centres. Isle of Man admin-clip is 17; Channel Islands
+  GG 6 / JE 8 (hard main-island bbox ≈ GG 6 / JE 8). Unnamed centres keep the
+  generic label (no `name=*` filter; density ~6.5k under the soft ~8–10k guideline).
 - Isle of Man has only 2 OSM hospitals at extract time — likely under-tagged
   relative to known sites; Channel Islands admin-clip counts are GG 4 / JE 4
   (hard bbox check slightly lower for Guernsey). Castles IoM admin-clip is 3;
