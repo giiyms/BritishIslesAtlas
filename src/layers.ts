@@ -531,7 +531,7 @@ export const LAYERS = [
     color: "#e25b52",
     kind: "ring",
     defaultOn: false,
-    blurb: "Preview post offices",
+    blurb: "OpenStreetMap post offices (ODbL)",
     pointScale: 1,
     icon: ICONS.post,
   },

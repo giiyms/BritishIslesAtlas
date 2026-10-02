@@ -542,12 +542,6 @@ const SCATTER: Record<string, ScatterRule> = {
     max: 3,
     nouns: ["General Hospital", "Royal Infirmary", "Community Hospital"],
   },
-  "post-offices": {
-    perMillion: 5,
-    minPop: 18000,
-    max: 2,
-    nouns: ["Post Office", "Delivery Office"],
-  },
   mosques: {
     perMillion: 2,
     minPop: 180000,
@@ -708,7 +702,7 @@ const builders: Record<LayerId, () => Feature[]> = {
   "fire-stations": () => [],
   police: () => [],
   churches: () => scatterLayer("churches"),
-  "post-offices": () => scatterLayer("post-offices"),
+  "post-offices": () => [],
   mosques: () => scatterLayer("mosques"),
   population: populationLayer,
   "other-religious": () => scatterLayer("other-religious"),
