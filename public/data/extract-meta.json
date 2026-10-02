@@ -1198,5 +1198,39 @@
       "counting_caveat": "amenity=post_office only; amenity=parcel_locker, shop=convenience with a post_office role alone, Royal Mail collection points without amenity=post_office, and amenity=post_box are omitted; feature counts are OSM objects not distinct offices (a complex may be several nodes/ways/relations); disused sites still tagged amenity=post_office are included; multipolygon / site relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry amenity=post_office; named-only (name=* required); unnamed post offices omitted",
       "name_filter": "require name=* (unnamed post offices omitted)"
     }
+  },
+  "playgrounds": {
+    "extracted_at": "2026-10-02T22:13:12Z",
+    "method": "Overpass per-nation/territory bbox tiles clipped to OSM admin polygons (Nominatim); endpoint overpass.openstreetmap.fr",
+    "license": "ODbL 1.0",
+    "endpoint": "https://overpass.openstreetmap.fr/api/interpreter",
+    "layer": "playgrounds",
+    "count": 5372,
+    "coverage": "Admin-area extract (ENG/SCT/WLS/NIR/IE/IM/GG/JE); IoM≈10; GG≈1; JE≈7; northern France bleed≈0",
+    "region_counts": {
+      "england": 4236,
+      "scotland": 352,
+      "wales": 229,
+      "northern-ireland": 228,
+      "ireland": 308,
+      "isle-of-man": 10,
+      "guernsey": 2,
+      "jersey": 7
+    },
+    "limitations": {
+      "isle_of_man": 10,
+      "channel_islands": 8,
+      "guernsey": 1,
+      "jersey": 7,
+      "northern_france_approx": 0,
+      "ways_as_centre_points": 4858,
+      "relations_as_centre_points": 63,
+      "pipeline_generic_names": 0,
+      "pipeline_note_repeats_brand": 1058,
+      "note_semantics": "pipeline field (brand/operator or 'OpenStreetMap'), not OSM note=*",
+      "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
+      "counting_caveat": "leisure=playground only; leisure=pitch, leisure=park, amenity=school playgrounds without leisure=playground, and tourism=attraction alone are omitted; feature counts are OSM objects not distinct playgrounds (a complex may be several nodes/ways/relations); disused sites still tagged leisure=playground are included; multipolygon / site relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry leisure=playground; named-only (name=* required); unnamed playgrounds omitted",
+      "name_filter": "require name=* (unnamed playgrounds omitted)"
+    }
   }
 }

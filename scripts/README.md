@@ -446,3 +446,20 @@ python3 scripts/extract_osm_post_offices.py
 Default `--max-span 2.0`. **Named-only** (`name=*` required) because UK Geofabrik
 density is already ~9.4k at the ~8–10k soft guideline (full BI with Ireland would
 blow past it); unnamed post offices are omitted.
+
+
+## `extract_osm_playgrounds.py`
+
+Rebuilds `public/data/playgrounds.geojson` (and merges into `extract-meta.json`)
+using the same admin-area Overpass + polygon-clip pipeline, querying
+`leisure=playground` (nodes, ways, and relations; `out center`). Does **not**
+include `leisure=pitch`, `leisure=park`, `amenity=school` playgrounds without
+`leisure=playground`, or `tourism=attraction` alone.
+
+```bash
+python3 scripts/extract_osm_playgrounds.py
+```
+
+Default `--max-span 2.0`. **Named-only** (`name=*` required) because England-alone
+density without `name=*` is ~44k (far past the ~8–10k soft guideline); unnamed
+playgrounds are omitted.
