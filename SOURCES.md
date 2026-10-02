@@ -37,7 +37,8 @@ fire stations by `scripts/extract_osm_fire_stations.py`; police by
 `scripts/extract_osm_caravan_sites.py`; fitness centres by
 `scripts/extract_osm_fitness_centres.py`; community centres by
 `scripts/extract_osm_community_centres.py`; post offices by
-`scripts/extract_osm_post_offices.py`.
+`scripts/extract_osm_post_offices.py`; playgrounds by
+`scripts/extract_osm_playgrounds.py`.
 Westminster constituencies (GB) are ingested separately by
 `scripts/ingest_ons_pcon2024.py` from the ONS ArcGIS FeatureServer (not Overpass).
 Shared OSM pipeline:
@@ -50,7 +51,7 @@ Shared OSM pipeline:
 3. **Clip** results to the admin polygon (+ ~200 m buffer) so mainland France
    and cross-border spill are dropped.
 4. Deduplicate by OSM `type/id`. Ways are stored as **centre points**
-   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme-parks, viewpoints, arts-centres, aquariums, piers, ruins, golf-courses, galleries, marketplaces, nature-reserves, camp-sites, memorials, sports-centres, caravan-sites, fitness-centres, community-centres, and post-offices extractors
+   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme-parks, viewpoints, arts-centres, aquariums, piers, ruins, golf-courses, galleries, marketplaces, nature-reserves, camp-sites, memorials, sports-centres, caravan-sites, fitness-centres, community-centres, post-offices, and playgrounds extractors
    also query **relations** and store them as centre points the same way;
    other layers remain node+way only unless noted.
 
@@ -930,6 +931,32 @@ Same pipeline fields as the other OSM layers (`name`, optional `brand`/`operator
 4 of 9784; nodes: 8319 of 9784. Pipeline-filled generic names: 0 (named-only extract).
 
 
+
+## Playgrounds (`playgrounds`)
+
+| | |
+|---|---|
+| **File** | `public/data/playgrounds.geojson` |
+| **Features** | 5372 points (not a round cap) |
+| **Coverage** | Same admin-area footprint: England 4236, Scotland 352, Wales 229, Northern Ireland 228, Ireland 308, Isle of Man 10, Guernsey 2, Jersey 7. **Northern France bleed ≈ 0** (hard bbox checks: IoM ≈ 10, GG ≈ 1, JE ≈ 7). |
+| **Sample vs full** | Admin-area extract of OSM `leisure=playground` at extract time (nodes, ways, **and relations**). `leisure=pitch`, `leisure=park`, `amenity=school` playgrounds without `leisure=playground`, and `tourism=attraction` alone are **not** included. Disused sites that remain tagged `leisure=playground` **are** included. **Named-only** (`name=*` required) because an England-alone Overpass count without `name=*` was ~44k (nodes 2788 + ways 41490 + relations 153; bbox roughly 49.9–55.8°N, −6.5–2.0°E, not admin-clipped), far past the ~8–10k soft guideline; the same England bbox with `name=*` was ~4.8k. Unnamed playgrounds are omitted. **Feature counts are OSM objects, not distinct playgrounds** (a complex may appear as several nodes/ways/relations). Large sites mapped as multipolygon / site relations are included via Overpass centre points (Heathrow lesson — playgrounds are often ways/relations). Default regional tiling `--max-span 2.0`. |
+| **Source** | [OpenStreetMap](https://www.openstreetmap.org/) via Overpass API |
+| **Query** | `leisure=playground` + `name=*` nodes, ways, and relations (`out center tags`) |
+| **Endpoint used** | `https://overpass.openstreetmap.fr/api/interpreter` |
+| **Extract date (UTC)** | 2026-10-02T22:13:12Z |
+| **Method** | Same admin-area pipeline as post offices / community centres / fitness centres (`scripts/extract_osm_playgrounds.py`), including OSM relations; default tile span 2.0° |
+| **License** | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/) — © OpenStreetMap contributors |
+| **Attribution** | © OpenStreetMap contributors |
+
+### Property semantics (pipeline)
+
+Same pipeline fields as the other OSM layers (`name`, optional `brand`/`operator`, `osm_id`,
+`osm_url`, pipeline `note`, `layer`, `source`). Generic missing names would fill as
+`"Playground"`. Ways as centre points: 4858 of 5372; relations as centre points:
+63 of 5372; nodes: 451 of 5372. Pipeline-filled generic names: 0 (named-only extract).
+
+
+
 ## Constituencies (`constituencies`)
 
 | | |
@@ -1274,6 +1301,17 @@ Popup shows **name + PCON24CD only** in this PR — no candidates, polls, or end
   objects, not distinct offices. **Named-only** (`name=*` required) due to
   density at/above the ~8–10k soft guideline; unnamed offices are omitted.
 
+- Playgrounds layer is `leisure=playground` only (not `leisure=pitch`,
+  `leisure=park`, `amenity=school` playgrounds without `leisure=playground`,
+  or `tourism=attraction` alone). Disused sites still tagged
+  `leisure=playground` are included. Extract includes **nodes, ways, and
+  relations**; ways and relations are Overpass centre points, not footprints. A
+  site may appear both as a relation and as member ways/nodes if both carry
+  `leisure=playground` (dedupe by OSM `type/id` only). Counts are OSM
+  objects, not distinct playgrounds. **Named-only** (`name=*` required) because
+  England-alone density without `name=*` is ~44k, far above the ~8–10k soft
+  guideline; unnamed playgrounds are omitted.
+
 - Isle of Man has only 2 OSM hospitals at extract time — likely under-tagged
   relative to known sites; Channel Islands admin-clip counts are GG 4 / JE 4
   (hard bbox check slightly lower for Guernsey). Castles IoM admin-clip is 3;
@@ -1304,6 +1342,7 @@ Popup shows **name + PCON24CD only** in this PR — no candidates, polls, or end
   Memorials admin-clip is IoM 61; Channel Islands GG 43 / JE 73.
   Sports centres IoM admin-clip is 26; Channel Islands GG 11 / JE 29.
   Caravan sites IoM admin-clip is 2; Channel Islands GG 0 / JE 0.
+  Playgrounds IoM admin-clip is 10; Channel Islands GG 2 / JE 7 (hard bbox GG ≈ 1).
 - Extract uses polygon clip + buffer; features extremely close to a land border
   could in theory be included or excluded by the ~200 m buffer.
 
