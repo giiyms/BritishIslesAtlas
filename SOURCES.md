@@ -48,7 +48,7 @@ Shared OSM pipeline:
 3. **Clip** results to the admin polygon (+ ~200 m buffer) so mainland France
    and cross-border spill are dropped.
 4. Deduplicate by OSM `type/id`. Ways are stored as **centre points**
-   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme-parks, viewpoints, arts-centres, aquariums, piers, ruins, golf-courses, galleries, marketplaces, nature-reserves, camp-sites, memorials, sports-centres, caravan-sites, and fitness-centres extractors
+   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme-parks, viewpoints, arts-centres, aquariums, piers, ruins, golf-courses, galleries, marketplaces, nature-reserves, camp-sites, memorials, sports-centres, caravan-sites, fitness-centres, and community-centres extractors
    also query **relations** and store them as centre points the same way;
    other layers remain node+way only unless noted.
 
@@ -878,6 +878,31 @@ Same pipeline fields as the other OSM layers (`name`, optional `brand`/`operator
 17 of 6463; nodes: 4312 of 6463. Pipeline-filled generic names: 312 (~4.8%).
 
 
+## Community centres (`community-centres`)
+
+| | |
+|---|---|
+| **File** | `public/data/community-centres.geojson` |
+| **Features** | 16909 points (not a round cap) |
+| **Coverage** | Same admin-area footprint: England 12598, Scotland 1510, Wales 770, Northern Ireland 852, Ireland 1117, Isle of Man 30, Guernsey 23, Jersey 9. **Northern France bleed ≈ 0** (hard bbox checks: IoM ≈ 30, GG ≈ 22, JE ≈ 9). |
+| **Sample vs full** | Admin-area extract of OSM `amenity=community_centre` at extract time (nodes, ways, **and relations**). `amenity=arts_centre` (already an arts-centres layer), `amenity=social_facility` alone, `leisure=fitness_centre` / `leisure=sports_centre`, and `tourism=attraction` without `amenity=community_centre` are **not** included. Disused sites that remain tagged `amenity=community_centre` **are** included. **Named-only** (`name=*` required) because England-alone density exceeded the ~8–10k threshold; unnamed community centres are omitted. **Feature counts are OSM objects, not distinct centres** (a complex may appear as several nodes/ways/relations). Large sites mapped as multipolygon / site relations are included via Overpass centre points (Heathrow lesson — community centres are often ways/relations). Default regional tiling `--max-span 2.0`. |
+| **Source** | [OpenStreetMap](https://www.openstreetmap.org/) via Overpass API |
+| **Query** | `amenity=community_centre` + `name=*` nodes, ways, and relations (`out center tags`) |
+| **Endpoint used** | `https://overpass.openstreetmap.fr/api/interpreter` |
+| **Extract date (UTC)** | 2026-10-02T20:20:01Z |
+| **Method** | Same admin-area pipeline as fitness centres / caravan sites / sports centres (`scripts/extract_osm_community_centres.py`), including OSM relations; default tile span 2.0° |
+| **License** | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/) — © OpenStreetMap contributors |
+| **Attribution** | © OpenStreetMap contributors |
+
+### Property semantics (pipeline)
+
+Same pipeline fields as the other OSM layers (`name`, optional `brand`/`operator`, `osm_id`,
+`osm_url`, pipeline `note`, `layer`, `source`). Generic missing names fill as
+`"Community centre"`. Ways as centre points: 14489 of 16909; relations as centre points:
+75 of 16909; nodes: 2345 of 16909. Pipeline-filled generic names: 0 (named-only extract).
+
+
+
 
 ## Constituencies (`constituencies`)
 
@@ -1203,6 +1228,16 @@ Popup shows **name + PCON24CD only** in this PR — no candidates, polls, or end
   objects, not distinct centres. Isle of Man admin-clip is 17; Channel Islands
   GG 6 / JE 8 (hard main-island bbox ≈ GG 6 / JE 8). Unnamed centres keep the
   generic label (no `name=*` filter; density ~6.5k under the soft ~8–10k guideline).
+- Community centres layer is `amenity=community_centre` only (not `amenity=arts_centre`,
+  `amenity=social_facility` alone, `leisure=fitness_centre` / `leisure=sports_centre`,
+  or `tourism=attraction` without the amenity tag). Disused centres still tagged
+  `amenity=community_centre` are included. Extract includes **nodes, ways, and
+  relations**; ways and relations are Overpass centre points, not footprints. A
+  site may appear both as a relation and as member ways/nodes if both carry
+  `amenity=community_centre` (dedupe by OSM `type/id` only). Counts are OSM
+  objects, not distinct centres. **Named-only** (`name=*` required) due to
+  density above the ~8–10k threshold; unnamed centres are omitted.
+
 - Isle of Man has only 2 OSM hospitals at extract time — likely under-tagged
   relative to known sites; Channel Islands admin-clip counts are GG 4 / JE 4
   (hard bbox check slightly lower for Guernsey). Castles IoM admin-clip is 3;

@@ -1130,5 +1130,39 @@
       "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
       "counting_caveat": "leisure=fitness_centre only; leisure=sports_centre (separate sports-centres layer), leisure=stadium, leisure=pitch alone, and amenity=gym without leisure=fitness_centre are omitted; complements sports-centres which already excludes fitness_centre without sports_centre; feature counts are OSM objects not distinct centres (a complex may be several nodes/ways/relations); disused sites still tagged leisure=fitness_centre are included; multipolygon / site relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry leisure=fitness_centre; unnamed fitness centres keep the generic label Fitness centre"
     }
+  },
+  "community-centres": {
+    "extracted_at": "2026-10-02T20:20:01Z",
+    "method": "Overpass per-nation/territory bbox tiles clipped to OSM admin polygons (Nominatim); endpoint overpass.openstreetmap.fr",
+    "license": "ODbL 1.0",
+    "endpoint": "https://overpass.openstreetmap.fr/api/interpreter",
+    "layer": "community-centres",
+    "count": 16909,
+    "coverage": "Admin-area extract (ENG/SCT/WLS/NIR/IE/IM/GG/JE); IoM≈30; GG≈22; JE≈9; northern France bleed≈0",
+    "region_counts": {
+      "england": 12598,
+      "scotland": 1510,
+      "wales": 770,
+      "northern-ireland": 852,
+      "ireland": 1117,
+      "isle-of-man": 30,
+      "guernsey": 23,
+      "jersey": 9
+    },
+    "limitations": {
+      "isle_of_man": 30,
+      "channel_islands": 31,
+      "guernsey": 22,
+      "jersey": 9,
+      "northern_france_approx": 0,
+      "ways_as_centre_points": 14489,
+      "relations_as_centre_points": 75,
+      "pipeline_generic_names": 0,
+      "pipeline_note_repeats_brand": 1633,
+      "note_semantics": "pipeline field (brand/operator or 'OpenStreetMap'), not OSM note=*",
+      "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
+      "counting_caveat": "amenity=community_centre only; amenity=arts_centre (already an arts-centres layer), amenity=social_facility alone, leisure=fitness_centre / leisure=sports_centre, and tourism=attraction without amenity=community_centre are omitted; feature counts are OSM objects not distinct centres (a complex may be several nodes/ways/relations); disused sites still tagged amenity=community_centre are included; multipolygon / site relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry amenity=community_centre; named-only (name=* required); unnamed community centres omitted",
+      "name_filter": "require name=* (unnamed community centres omitted)"
+    }
   }
 }

@@ -104,6 +104,9 @@ export const ICONS = {
   "fitness-centres": icon(
     `<rect x="5" y="8.5" width="14" height="11" rx="1.2"/><path d="M8 8.5V6.5h8v2"/><path d="M9.5 14.5c0-1.4 1.1-2.5 2.5-2.5s2.5 1.1 2.5 2.5"/><path d="M8.5 17.5h7"/><circle cx="12" cy="12.2" r="1.2"/>`,
   ),
+  "community-centres": icon(
+    `<path d="M4 19.5h16"/><path d="M6 17V9.5l6-4.5 6 4.5V17"/><path d="M9.5 12.5h5"/><path d="M9.5 15h5"/><path d="M11 17v-2.5h2V17"/>`,
+  ),
   churches: icon(
     `<path d="M12 3v3M10.2 4.6h3.6"/><path d="M6 21V11.2L12 7l6 4.2V21"/><path d="M10 21v-4h4v4"/><path d="M4 21h16"/>`,
   ),
