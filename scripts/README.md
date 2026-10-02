@@ -413,3 +413,20 @@ python3 scripts/extract_osm_fitness_centres.py
 Default `--max-span 2.0`. Unnamed sites keep the generic label `"Fitness centre"`
 unless density forces `--` named-only via `require_name` in the script config.
 
+
+## `extract_osm_community_centres.py`
+
+Rebuilds `public/data/community-centres.geojson` (and merges into `extract-meta.json`)
+using the same admin-area Overpass + polygon-clip pipeline, querying
+`amenity=community_centre` (nodes, ways, and relations; `out center`). Does **not**
+include `amenity=arts_centre` (already an arts-centres layer),
+`amenity=social_facility` alone, `leisure=fitness_centre` / `leisure=sports_centre`,
+or `tourism=attraction` without `amenity=community_centre`.
+
+```bash
+python3 scripts/extract_osm_community_centres.py
+```
+
+Default `--max-span 2.0`. **Named-only** (`name=*` required) because England-alone
+density exceeds the ~8–10k threshold; unnamed community centres are omitted.
+
