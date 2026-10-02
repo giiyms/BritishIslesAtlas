@@ -396,3 +396,20 @@ pipeline as sports centres / camp sites.
 ```bash
 python3 scripts/extract_osm_caravan_sites.py
 ```
+
+## `extract_osm_fitness_centres.py`
+
+Rebuilds `public/data/fitness-centres.geojson` (and merges into `extract-meta.json`)
+using the same admin-area Overpass + polygon-clip pipeline, querying
+`leisure=fitness_centre` (nodes, ways, and relations; `out center`). Does **not**
+include `leisure=sports_centre`, `leisure=stadium`, `leisure=pitch` alone, or
+`amenity=gym` without `leisure=fitness_centre`. Complements sports centres, which
+already excludes `fitness_centre` without `sports_centre`.
+
+```bash
+python3 scripts/extract_osm_fitness_centres.py
+```
+
+Default `--max-span 2.0`. Unnamed sites keep the generic label `"Fitness centre"`
+unless density forces `--` named-only via `require_name` in the script config.
+
