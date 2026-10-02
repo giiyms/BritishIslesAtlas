@@ -1267,5 +1267,40 @@
       "name_filter": "no name=* filter; a loose BI bbox probe (incl. some N France coast) was ~9.1k (n357/w8216/r567), inside the ~8-10k soft band (same bbox with name=* was ~2.0k: n201/w1607/r197). Dropping unnamed beaches would omit most of the layer, so they are kept",
       "france_bleed_note": "Hard bbox heuristic flags 1 feature (relation/20327663, centre -1.928, 49.291) just east of the Channel Islands exclusion box (lon -1.95). It is inside the Jersey admin polygon (Écréhous reef), not mainland France. Mainland France bleed = 0."
     }
+  },
+  "swimming-pools": {
+    "extracted_at": "2026-10-02T23:22:52Z",
+    "method": "Overpass per-nation/territory bbox tiles clipped to OSM admin polygons (Nominatim); endpoint overpass.openstreetmap.fr",
+    "license": "ODbL 1.0",
+    "endpoint": "https://overpass.openstreetmap.fr/api/interpreter",
+    "layer": "swimming-pools",
+    "count": 552,
+    "coverage": "Admin-area extract (ENG/SCT/WLS/NIR/IE/IM/GG/JE); IoM≈1; GG≈4; JE≈2; northern France bleed≈0",
+    "region_counts": {
+      "england": 419,
+      "scotland": 41,
+      "wales": 25,
+      "northern-ireland": 5,
+      "ireland": 55,
+      "isle-of-man": 1,
+      "guernsey": 4,
+      "jersey": 2
+    },
+    "limitations": {
+      "isle_of_man": 1,
+      "channel_islands": 6,
+      "guernsey": 4,
+      "jersey": 2,
+      "northern_france_approx": 0,
+      "ways_as_centre_points": 361,
+      "relations_as_centre_points": 3,
+      "pipeline_generic_names": 0,
+      "pipeline_note_repeats_brand": 60,
+      "note_semantics": "pipeline field (brand/operator or 'OpenStreetMap'), not OSM note=*",
+      "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
+      "counting_caveat": "leisure=swimming_pool only; leisure=water_park, amenity=public_bath, sport=swimming without leisure=swimming_pool, and natural=water are omitted; feature counts are OSM objects not distinct pools (a site may be several nodes/ways/relations); disused sites still tagged leisure=swimming_pool are included; multipolygon / site relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry leisure=swimming_pool; named-only (name=* required); unnamed pools (mostly private backyards) omitted",
+      "name_filter": "require name=* (unnamed pools omitted). England-alone Overpass count without name=* (bbox ~49.9-55.8N, -6.5-2.0E, not admin-clipped) was 23698 (nodes 366 + ways 23312 + relations 20), far past the ~8-10k soft guideline. The same England bbox with name=* was 478 (nodes 151 + ways 324 + relations 3). Private backyard pools are typically unnamed.",
+      "france_bleed_note": "Hard bbox heuristic flags 0 features. Mainland France bleed = 0. Southernmost points are Jersey (Havre des Pas / Aquasplash) and Guernsey tidal pools (La Vallette), inside those admin polygons, not mainland France. Easternmost points (~1.7E, ~52.6N) are the Suffolk coast, not France."
+    }
   }
 }

@@ -39,7 +39,8 @@ fire stations by `scripts/extract_osm_fire_stations.py`; police by
 `scripts/extract_osm_community_centres.py`; post offices by
 `scripts/extract_osm_post_offices.py`; playgrounds by
 `scripts/extract_osm_playgrounds.py`; beaches by
-`scripts/extract_osm_beaches.py`.
+`scripts/extract_osm_beaches.py`; swimming pools by
+`scripts/extract_osm_swimming_pools.py`.
 Westminster constituencies (GB) are ingested separately by
 `scripts/ingest_ons_pcon2024.py` from the ONS ArcGIS FeatureServer (not Overpass).
 Shared OSM pipeline:
@@ -52,7 +53,7 @@ Shared OSM pipeline:
 3. **Clip** results to the admin polygon (+ ~200 m buffer) so mainland France
    and cross-border spill are dropped.
 4. Deduplicate by OSM `type/id`. Ways are stored as **centre points**
-   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme-parks, viewpoints, arts-centres, aquariums, piers, ruins, golf-courses, galleries, marketplaces, nature-reserves, camp-sites, memorials, sports-centres, caravan-sites, fitness-centres, community-centres, post-offices, playgrounds, and beaches extractors
+   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme-parks, viewpoints, arts-centres, aquariums, piers, ruins, golf-courses, galleries, marketplaces, nature-reserves, camp-sites, memorials, sports-centres, caravan-sites, fitness-centres, community-centres, post-offices, playgrounds, beaches, and swimming-pools extractors
    also query **relations** and store them as centre points the same way;
    other layers remain node+way only unless noted.
 
@@ -984,6 +985,32 @@ Same pipeline fields as the other OSM layers (`name`, optional `brand`/`operator
 beaches kept).
 
 
+
+
+## Swimming pools (`swimming-pools`)
+
+| | |
+|---|---|
+| **File** | `public/data/swimming-pools.geojson` |
+| **Features** | 552 points (not a round cap) |
+| **Coverage** | Same admin-area footprint: England 419, Scotland 41, Wales 25, Northern Ireland 5, Ireland 55, Isle of Man 1, Guernsey 4, Jersey 2. **Northern France bleed = 0** (hard bbox heuristic flags 0). Southernmost points are Jersey (Havre des Pas Pool, Aquasplash) and Guernsey tidal pools (La Vallette), inside those admin polygons — not mainland France. Easternmost points (~1.7°E, ~52.6°N, e.g. node/2408014563) are the Suffolk coast, not France. Hard main-island bbox checks match the admin clip: IoM ≈ 1, GG ≈ 4, JE ≈ 2. |
+| **Sample vs full** | Admin-area extract of OSM `leisure=swimming_pool` at extract time (nodes, ways, **and relations**). `leisure=water_park`, `amenity=public_bath`, `sport=swimming` without `leisure=swimming_pool`, and `natural=water` are **not** included. Disused sites that remain tagged `leisure=swimming_pool` **are** included. **Named-only** (`name=*` required) because an England-alone Overpass count without `name=*` was 23698 (nodes 366 + ways 23312 + relations 20; bbox roughly 49.9–55.8°N, −6.5–2.0°E, not admin-clipped), far past the ~8–10k soft guideline — mostly unnamed private backyard pools. The same England bbox with `name=*` was 478 (nodes 151 + ways 324 + relations 3). Unnamed pools are omitted. Admin-clipped named result is **552** (nodes 188 / ways 361 / relations 3). **Feature counts are OSM objects, not distinct pools** (a site may appear as several nodes/ways/relations). Large sites mapped as multipolygon / site relations are included via Overpass centre points (Heathrow lesson). Default regional tiling `--max-span 2.0`. |
+| **Source** | [OpenStreetMap](https://www.openstreetmap.org/) via Overpass API |
+| **Query** | `leisure=swimming_pool` + `name=*` nodes, ways, and relations (`out center tags`) |
+| **Endpoint used** | `https://overpass.openstreetmap.fr/api/interpreter` |
+| **Extract date (UTC)** | 2026-10-02T23:22:52Z |
+| **Method** | Same admin-area pipeline as beaches / playgrounds / post offices (`scripts/extract_osm_swimming_pools.py`), including OSM relations; default tile span 2.0° |
+| **License** | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/) — © OpenStreetMap contributors |
+| **Attribution** | © OpenStreetMap contributors |
+
+### Property semantics (pipeline)
+
+Same pipeline fields as the other OSM layers (`name`, optional `brand`/`operator`, `osm_id`,
+`osm_url`, pipeline `note`, `layer`, `source`). Generic missing names would fill as
+`"Swimming pool"`. Ways as centre points: 361 of 552; relations as centre points:
+3 of 552; nodes: 188 of 552. Pipeline-filled generic names: 0 (named-only extract).
+
+
 ## Constituencies (`constituencies`)
 
 | | |
@@ -1355,6 +1382,19 @@ Popup shows **name + PCON24CD only** in this PR — no candidates, polls, or end
   Channel Islands GG 114 / JE 54 (hard main-island bbox ≈ GG 86 / JE 53;
   the Bailiwick polygon includes Alderney / Sark / Herm, and the extra
   Jersey point is the Écréhous).
+
+- Swimming pools layer is `leisure=swimming_pool` only (not `leisure=water_park`,
+  `amenity=public_bath`, `sport=swimming` without `leisure=swimming_pool`,
+  or `natural=water`). Disused sites still tagged `leisure=swimming_pool`
+  are included. Extract includes **nodes, ways, and relations**; ways and
+  relations are Overpass centre points, not footprints. A site may appear
+  both as a relation and as member ways/nodes if both carry
+  `leisure=swimming_pool` (dedupe by OSM `type/id` only). Counts are OSM
+  objects, not distinct pools. **Named-only** (`name=*` required) because
+  England-alone density without `name=*` is ~23.7k (nodes 366 + ways 23312
+  + relations 20), far above the ~8–10k soft guideline (mostly unnamed
+  private backyard pools); the same England bbox with `name=*` was 478
+  (nodes 151 + ways 324 + relations 3). Unnamed pools are omitted.
 
 - Isle of Man has only 2 OSM hospitals at extract time — likely under-tagged
   relative to known sites; Channel Islands admin-clip counts are GG 4 / JE 4
