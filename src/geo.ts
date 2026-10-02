@@ -698,6 +698,7 @@ const builders: Record<LayerId, () => Feature[]> = {
   marketplaces: () => [],
   "nature-reserves": () => [],
   "camp-sites": () => [],
+  memorials: () => [],
   hospitals: () => [],
   "fire-stations": () => [],
   police: () => [],

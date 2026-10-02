@@ -31,7 +31,8 @@ fire stations by `scripts/extract_osm_fire_stations.py`; police by
 `scripts/extract_osm_galleries.py`; marketplaces by
 `scripts/extract_osm_marketplaces.py`; nature reserves by
 `scripts/extract_osm_nature_reserves.py`; camp sites by
-`scripts/extract_osm_camp_sites.py`.
+`scripts/extract_osm_camp_sites.py`; memorials by
+`scripts/extract_osm_memorials.py`.
 Shared pipeline:
 
 1. Load OSM admin polygons for England, Scotland, Wales, Northern Ireland,
@@ -42,7 +43,7 @@ Shared pipeline:
 3. **Clip** results to the admin polygon (+ ~200 m buffer) so mainland France
    and cross-border spill are dropped.
 4. Deduplicate by OSM `type/id`. Ways are stored as **centre points**
-   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme-parks, viewpoints, arts-centres, aquariums, piers, ruins, golf-courses, galleries, marketplaces, nature-reserves, and camp-sites extractors
+   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme-parks, viewpoints, arts-centres, aquariums, piers, ruins, golf-courses, galleries, marketplaces, nature-reserves, camp-sites, and memorials extractors
    also query **relations** and store them as centre points the same way;
    other layers remain node+way only unless noted.
 
@@ -774,6 +775,31 @@ Same pipeline fields as petrol/EV/power/hospitals/fire/police/castles/libraries/
 78 of 4155; nodes: 1057 of 4155. Pipeline-filled generic names: 870 (~20.9%).
 
 
+## Memorials (`memorials`)
+
+| | |
+|---|---|
+| **File** | `public/data/memorials.geojson` |
+| **Features** | 14 851 points (not a round cap) |
+| **Coverage** | Same admin-area footprint: England 8 919, Scotland 4 156, Wales 426, Northern Ireland 117, Ireland 1 056, Isle of Man 61, Guernsey 43, Jersey 73. **Northern France bleed ≈ 0** (hard bbox checks: IoM ≈ 61, GG ≈ 40, JE ≈ 73). |
+| **Sample vs full** | Admin-area extract of OSM `historic=memorial` at extract time (nodes, ways, **and relations**) with `name=*` required. Unnamed plaques and memorial noise, `historic=monument`, `historic=war_memorial` without `historic=memorial`, `memorial=yes` on other keys, and `tourism=attraction` without `historic=memorial` are **not** included. War memorials tagged `historic=memorial` **are** included. Disused sites retaining `historic=memorial` and `name=*` are included. **Feature counts are OSM objects, not distinct memorials** (a complex may appear as several nodes/ways/relations). Relations use Overpass centre points. |
+| **Source** | [OpenStreetMap](https://www.openstreetmap.org/) via Overpass API |
+| **Query** | `historic=memorial` nodes, ways, and relations with `name=*` (`out center tags`) |
+| **Endpoint used** | `https://overpass.openstreetmap.fr/api/interpreter` |
+| **Extract date (UTC)** | 2026-10-01T16:23:37Z |
+| **Method** | Same admin-area pipeline as camp sites and ruins (`scripts/extract_osm_memorials.py`), including OSM relations; default tile span `--max-span 1.5°` |
+| **License** | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/) — © OpenStreetMap contributors |
+| **Attribution** | © OpenStreetMap contributors |
+
+### Property semantics (pipeline)
+
+Same pipeline fields as the other OSM layers (`name`, optional `brand`/`operator`, `osm_id`,
+`osm_url`, pipeline `note`, `layer`, `source`). The extractor requires a non-empty
+`name=*` tag; the five pipeline generic-name fallbacks in the metadata are retained as
+a pipeline diagnostic. Ways as centre points: 792 of 14 851; relations as centre points:
+20 of 14 851; pipeline generic names: 5.
+
+
 ## Remaining honest caveats
 
 - OSM tagging completeness varies; absence of a station on the map is not proof
@@ -1014,6 +1040,16 @@ Same pipeline fields as petrol/EV/power/hospitals/fire/police/castles/libraries/
   ways/nodes if both carry `tourism=camp_site` (dedupe by OSM `type/id` only).
   Counts are OSM objects, not distinct campsites. Isle of Man admin-clip is 20;
   Channel Islands GG 11 / JE 6 (hard main-island bbox ≈ GG 7 / JE 6).
+- Memorials layer is `historic=memorial` **with `name=*` required** (not
+  unnamed plaques or memorial noise, `historic=monument`, `historic=war_memorial`
+  without `historic=memorial`, `memorial=yes` on other keys, or
+  `tourism=attraction` without `historic=memorial`). War memorials tagged
+  `historic=memorial` are included; disused named memorials are included.
+  Extract includes **nodes, ways, and relations**; ways and relations are
+  Overpass centre points, not footprints, and counts are OSM objects rather
+  than distinct memorials. Isle of Man admin-clip is 61; Channel Islands GG 43 /
+  JE 73 (hard main-island bbox ≈ GG 40 / JE 73). The fine regional tiling
+  default is `--max-span 1.5°` because raw unfiltered memorials are dense.
 - Isle of Man has only 2 OSM hospitals at extract time — likely under-tagged
   relative to known sites; Channel Islands admin-clip counts are GG 4 / JE 4
   (hard bbox check slightly lower for Guernsey). Castles IoM admin-clip is 3;
@@ -1041,6 +1077,7 @@ Same pipeline fields as petrol/EV/power/hospitals/fire/police/castles/libraries/
   admin-clip is 1; Channel Islands GG 1 / JE 2. Nature reserves IoM
   admin-clip is 14; Channel Islands GG 10 / JE 1. Camp sites IoM
   admin-clip is 20; Channel Islands GG 11 / JE 6.
+  Memorials admin-clip is IoM 61; Channel Islands GG 43 / JE 73.
 - Extract uses polygon clip + buffer; features extremely close to a land border
   could in theory be included or excluded by the ~200 m buffer.
 
