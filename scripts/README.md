@@ -381,3 +381,18 @@ density / timeouts force it). Same admin-area pipeline as camp sites.
 python3 scripts/extract_osm_sports_centres.py
 ```
 
+
+## `extract_osm_caravan_sites.py`
+
+Rebuilds `public/data/caravan-sites.geojson` (and merges into `extract-meta.json`)
+from OSM `tourism=caravan_site` (nodes, ways, and relations; `out center`).
+Does **not** include `tourism=camp_site` (separate camp-sites layer),
+`tourism=camp_pitch`, `tourism=hostel`, or `amenity=shelter` without
+`tourism=caravan_site`. Complements the camp-sites layer which already
+excludes caravan sites. Unnamed sites keep the generic label "Caravan site"
+(no `name=*` filter unless density / timeouts force it). Same admin-area
+pipeline as sports centres / camp sites.
+
+```bash
+python3 scripts/extract_osm_caravan_sites.py
+```
