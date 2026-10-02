@@ -46,7 +46,7 @@ Shared OSM pipeline:
 3. **Clip** results to the admin polygon (+ ~200 m buffer) so mainland France
    and cross-border spill are dropped.
 4. Deduplicate by OSM `type/id`. Ways are stored as **centre points**
-   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme-parks, viewpoints, arts-centres, aquariums, piers, ruins, golf-courses, galleries, marketplaces, nature-reserves, camp-sites, memorials, and sports-centres extractors
+   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme-parks, viewpoints, arts-centres, aquariums, piers, ruins, golf-courses, galleries, marketplaces, nature-reserves, camp-sites, memorials, sports-centres, and caravan-sites extractors
    also query **relations** and store them as centre points the same way;
    other layers remain node+way only unless noted.
 
@@ -827,6 +827,31 @@ Same pipeline fields as the other OSM layers (`name`, optional `brand`/`operator
 203 of 10 726; nodes: 1737 of 10 726. Pipeline-filled generic names: 1604 (~15.0%).
 
 
+
+## Caravan sites (`caravan-sites`)
+
+| | |
+|---|---|
+| **File** | `public/data/caravan-sites.geojson` |
+| **Features** | 5017 points (not a round cap) |
+| **Coverage** | Same admin-area footprint: England 3319, Scotland 454, Wales 886, Northern Ireland 91, Ireland 265, Isle of Man 2, Guernsey 0, Jersey 0. **Northern France bleed ≈ 0** (hard bbox checks: IoM ≈ 2, GG ≈ 0, JE ≈ 0). |
+| **Sample vs full** | Admin-area extract of OSM `tourism=caravan_site` at extract time (nodes, ways, **and relations**). `tourism=camp_site` (already a separate camp-sites layer), `tourism=camp_pitch`, `tourism=hostel`, and `amenity=shelter` without `tourism=caravan_site` are **not** included — this layer **complements** camp sites, which already excludes `tourism=caravan_site`. Disused sites that remain tagged `tourism=caravan_site` **are** included. Unnamed sites keep the generic label `"Caravan site"` (no `name=*` filter — density ~5.0k is under the ~8–10k named-only threshold). **Feature counts are OSM objects, not distinct caravan sites** (a complex may appear as several nodes/ways/relations). Large sites mapped as multipolygon / site relations are included via Overpass centre points (Heathrow lesson — caravan sites are often ways/relations). Default regional tiling `--max-span 2.0`. |
+| **Source** | [OpenStreetMap](https://www.openstreetmap.org/) via Overpass API |
+| **Query** | `tourism=caravan_site` nodes, ways, and relations (`out center tags`) |
+| **Endpoint used** | `https://overpass.openstreetmap.fr/api/interpreter` |
+| **Extract date (UTC)** | 2026-10-02T19:41:52Z |
+| **Method** | Same admin-area pipeline as sports centres / camp sites / nature reserves / memorials (`scripts/extract_osm_caravan_sites.py`), including OSM relations; default tile span 2.0° |
+| **License** | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/) — © OpenStreetMap contributors |
+| **Attribution** | © OpenStreetMap contributors |
+
+### Property semantics (pipeline)
+
+Same pipeline fields as the other OSM layers (`name`, optional `brand`/`operator`, `osm_id`,
+`osm_url`, pipeline `note`, `layer`, `source`). Generic missing names fill as
+`"Caravan site"`. Ways as centre points: 4454 of 5017; relations as centre points:
+89 of 5017; nodes: 474 of 5017. Pipeline-filled generic names: 1639 (~32.7%).
+
+
 ## Constituencies (`constituencies`)
 
 | | |
@@ -1125,6 +1150,18 @@ Popup shows **name + PCON24CD only** in this PR — no candidates, polls, or end
   `leisure=sports_centre` (dedupe by OSM `type/id` only). Counts are OSM objects,
   not distinct centres. Isle of Man admin-clip is 26; Channel Islands GG 11 /
   JE 29 (hard main-island bbox ≈ GG 9 / JE 29).
+- Caravan sites layer is `tourism=caravan_site` only (not `tourism=camp_site`
+  — already a separate camp-sites layer — `tourism=camp_pitch`, `tourism=hostel`,
+  or `amenity=shelter` without `tourism=caravan_site`). Complements camp sites,
+  which already excludes `tourism=caravan_site`. Disused sites still tagged
+  `tourism=caravan_site` are included. Unnamed sites keep the generic label
+  `"Caravan site"` (no `name=*` filter at this density). Extract includes
+  **nodes, ways, and relations**; ways and relations are Overpass centre points,
+  not footprints (Heathrow lesson — caravan sites are often ways/relations).
+  A site may appear both as a relation and as member ways/nodes if both carry
+  `tourism=caravan_site` (dedupe by OSM `type/id` only). Counts are OSM objects,
+  not distinct sites. Isle of Man admin-clip is 2; Channel Islands GG 0 / JE 0
+  (hard main-island bbox ≈ GG 0 / JE 0) — likely under-tagged on GG/JE.
 - Isle of Man has only 2 OSM hospitals at extract time — likely under-tagged
   relative to known sites; Channel Islands admin-clip counts are GG 4 / JE 4
   (hard bbox check slightly lower for Guernsey). Castles IoM admin-clip is 3;
@@ -1154,6 +1191,7 @@ Popup shows **name + PCON24CD only** in this PR — no candidates, polls, or end
   admin-clip is 20; Channel Islands GG 11 / JE 6.
   Memorials admin-clip is IoM 61; Channel Islands GG 43 / JE 73.
   Sports centres IoM admin-clip is 26; Channel Islands GG 11 / JE 29.
+  Caravan sites IoM admin-clip is 2; Channel Islands GG 0 / JE 0.
 - Extract uses polygon clip + buffer; features extremely close to a land border
   could in theory be included or excluded by the ~200 m buffer.
 
