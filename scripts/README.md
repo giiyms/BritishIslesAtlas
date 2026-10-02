@@ -463,3 +463,24 @@ python3 scripts/extract_osm_playgrounds.py
 Default `--max-span 2.0`. **Named-only** (`name=*` required) because England-alone
 density without `name=*` is ~44k (far past the ~8–10k soft guideline); unnamed
 playgrounds are omitted.
+
+
+## `extract_osm_beaches.py`
+
+Rebuilds `public/data/beaches.geojson` (and merges into `extract-meta.json`)
+using the same admin-area Overpass + polygon-clip pipeline, querying
+`natural=beach` (nodes, ways, and relations; `out center`). Does **not**
+include `natural=coastline`, `natural=sand` alone, `leisure=beach_resort`
+without `natural=beach`, or `tourism=hotel`.
+
+```bash
+python3 scripts/extract_osm_beaches.py
+```
+
+Default `--max-span 2.0`. **No `name=*` filter**: a loose British Isles bbox
+probe (49–61°N, −11–2.2°E, not admin-clipped, includes some northern France
+coast) was ~9.1k objects (nodes 357 + ways 8216 + relations 567), inside the
+~8–10k soft band rather than past it. The same bbox with `name=*` was ~2.0k
+(nodes 201 + ways 1607 + relations 197); dropping unnamed beaches would omit
+most of the layer, so unnamed sites keep the generic label `Beach`. Admin
+polygons clip coastal France.

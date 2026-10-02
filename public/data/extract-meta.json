@@ -1232,5 +1232,40 @@
       "counting_caveat": "leisure=playground only; leisure=pitch, leisure=park, amenity=school playgrounds without leisure=playground, and tourism=attraction alone are omitted; feature counts are OSM objects not distinct playgrounds (a complex may be several nodes/ways/relations); disused sites still tagged leisure=playground are included; multipolygon / site relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry leisure=playground; named-only (name=* required); unnamed playgrounds omitted",
       "name_filter": "require name=* (unnamed playgrounds omitted)"
     }
+  },
+  "beaches": {
+    "extracted_at": "2026-10-02T23:03:13Z",
+    "method": "Overpass per-nation/territory bbox tiles clipped to OSM admin polygons (Nominatim); endpoint overpass.openstreetmap.fr",
+    "license": "ODbL 1.0",
+    "endpoint": "https://overpass.openstreetmap.fr/api/interpreter",
+    "layer": "beaches",
+    "count": 8846,
+    "coverage": "Admin-area extract (ENG/SCT/WLS/NIR/IE/IM/GG/JE); IoM≈129; GG≈86; JE≈53; northern France bleed≈1",
+    "region_counts": {
+      "england": 2711,
+      "scotland": 3346,
+      "wales": 680,
+      "northern-ireland": 197,
+      "ireland": 1615,
+      "isle-of-man": 129,
+      "guernsey": 114,
+      "jersey": 54
+    },
+    "limitations": {
+      "isle_of_man": 129,
+      "channel_islands": 139,
+      "guernsey": 86,
+      "jersey": 53,
+      "northern_france_approx": 1,
+      "ways_as_centre_points": 7975,
+      "relations_as_centre_points": 547,
+      "pipeline_generic_names": 6902,
+      "pipeline_note_repeats_brand": 35,
+      "note_semantics": "pipeline field (brand/operator or 'OpenStreetMap'), not OSM note=*",
+      "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
+      "counting_caveat": "natural=beach only; natural=coastline, natural=sand alone, leisure=beach_resort without natural=beach, and tourism=hotel are omitted; feature counts are OSM objects not distinct beaches (a stretch may be several nodes/ways/relations); disused sites still tagged natural=beach are included; multipolygon / site relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry natural=beach; unnamed beaches keep the generic label Beach",
+      "name_filter": "no name=* filter; a loose BI bbox probe (incl. some N France coast) was ~9.1k (n357/w8216/r567), inside the ~8-10k soft band (same bbox with name=* was ~2.0k: n201/w1607/r197). Dropping unnamed beaches would omit most of the layer, so they are kept",
+      "france_bleed_note": "Hard bbox heuristic flags 1 feature (relation/20327663, centre -1.928, 49.291) just east of the Channel Islands exclusion box (lon -1.95). It is inside the Jersey admin polygon (Écréhous reef), not mainland France. Mainland France bleed = 0."
+    }
   }
 }
