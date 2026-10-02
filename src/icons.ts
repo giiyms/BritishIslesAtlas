@@ -89,6 +89,9 @@ export const ICONS = {
   "camp-sites": icon(
     `<path d="M4 19.5h16"/><path d="M6 19.5 12 6.5l6 13"/><path d="M8.5 14.5h7"/><path d="M12 6.5v-2"/>`,
   ),
+  constituencies: icon(
+    `<path d="M4 6.5h7.5V4.5H4z"/><path d="M12.5 6.5H20V4.5h-7.5z"/><path d="M4 13.5h7.5V8H4z"/><path d="M12.5 13.5H20V8h-7.5z"/><path d="M4 19.5h7.5v-5H4z"/><path d="M12.5 19.5H20v-5h-7.5z"/>`,
+  ),
   memorials: icon(
     `<path d="M4 19.5h16"/><path d="M7.5 19.5V10.5h9v9"/><path d="M9.5 10.5V7.5L12 5l2.5 2.5v3"/><circle cx="12" cy="14.5" r="1.6"/><path d="M12 12.9v3.2"/>`,
   ),

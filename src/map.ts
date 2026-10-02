@@ -264,6 +264,7 @@ export function createAtlas(container: HTMLElement): Atlas {
   const minZoom = (id: LayerId) => id === "post-offices" ? 7 :
     ["pubs", "schools", "churches", "other-religious", "mosques", "petrol", "ev", "libraries", "universities", "museums", "railway-stations", "aerodromes", "ferry-terminals", "marinas", "zoos", "theatres", "battlefields", "cinemas", "stadiums", "theme-parks", "viewpoints", "arts-centres", "aquariums", "piers", "ruins", "golf-courses", "galleries", "marketplaces", "nature-reserves", "camp-sites", "memorials"].includes(id) ? 6 : 0;
   const layerIds = (id: LayerId) => id === "roads" ? [id, "roads-hit"] :
+    id === "constituencies" ? [id, `${id}-outline`] :
     clustered.has(id) ? [id, `${id}-cluster`, `${id}-cluster-count`] : [id];
   const beforeFor = (z: number): string | undefined => {
     const next = ordered.find((layer) => layer.z > z && map.getLayer(layer.id));
@@ -273,19 +274,55 @@ export function createAtlas(container: HTMLElement): Atlas {
     if (map.getLayer(id)) return;
     const layer = LAYERS.find((item) => item.id === id)!;
     const clusters = clustered.has(id);
-    if (!map.getSource(id)) map.addSource(id, {
-      type: "geojson",
-      data: OSM_STATIC.has(id) ? `/data/${id}.geojson` : buildCollection(id),
-      ...(clusters ? { cluster: true, clusterRadius: 44, clusterMaxZoom: 11, clusterMinPoints: 3,
-        maxzoom: 12, buffer: 64, tolerance: 0.5 } : {}),
-      ...(OSM_STATIC.has(id) ? { attribution: "© OpenStreetMap contributors (ODbL 1.0)" } : {}),
-    });
+    if (!map.getSource(id)) {
+      const sourceData =
+        id === "constituencies"
+          ? "/data/constituencies-gb-2024.geojson"
+          : OSM_STATIC.has(id)
+            ? `/data/${id}.geojson`
+            : buildCollection(id);
+      const attribution =
+        id === "constituencies"
+          ? "Contains OS data © Crown copyright and database right 2024; Contains National Statistics data © Crown copyright and database right 2024 (OGL v3.0)"
+          : OSM_STATIC.has(id)
+            ? "© OpenStreetMap contributors (ODbL 1.0)"
+            : undefined;
+      map.addSource(id, {
+        type: "geojson",
+        data: sourceData,
+        ...(clusters ? { cluster: true, clusterRadius: 44, clusterMaxZoom: 11, clusterMinPoints: 3,
+          maxzoom: 12, buffer: 64, tolerance: 0.5 } : {}),
+        ...(attribution ? { attribution } : {}),
+      });
+    }
     const before = beforeFor(layer.z);
     const visible = state[id] ? "visible" : "none";
     const layout = { visibility: visible } as const;
     const pointFilter: { filter?: FilterSpecification } =
       clusters ? { filter: ["!", ["has", "point_count"]] } : {};
-    if (layer.kind === "line") {
+    if (layer.kind === "fill") {
+      map.addLayer({
+        id,
+        type: "fill",
+        source: id,
+        layout,
+        paint: {
+          "fill-color": layer.color,
+          "fill-opacity": 0.16,
+        },
+      }, before);
+      map.addLayer({
+        id: `${id}-outline`,
+        type: "line",
+        source: id,
+        layout: { ...layout, "line-cap": "round", "line-join": "round" },
+        paint: {
+          "line-color": layer.accent,
+          "line-width": ["interpolate", ["linear"], ["zoom"], 4, 0.4, 8, 0.8, 12, 1.4],
+          "line-opacity": 0.85,
+        },
+      }, before);
+    } else if (layer.kind === "line") {
       map.addLayer({ id, type: "line", source: id,
         layout: { ...layout, "line-cap": "round", "line-join": "round" },
         paint: { "line-color": layer.color,
@@ -370,6 +407,14 @@ export function createAtlas(container: HTMLElement): Atlas {
     const layerId = String(properties.layer ?? feature.source ?? "");
     const layer = LAYERS.find((item) => item.id === layerId);
     const name = String(properties.name ?? layer?.label ?? "Place");
+    if (layerId === "constituencies") {
+      const code = String(properties.PCON24CD ?? "");
+      popup.setLngLat(event.lngLat).setHTML(
+        `<strong>${escapeHtml(name)}</strong>` +
+        (code ? `<div class="popup-meta">${escapeHtml(code)}</div>` : ""),
+      ).addTo(map);
+      return;
+    }
     const brand = properties.brand ? String(properties.brand) : "";
     const note = properties.note != null && String(properties.note).length
       ? String(properties.note)

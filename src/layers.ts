@@ -2,6 +2,7 @@ import { ICONS } from "./icons";
 
 export type MarkerKind =
   | "line"
+  | "fill"
   | "dot"
   | "disc"
   | "ring"
@@ -533,6 +534,20 @@ export const LAYERS = [
     blurb: "Preview census markers",
     pointScale: 1,
     icon: ICONS.census,
+  },
+  {
+    id: "constituencies",
+    z: 35,
+    label: "Constituencies",
+    group: "data",
+    accent: "#3a4a5c",
+    tint: "#e8ebef",
+    color: "#3a4a5c",
+    kind: "fill",
+    defaultOn: false,
+    blurb: "GB Westminster constituencies (2024)",
+    pointScale: 1,
+    icon: ICONS.constituencies,
   },
   {
     id: "petrol",
