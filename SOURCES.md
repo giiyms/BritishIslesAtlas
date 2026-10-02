@@ -35,7 +35,9 @@ fire stations by `scripts/extract_osm_fire_stations.py`; police by
 `scripts/extract_osm_memorials.py`; sports centres by
 `scripts/extract_osm_sports_centres.py`; caravan sites by
 `scripts/extract_osm_caravan_sites.py`; fitness centres by
-`scripts/extract_osm_fitness_centres.py`.
+`scripts/extract_osm_fitness_centres.py`; community centres by
+`scripts/extract_osm_community_centres.py`; post offices by
+`scripts/extract_osm_post_offices.py`.
 Westminster constituencies (GB) are ingested separately by
 `scripts/ingest_ons_pcon2024.py` from the ONS ArcGIS FeatureServer (not Overpass).
 Shared OSM pipeline:
@@ -48,7 +50,7 @@ Shared OSM pipeline:
 3. **Clip** results to the admin polygon (+ ~200 m buffer) so mainland France
    and cross-border spill are dropped.
 4. Deduplicate by OSM `type/id`. Ways are stored as **centre points**
-   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme-parks, viewpoints, arts-centres, aquariums, piers, ruins, golf-courses, galleries, marketplaces, nature-reserves, camp-sites, memorials, sports-centres, caravan-sites, fitness-centres, and community-centres extractors
+   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme-parks, viewpoints, arts-centres, aquariums, piers, ruins, golf-courses, galleries, marketplaces, nature-reserves, camp-sites, memorials, sports-centres, caravan-sites, fitness-centres, community-centres, and post-offices extractors
    also query **relations** and store them as centre points the same way;
    other layers remain node+way only unless noted.
 
@@ -904,6 +906,30 @@ Same pipeline fields as the other OSM layers (`name`, optional `brand`/`operator
 
 
 
+## Post offices (`post-offices`)
+
+| | |
+|---|---|
+| **File** | `public/data/post-offices.geojson` |
+| **Features** | 9784 points (not a round cap) |
+| **Coverage** | Same admin-area footprint: England 7062, Scotland 902, Wales 522, Northern Ireland 469, Ireland 799, Isle of Man 11, Guernsey 8, Jersey 11. **Northern France bleed ≈ 0** (hard bbox checks: IoM ≈ 11, GG ≈ 6, JE ≈ 11). |
+| **Sample vs full** | Admin-area extract of OSM `amenity=post_office` at extract time (nodes, ways, **and relations**). `amenity=parcel_locker`, `shop=convenience` with a post_office role alone, Royal Mail collection points without `amenity=post_office`, and `amenity=post_box` are **not** included. Disused sites that remain tagged `amenity=post_office` **are** included. **Named-only** (`name=*` required) because UK Geofabrik density is already ~9.4k at the ~8–10k soft guideline (full BI with Ireland would blow past it); unnamed post offices are omitted. **Feature counts are OSM objects, not distinct offices** (a complex may appear as several nodes/ways/relations). Large sites mapped as multipolygon / site relations are included via Overpass centre points (Heathrow lesson — post offices are often ways/relations). Default regional tiling `--max-span 2.0`. |
+| **Source** | [OpenStreetMap](https://www.openstreetmap.org/) via Overpass API |
+| **Query** | `amenity=post_office` + `name=*` nodes, ways, and relations (`out center tags`) |
+| **Endpoint used** | `https://overpass.openstreetmap.fr/api/interpreter` |
+| **Extract date (UTC)** | 2026-10-02T21:31:26Z |
+| **Method** | Same admin-area pipeline as community centres / fitness centres / caravan sites (`scripts/extract_osm_post_offices.py`), including OSM relations; default tile span 2.0° |
+| **License** | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/) — © OpenStreetMap contributors |
+| **Attribution** | © OpenStreetMap contributors |
+
+### Property semantics (pipeline)
+
+Same pipeline fields as the other OSM layers (`name`, optional `brand`/`operator`, `osm_id`,
+`osm_url`, pipeline `note`, `layer`, `source`). Generic missing names fill as
+`"Post office"`. Ways as centre points: 1461 of 9784; relations as centre points:
+4 of 9784; nodes: 8319 of 9784. Pipeline-filled generic names: 0 (named-only extract).
+
+
 ## Constituencies (`constituencies`)
 
 | | |
@@ -1237,6 +1263,16 @@ Popup shows **name + PCON24CD only** in this PR — no candidates, polls, or end
   `amenity=community_centre` (dedupe by OSM `type/id` only). Counts are OSM
   objects, not distinct centres. **Named-only** (`name=*` required) due to
   density above the ~8–10k threshold; unnamed centres are omitted.
+
+- Post offices layer is `amenity=post_office` only (not `amenity=parcel_locker`,
+  `shop=convenience` with a post_office role alone, Royal Mail collection points
+  without `amenity=post_office`, or `amenity=post_box`). Disused offices still tagged
+  `amenity=post_office` are included. Extract includes **nodes, ways, and
+  relations**; ways and relations are Overpass centre points, not footprints. A
+  site may appear both as a relation and as member ways/nodes if both carry
+  `amenity=post_office` (dedupe by OSM `type/id` only). Counts are OSM
+  objects, not distinct offices. **Named-only** (`name=*` required) due to
+  density at/above the ~8–10k soft guideline; unnamed offices are omitted.
 
 - Isle of Man has only 2 OSM hospitals at extract time — likely under-tagged
   relative to known sites; Channel Islands admin-clip counts are GG 4 / JE 4

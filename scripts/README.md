@@ -430,3 +430,19 @@ python3 scripts/extract_osm_community_centres.py
 Default `--max-span 2.0`. **Named-only** (`name=*` required) because England-alone
 density exceeds the ~8–10k threshold; unnamed community centres are omitted.
 
+
+## `extract_osm_post_offices.py`
+
+Rebuilds `public/data/post-offices.geojson` (and merges into `extract-meta.json`)
+using the same admin-area Overpass + polygon-clip pipeline, querying
+`amenity=post_office` (nodes, ways, and relations; `out center`). Does **not**
+include `amenity=parcel_locker`, `shop=convenience` with a post_office role alone,
+Royal Mail collection points without `amenity=post_office`, or `amenity=post_box`.
+
+```bash
+python3 scripts/extract_osm_post_offices.py
+```
+
+Default `--max-span 2.0`. **Named-only** (`name=*` required) because UK Geofabrik
+density is already ~9.4k at the ~8–10k soft guideline (full BI with Ireland would
+blow past it); unnamed post offices are omitted.

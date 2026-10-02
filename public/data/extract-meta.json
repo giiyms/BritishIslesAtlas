@@ -1164,5 +1164,39 @@
       "counting_caveat": "amenity=community_centre only; amenity=arts_centre (already an arts-centres layer), amenity=social_facility alone, leisure=fitness_centre / leisure=sports_centre, and tourism=attraction without amenity=community_centre are omitted; feature counts are OSM objects not distinct centres (a complex may be several nodes/ways/relations); disused sites still tagged amenity=community_centre are included; multipolygon / site relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry amenity=community_centre; named-only (name=* required); unnamed community centres omitted",
       "name_filter": "require name=* (unnamed community centres omitted)"
     }
+  },
+  "post-offices": {
+    "extracted_at": "2026-10-02T21:31:26Z",
+    "method": "Overpass per-nation/territory bbox tiles clipped to OSM admin polygons (Nominatim); endpoint overpass.openstreetmap.fr",
+    "license": "ODbL 1.0",
+    "endpoint": "https://overpass.openstreetmap.fr/api/interpreter",
+    "layer": "post-offices",
+    "count": 9784,
+    "coverage": "Admin-area extract (ENG/SCT/WLS/NIR/IE/IM/GG/JE); IoM≈11; GG≈6; JE≈11; northern France bleed≈0",
+    "region_counts": {
+      "england": 7062,
+      "scotland": 902,
+      "wales": 522,
+      "northern-ireland": 469,
+      "ireland": 799,
+      "isle-of-man": 11,
+      "guernsey": 8,
+      "jersey": 11
+    },
+    "limitations": {
+      "isle_of_man": 11,
+      "channel_islands": 17,
+      "guernsey": 6,
+      "jersey": 11,
+      "northern_france_approx": 0,
+      "ways_as_centre_points": 1461,
+      "relations_as_centre_points": 4,
+      "pipeline_generic_names": 0,
+      "pipeline_note_repeats_brand": 8060,
+      "note_semantics": "pipeline field (brand/operator or 'OpenStreetMap'), not OSM note=*",
+      "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
+      "counting_caveat": "amenity=post_office only; amenity=parcel_locker, shop=convenience with a post_office role alone, Royal Mail collection points without amenity=post_office, and amenity=post_box are omitted; feature counts are OSM objects not distinct offices (a complex may be several nodes/ways/relations); disused sites still tagged amenity=post_office are included; multipolygon / site relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry amenity=post_office; named-only (name=* required); unnamed post offices omitted",
+      "name_filter": "require name=* (unnamed post offices omitted)"
+    }
   }
 }
