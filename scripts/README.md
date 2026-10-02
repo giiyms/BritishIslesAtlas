@@ -276,3 +276,108 @@ as multipolygons (Heathrow lesson).
 python3 scripts/extract_osm_arts_centres.py
 ```
 
+## `extract_osm_aquariums.py`
+
+Rebuilds `public/data/aquariums.geojson` (and merges into `extract-meta.json`)
+using the same admin-area Overpass + polygon-clip pipeline, querying
+`tourism=aquarium` on **nodes, ways, and relations** (`out center tags`).
+
+```bash
+python3 scripts/extract_osm_aquariums.py
+```
+
+## `extract_osm_piers.py`
+
+Rebuilds `public/data/piers.geojson` (and merges into `extract-meta.json`)
+using the same admin-area Overpass + polygon-clip pipeline, querying
+`man_made=pier` **with `name=*`** on **nodes, ways, and relations**.
+
+```bash
+python3 scripts/extract_osm_piers.py
+```
+
+## `extract_osm_ruins.py`
+
+Rebuilds `public/data/ruins.geojson` (and merges into `extract-meta.json`)
+using the same admin-area Overpass + polygon-clip pipeline, querying
+`historic=ruins` **with `name=*`** on **nodes, ways, and relations**
+(tighter `--max-span 1.5`).
+
+```bash
+python3 scripts/extract_osm_ruins.py
+```
+
+## `extract_osm_golf_courses.py`
+
+Rebuilds `public/data/golf-courses.geojson` (and merges into `extract-meta.json`)
+using the same admin-area Overpass + polygon-clip pipeline, querying
+`leisure=golf_course` on **nodes, ways, and relations**.
+
+```bash
+python3 scripts/extract_osm_golf_courses.py
+```
+
+## `extract_osm_galleries.py`
+
+Rebuilds `public/data/galleries.geojson` (and merges into `extract-meta.json`)
+using the same admin-area Overpass + polygon-clip pipeline, querying
+`tourism=gallery` on **nodes, ways, and relations**.
+
+```bash
+python3 scripts/extract_osm_galleries.py
+```
+
+## `extract_osm_marketplaces.py`
+
+Rebuilds `public/data/marketplaces.geojson` (and merges into `extract-meta.json`)
+using the same admin-area Overpass + polygon-clip pipeline, querying
+`amenity=marketplace` on **nodes, ways, and relations**.
+
+```bash
+python3 scripts/extract_osm_marketplaces.py
+```
+
+## `extract_osm_nature_reserves.py`
+
+Rebuilds `public/data/nature-reserves.geojson` (and merges into `extract-meta.json`)
+using the same admin-area Overpass + polygon-clip pipeline, querying
+`leisure=nature_reserve` on **nodes, ways, and relations**.
+
+```bash
+python3 scripts/extract_osm_nature_reserves.py
+```
+
+## `extract_osm_camp_sites.py`
+
+Rebuilds `public/data/camp-sites.geojson` (and merges into `extract-meta.json`)
+using the same admin-area Overpass + polygon-clip pipeline, querying
+`tourism=camp_site` on **nodes, ways, and relations** (not caravan sites).
+
+```bash
+python3 scripts/extract_osm_camp_sites.py
+```
+
+## `extract_osm_memorials.py`
+
+Rebuilds `public/data/memorials.geojson` (and merges into `extract-meta.json`)
+using the same admin-area Overpass + polygon-clip pipeline, querying
+`historic=memorial` **with `name=*`** on **nodes, ways, and relations**
+(tighter `--max-span 1.5`).
+
+```bash
+python3 scripts/extract_osm_memorials.py
+```
+
+## `extract_osm_sports_centres.py`
+
+Rebuilds `public/data/sports-centres.geojson` (and merges into `extract-meta.json`)
+from OSM `leisure=sports_centre` (nodes, ways, and relations; `out center`).
+Does **not** include `leisure=stadium` (separate layer), `leisure=pitch` alone,
+`leisure=fitness_centre`, or `leisure=sports_hall` without `leisure=sports_centre`.
+Unnamed sites keep the generic label "Sports centre" (no `name=*` filter unless
+density / timeouts force it). Same admin-area pipeline as camp sites.
+
+```bash
+python3 scripts/extract_osm_sports_centres.py
+```
+

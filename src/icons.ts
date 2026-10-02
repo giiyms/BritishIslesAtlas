@@ -95,6 +95,9 @@ export const ICONS = {
   memorials: icon(
     `<path d="M4 19.5h16"/><path d="M7.5 19.5V10.5h9v9"/><path d="M9.5 10.5V7.5L12 5l2.5 2.5v3"/><circle cx="12" cy="14.5" r="1.6"/><path d="M12 12.9v3.2"/>`,
   ),
+  "sports-centres": icon(
+    `<rect x="4" y="10.5" width="16" height="9" rx="1.2"/><path d="M7 10.5V8.5h10v2"/><circle cx="12" cy="15" r="2.2"/><path d="M12 12.8v4.4M9.8 15h4.4"/>`,
+  ),
   churches: icon(
     `<path d="M12 3v3M10.2 4.6h3.6"/><path d="M6 21V11.2L12 7l6 4.2V21"/><path d="M10 21v-4h4v4"/><path d="M4 21h16"/>`,
   ),

@@ -1031,5 +1031,38 @@
     "coverage": "GB Westminster only: England+Scotland+Wales = 632; Northern Ireland 18 deferred; Ireland/IoM/CI have no Westminster seats",
     "attribution": "Contains Ordnance Survey data © Crown copyright and database right 2024. Contains National Statistics data © Crown copyright and database right 2024.",
     "size_bytes": 20474485
+  },
+  "sports-centres": {
+    "extracted_at": "2026-10-02T19:25:05Z",
+    "method": "Overpass per-nation/territory bbox tiles clipped to OSM admin polygons (Nominatim); endpoint overpass.openstreetmap.fr",
+    "license": "ODbL 1.0",
+    "endpoint": "https://overpass.openstreetmap.fr/api/interpreter",
+    "layer": "sports-centres",
+    "count": 10726,
+    "coverage": "Admin-area extract (ENG/SCT/WLS/NIR/IE/IM/GG/JE); IoM≈26; GG≈9; JE≈29; northern France bleed≈0",
+    "region_counts": {
+      "england": 6536,
+      "scotland": 973,
+      "wales": 394,
+      "northern-ireland": 322,
+      "ireland": 2435,
+      "isle-of-man": 26,
+      "guernsey": 11,
+      "jersey": 29
+    },
+    "limitations": {
+      "isle_of_man": 26,
+      "channel_islands": 38,
+      "guernsey": 9,
+      "jersey": 29,
+      "northern_france_approx": 0,
+      "ways_as_centre_points": 8786,
+      "relations_as_centre_points": 203,
+      "pipeline_generic_names": 1604,
+      "pipeline_note_repeats_brand": 1095,
+      "note_semantics": "pipeline field (brand/operator or 'OpenStreetMap'), not OSM note=*",
+      "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
+      "counting_caveat": "leisure=sports_centre only; leisure=stadium (separate layer), leisure=pitch alone, leisure=fitness_centre, and leisure=sports_hall without leisure=sports_centre are omitted; feature counts are OSM objects not distinct centres (a complex may be several nodes/ways/relations); disused sites still tagged leisure=sports_centre are included; multipolygon / site relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry leisure=sports_centre; unnamed sports centres keep the generic label Sports centre"
+    }
   }
 }
