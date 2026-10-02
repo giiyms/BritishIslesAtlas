@@ -978,5 +978,39 @@
       "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
       "counting_caveat": "tourism=camp_site only; tourism=caravan_site, tourism=camp_pitch, tourism=hostel, and amenity=shelter without tourism=camp_site are omitted (caravan sites are a separate OSM tag and excluded); feature counts are OSM objects not distinct campsites (a complex may be several nodes/ways/relations); disused sites still tagged tourism=camp_site are included; multipolygon / site relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry tourism=camp_site; unnamed camp sites keep the generic label Camp site"
     }
+  },
+  "memorials": {
+    "extracted_at": "2026-10-01T16:23:37Z",
+    "method": "Overpass per-nation/territory bbox tiles clipped to OSM admin polygons (Nominatim); endpoint overpass.openstreetmap.fr",
+    "license": "ODbL 1.0",
+    "endpoint": "https://overpass.openstreetmap.fr/api/interpreter",
+    "layer": "memorials",
+    "count": 14851,
+    "coverage": "Admin-area extract (ENG/SCT/WLS/NIR/IE/IM/GG/JE); IoM≈61; GG≈40; JE≈73; northern France bleed≈0",
+    "region_counts": {
+      "england": 8919,
+      "scotland": 4156,
+      "wales": 426,
+      "northern-ireland": 117,
+      "ireland": 1056,
+      "isle-of-man": 61,
+      "guernsey": 43,
+      "jersey": 73
+    },
+    "limitations": {
+      "isle_of_man": 61,
+      "channel_islands": 113,
+      "guernsey": 40,
+      "jersey": 73,
+      "northern_france_approx": 0,
+      "ways_as_centre_points": 792,
+      "relations_as_centre_points": 20,
+      "pipeline_generic_names": 5,
+      "pipeline_note_repeats_brand": 774,
+      "note_semantics": "pipeline field (brand/operator or 'OpenStreetMap'), not OSM note=*",
+      "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
+      "counting_caveat": "historic=memorial WITH name=* only; unnamed plaques and memorial noise, historic=monument, historic=war_memorial without historic=memorial, memorial=yes on other keys, and tourism=attraction without historic=memorial are omitted; war memorials tagged historic=memorial ARE included; feature counts are OSM objects not distinct sites (a complex may be several nodes/ways/relations); disused sites still tagged historic=memorial with name are included; multipolygon relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry historic=memorial+name; raw unfiltered historic=memorial is notoriously dense/timeout-prone Isles-wide so this extract uses name=* and fine regional tiling",
+      "name_filter": "require name=* (unnamed memorials omitted)"
+    }
   }
 }
