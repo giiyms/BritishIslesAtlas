@@ -38,7 +38,8 @@ fire stations by `scripts/extract_osm_fire_stations.py`; police by
 `scripts/extract_osm_fitness_centres.py`; community centres by
 `scripts/extract_osm_community_centres.py`; post offices by
 `scripts/extract_osm_post_offices.py`; playgrounds by
-`scripts/extract_osm_playgrounds.py`.
+`scripts/extract_osm_playgrounds.py`; beaches by
+`scripts/extract_osm_beaches.py`.
 Westminster constituencies (GB) are ingested separately by
 `scripts/ingest_ons_pcon2024.py` from the ONS ArcGIS FeatureServer (not Overpass).
 Shared OSM pipeline:
@@ -51,7 +52,7 @@ Shared OSM pipeline:
 3. **Clip** results to the admin polygon (+ ~200 m buffer) so mainland France
    and cross-border spill are dropped.
 4. Deduplicate by OSM `type/id`. Ways are stored as **centre points**
-   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme-parks, viewpoints, arts-centres, aquariums, piers, ruins, golf-courses, galleries, marketplaces, nature-reserves, camp-sites, memorials, sports-centres, caravan-sites, fitness-centres, community-centres, post-offices, and playgrounds extractors
+   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme-parks, viewpoints, arts-centres, aquariums, piers, ruins, golf-courses, galleries, marketplaces, nature-reserves, camp-sites, memorials, sports-centres, caravan-sites, fitness-centres, community-centres, post-offices, playgrounds, and beaches extractors
    also query **relations** and store them as centre points the same way;
    other layers remain node+way only unless noted.
 
@@ -957,6 +958,32 @@ Same pipeline fields as the other OSM layers (`name`, optional `brand`/`operator
 
 
 
+
+## Beaches (`beaches`)
+
+| | |
+|---|---|
+| **File** | `public/data/beaches.geojson` |
+| **Features** | 8846 points (not a round cap) |
+| **Coverage** | Same admin-area footprint: England 2711, Scotland 3346, Wales 680, Northern Ireland 197, Ireland 1615, Isle of Man 129, Guernsey 114, Jersey 54. **Northern France bleed ≈ 0**. The hard bbox heuristic flags **1** feature (`relation/20327663`, unnamed multipolygon centre −1.928, 49.291) just east of the Channel Islands exclusion box (lon −1.95). That centre is inside the **Jersey** admin polygon (Écréhous reef), not mainland France. Hard main-island bbox checks: IoM ≈ 129, GG ≈ 86, JE ≈ 53 (admin GG 114 includes the rest of the Bailiwick; the extra Jersey feature is the Écréhous hit). |
+| **Sample vs full** | Admin-area extract of OSM `natural=beach` at extract time (nodes, ways, **and relations**). `natural=coastline`, `natural=sand` alone, `leisure=beach_resort` without `natural=beach`, and `tourism=hotel` are **not** included. Disused sites that remain tagged `natural=beach` **are** included. **No `name=*` filter.** A loose British Isles bbox probe (49–61°N, −11–2.2°E, not admin-clipped, includes some northern France coast) was ~9.1k (nodes 357 + ways 8216 + relations 567), inside the ~8–10k soft band rather than past it. The same bbox with `name=*` was ~2.0k (nodes 201 + ways 1607 + relations 197); requiring names would drop most beaches, so unnamed sites are kept with the generic label `Beach`. Admin-clipped result is **8846** (nodes 324 / ways 7975 / relations 547). **Feature counts are OSM objects, not distinct beaches** (a stretch may appear as several nodes/ways/relations). Large sites mapped as multipolygon / site relations are included via Overpass centre points (Heathrow lesson — beaches are often ways/relations). Default regional tiling `--max-span 2.0`. |
+| **Source** | [OpenStreetMap](https://www.openstreetmap.org/) via Overpass API |
+| **Query** | `natural=beach` nodes, ways, and relations (`out center tags`); no `name=*` filter |
+| **Endpoint used** | `https://overpass.openstreetmap.fr/api/interpreter` |
+| **Extract date (UTC)** | 2026-10-02T23:03:13Z |
+| **Method** | Same admin-area pipeline as playgrounds / post offices / community centres (`scripts/extract_osm_beaches.py`), including OSM relations; default tile span 2.0° |
+| **License** | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/) — © OpenStreetMap contributors |
+| **Attribution** | © OpenStreetMap contributors |
+
+### Property semantics (pipeline)
+
+Same pipeline fields as the other OSM layers (`name`, optional `brand`/`operator`, `osm_id`,
+`osm_url`, pipeline `note`, `layer`, `source`). Generic missing names fill as
+`"Beach"`. Ways as centre points: 7975 of 8846; relations as centre points:
+547 of 8846; nodes: 324 of 8846. Pipeline-filled generic names: 6902 (unnamed
+beaches kept).
+
+
 ## Constituencies (`constituencies`)
 
 | | |
@@ -1312,6 +1339,23 @@ Popup shows **name + PCON24CD only** in this PR — no candidates, polls, or end
   England-alone density without `name=*` is ~44k, far above the ~8–10k soft
   guideline; unnamed playgrounds are omitted.
 
+- Beaches layer is `natural=beach` only (not `natural=coastline`,
+  `natural=sand` alone, `leisure=beach_resort` without `natural=beach`,
+  or `tourism=hotel`). Disused sites still tagged `natural=beach` are
+  included. Extract includes **nodes, ways, and relations**; ways and
+  relations are Overpass centre points, not footprints. A site may appear
+  both as a relation and as member ways/nodes if both carry `natural=beach`
+  (dedupe by OSM `type/id` only). Counts are OSM objects, not distinct
+  beaches. **No `name=*` filter**: a loose BI bbox probe (including some
+  northern France coast) was ~9.1k, inside the ~8–10k soft band, and the
+  same bbox with `name=*` was only ~2.0k, so unnamed beaches are kept.
+  Hard France-bleed heuristic flags 1 feature (`relation/20327663` at
+  −1.928, 49.291) which is the Jersey Écréhous, inside the Jersey admin
+  polygon — mainland France bleed is 0. Isle of Man admin-clip is 129;
+  Channel Islands GG 114 / JE 54 (hard main-island bbox ≈ GG 86 / JE 53;
+  the Bailiwick polygon includes Alderney / Sark / Herm, and the extra
+  Jersey point is the Écréhous).
+
 - Isle of Man has only 2 OSM hospitals at extract time — likely under-tagged
   relative to known sites; Channel Islands admin-clip counts are GG 4 / JE 4
   (hard bbox check slightly lower for Guernsey). Castles IoM admin-clip is 3;
@@ -1343,6 +1387,7 @@ Popup shows **name + PCON24CD only** in this PR — no candidates, polls, or end
   Sports centres IoM admin-clip is 26; Channel Islands GG 11 / JE 29.
   Caravan sites IoM admin-clip is 2; Channel Islands GG 0 / JE 0.
   Playgrounds IoM admin-clip is 10; Channel Islands GG 2 / JE 7 (hard bbox GG ≈ 1).
+  Beaches IoM admin-clip is 129; Channel Islands GG 114 / JE 54 (hard main-island bbox ≈ GG 86 / JE 53).
 - Extract uses polygon clip + buffer; features extremely close to a land border
   could in theory be included or excluded by the ~200 m buffer.
 

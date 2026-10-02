@@ -110,6 +110,9 @@ export const ICONS = {
   playgrounds: icon(
     `<path d="M4 19.5h16"/><path d="M6 17.5V12l6-5.5 6 5.5v5.5"/><circle cx="9" cy="14.5" r="1.4"/><circle cx="15" cy="14.5" r="1.4"/><path d="M12 11.5v6"/><path d="M9.5 17.5h5"/>`,
   ),
+  beaches: icon(
+    `<circle cx="16.2" cy="6.4" r="2.1"/><path d="M16.2 2.8v1"/><path d="M19.6 4.2l-.8.6"/><path d="M19.2 7.6l-.7-.4"/><path d="M3.2 14.6c1.7-1.5 3.2-1.5 4.9 0s3.2 1.5 4.9 0 3.2-1.5 4.9 0 2.6 1.5 2.9.9"/><path d="M3.2 18.4c1.7-1.5 3.2-1.5 4.9 0s3.2 1.5 4.9 0 3.2-1.5 4.9 0"/>`,
+  ),
   churches: icon(
     `<path d="M12 3v3M10.2 4.6h3.6"/><path d="M6 21V11.2L12 7l6 4.2V21"/><path d="M10 21v-4h4v4"/><path d="M4 21h16"/>`,
   ),
