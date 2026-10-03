@@ -1408,5 +1408,40 @@
       "with_religion_tag": 42687,
       "france_bleed_note": "Mainland France bleed checked after extract with the hard bbox heuristic (in_france_bleed). Admin polygons clip coastal France; southernmost retained points should be Channel Islands, not mainland France."
     }
+  },
+  "lighthouses": {
+    "extracted_at": "2026-10-03T03:21:32Z",
+    "method": "Overpass per-nation/territory bbox tiles clipped to OSM admin polygons (Nominatim); endpoint overpass.openstreetmap.fr",
+    "license": "ODbL 1.0",
+    "endpoint": "https://overpass.openstreetmap.fr/api/interpreter",
+    "layer": "lighthouses",
+    "count": 582,
+    "coverage": "Admin-area extract (ENG/SCT/WLS/NIR/IE/IM/GG/JE); IoM≈22; GG≈9; JE≈4; northern France bleed≈0",
+    "region_counts": {
+      "england": 170,
+      "scotland": 228,
+      "wales": 41,
+      "northern-ireland": 16,
+      "ireland": 88,
+      "isle-of-man": 22,
+      "guernsey": 13,
+      "jersey": 4
+    },
+    "limitations": {
+      "isle_of_man": 22,
+      "channel_islands": 13,
+      "guernsey": 9,
+      "jersey": 4,
+      "northern_france_approx": 0,
+      "ways_as_centre_points": 240,
+      "relations_as_centre_points": 2,
+      "pipeline_generic_names": 127,
+      "pipeline_note_repeats_brand": 52,
+      "note_semantics": "pipeline field (brand/operator or 'OpenStreetMap'), not OSM note=*",
+      "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
+      "counting_caveat": "man_made=lighthouse only; man_made=beacon, seamark:type=light_major alone without man_made=lighthouse, and historic=yes without man_made=lighthouse are omitted; feature counts are OSM objects not distinct lighthouses (a site may be several nodes/ways/relations); disused sites still tagged man_made=lighthouse are included; multipolygon / site relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry man_made=lighthouse; no name=* filter (unnamed lighthouses kept)",
+      "name_filter": "no name=* filter (unnamed lighthouses kept). England-alone Overpass count without name=* (bbox ~49.9-55.8N, -6.5-2.0E, not admin-clipped) was 314 (nodes 180 + ways 132 + relations 2), well inside the ~8-10k soft guideline. A loose British Isles bbox (49.8-61.0N, -10.8-1.9E, not admin-clipped, includes some northern France) was 585 (nodes 337 + ways 246 + relations 2), also well under ~8k. The same England bbox with name=* was 234 (nodes 122 + ways 110 + relations 2); the loose BI bbox with name=* was 452 (nodes 246 + ways 204 + relations 2) before admin clip.",
+      "france_bleed_note": "Mainland France bleed checked after extract with the hard bbox heuristic (in_france_bleed). Admin polygons clip coastal France; southernmost retained points should be Channel Islands, not mainland France."
+    }
   }
 }

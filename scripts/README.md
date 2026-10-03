@@ -574,3 +574,26 @@ England-alone Overpass count without `name=*` (bbox roughly 49.9–55.8°N,
 was 37859 (nodes 4028 + ways 33673 + relations 158) — still dense, but the
 filter drops unnamed objects only. Unnamed places of worship are omitted.
 Disused sites that remain tagged `amenity=place_of_worship` are included.
+
+## `extract_osm_lighthouses.py`
+
+Rebuilds `public/data/lighthouses.geojson` (and merges into `extract-meta.json`)
+using the same admin-area Overpass + polygon-clip pipeline, querying
+`man_made=lighthouse` (nodes, ways, and relations; `out center`). Does **not**
+include `man_made=beacon`, `seamark:type=light_major` alone without
+`man_made=lighthouse`, or `historic=yes` without `man_made=lighthouse`. No prior
+lighthouse preview chip existed.
+
+```bash
+python3 scripts/extract_osm_lighthouses.py
+```
+
+Default `--max-span 2.0`. **No `name=*` filter** because an England-alone
+Overpass count without `name=*` (bbox roughly 49.9–55.8°N, −6.5–2.0°E, not
+admin-clipped) was 314 (nodes 180 + ways 132 + relations 2), well inside the
+~8–10k soft guideline. A loose British Isles bbox (49.8–61.0°N, −10.8–1.9°E,
+not admin-clipped, includes some northern France) was 585 (nodes 337 + ways
+246 + relations 2), also well under ~8k. The same England bbox with `name=*`
+was 234 (nodes 122 + ways 110 + relations 2); the loose BI bbox with `name=*`
+was 452 (nodes 246 + ways 204 + relations 2). Unnamed lighthouses are kept.
+Disused sites that remain tagged `man_made=lighthouse` are included.
