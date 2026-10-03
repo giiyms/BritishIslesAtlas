@@ -49,7 +49,8 @@ fire stations by `scripts/extract_osm_fire_stations.py`; police by
 `scripts/extract_osm_nightclubs.py`; windmills by
 `scripts/extract_osm_windmills.py`; prisons by
 `scripts/extract_osm_prisons.py`; clinics by
-`scripts/extract_osm_clinics.py`.
+`scripts/extract_osm_clinics.py`; dentists by
+`scripts/extract_osm_dentists.py`.
 Westminster constituencies (GB) are ingested separately by
 `scripts/ingest_ons_pcon2024.py` from the ONS ArcGIS FeatureServer (not Overpass).
 Shared OSM pipeline:
@@ -62,7 +63,7 @@ Shared OSM pipeline:
 3. **Clip** results to the admin polygon (+ ~200 m buffer) so mainland France
    and cross-border spill are dropped.
 4. Deduplicate by OSM `type/id`. Ways are stored as **centre points**
-   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme-parks, viewpoints, arts-centres, aquariums, piers, ruins, golf-courses, galleries, marketplaces, nature-reserves, camp-sites, memorials, sports-centres, caravan-sites, fitness-centres, community-centres, post-offices, playgrounds, beaches, swimming-pools, pharmacies, townhalls, places-of-worship, lighthouses, courthouses, nightclubs, windmills, prisons, and clinics extractors
+   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme-parks, viewpoints, arts-centres, aquariums, piers, ruins, golf-courses, galleries, marketplaces, nature-reserves, camp-sites, memorials, sports-centres, caravan-sites, fitness-centres, community-centres, post-offices, playgrounds, beaches, swimming-pools, pharmacies, townhalls, places-of-worship, lighthouses, courthouses, nightclubs, windmills, prisons, clinics, and dentists extractors
    also query **relations** and store them as centre points the same way;
    other layers remain node+way only unless noted.
 
@@ -1263,6 +1264,31 @@ Pipeline `note` repeats brand or operator on 981 of 3723.
 
 
 
+## Dentists (`dentists`)
+
+| | |
+|---|---|
+| **File** | `public/data/dentists.geojson` |
+| **Features** | 7135 points (not a round cap) |
+| **Coverage** | Same admin-area footprint: England 5612, Scotland 600, Wales 228, Northern Ireland 96, Ireland 570, Isle of Man 19, Guernsey 7, Jersey 3. **Northern France bleed = 0** (hard bbox heuristic flags 0). Southernmost point is The Dental Studio (`node/9621039582`, 49.182°N, 2.115°W), inside the Jersey admin polygon — not mainland France. Easternmost point (~1.756°E, ~52.48°N, The Dental Lounge `way/1102559447`) is the Suffolk coast, not France (19 retained points sit east of 1.55°E, all between about 52.15°N and 52.61°N). Hard main-island bbox checks match the admin clip: IoM ≈ 19, Guernsey ≈ 7, Jersey ≈ 3. No Sark dentist was retained (Guernsey points all sit west of 2.40°W). The 10 points south of 49.8°N are exactly those Jersey (3) and Guernsey (7) features. |
+| **Sample vs full** | Admin-area extract of OSM `amenity=dentist` at extract time (nodes, ways, **and relations**). **Tag choice:** Atlas preferred `amenity=dentist` is **not** already a LayerId and is **usable** (not empty, and well under ~8–10k). This layer is `amenity=dentist` only. It does **not** include `amenity=doctors`, `amenity=clinic` (already shipped), `amenity=hospital`, or `healthcare=dentist` alone without `amenity=dentist`. `amenity=veterinary` and `amenity=supermarket` were not needed. `amenity=pub` remains the preview pubs chip and is not this layer. Wind turbines (`generator:source=wind` / `power=generator`, LayerId `wind`) are not this layer. `amenity=embassy` was not retried. No second preview chip is added. Disused sites that remain tagged `amenity=dentist` **are** included. **No `name=*` filter** because an England-alone Overpass count without `name=*` was 6270 (nodes 3869 + ways 2396 + relations 5; bbox roughly 49.9–55.8°N, −6.5–2.0°E, not admin-clipped; overpass.openstreetmap.fr, OSM base 2026-10-03T05:09:31Z), well inside the ~8–10k soft guideline, and a loose British Isles bbox (49.8–61.0°N, −10.8–1.9°E, not admin-clipped, includes some northern France and **excludes** Jersey/Guernsey south of 49.8°N; OSM base 2026-10-03T05:12:34Z) was 7151 (nodes 4591 + ways 2554 + relations 6), also well under ~8k. The same England bbox with `name=*` was 5965 (nodes 3698 + ways 2263 + relations 4; OSM base 2026-10-03T05:11:32Z); the loose BI bbox with `name=*` was 6794 (nodes 4390 + ways 2399 + relations 5; OSM base 2026-10-03T05:13:30Z) before admin clip. Unnamed dentists are kept (353 pipeline-filled `"Dentist"`). Admin-clipped result is **7135** (nodes 4573 / ways 2556 / relations 6). The loose box omits 10 Channel Islands points, so 7151 + 10 = 7161 versus the admin total 7135: about 26 loose-bbox hits were dropped by the admin clip (coastal spill), and the retained set flags **0** mainland France. **Feature counts are OSM objects, not distinct dentists** (a site may appear as several nodes/ways/relations). Large sites mapped as multipolygon / site relations are included via Overpass centre points (Heathrow lesson). Default regional tiling `--max-span 2.0`. No prior dentist preview chip existed. The upcoming health stub is untouched. |
+| **Source** | [OpenStreetMap](https://www.openstreetmap.org/) via Overpass API |
+| **Query** | `amenity=dentist` nodes, ways, and relations (`out center tags`) |
+| **Endpoint used** | `https://overpass.openstreetmap.fr/api/interpreter` |
+| **Extract date (UTC)** | 2026-10-03T05:15:57Z |
+| **Method** | Same admin-area pipeline as clinics / prisons (`scripts/extract_osm_dentists.py`), including OSM relations; default tile span 2.0° |
+| **License** | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/) — © OpenStreetMap contributors |
+| **Attribution** | © OpenStreetMap contributors |
+
+### Property semantics (pipeline)
+
+Same pipeline fields as the other OSM layers (`name`, optional `brand`/`operator`, `osm_id`,
+`osm_url`, pipeline `note`, `layer`, `source`). Generic missing names fill as
+`"Dentist"`. Ways as centre points: 2556 of 7135; relations as centre points:
+6 of 7135; nodes: 4573 of 7135. Pipeline-filled generic names: 353 (no OSM `name=*`).
+Pipeline `note` repeats brand or operator on 848 of 7135.
+
+
 ## Constituencies (`constituencies`)
 
 | | |
@@ -1837,6 +1863,33 @@ Popup shows **name + PCON24CD only** in this PR — no candidates, polls, or end
   6 (hard bbox matches). Guernsey admin-clip is 11 (hard bbox matches;
   no Sark clinic). Easternmost retained point is Suffolk
   (`node/13060661008`, ~1.76°E), not France. No prior clinic preview
+  chip existed.
+
+- Dentists layer is `amenity=dentist` only (not `amenity=doctors`,
+  `amenity=clinic`, `amenity=hospital`, or `healthcare=dentist` alone
+  without `amenity=dentist`). Atlas preferred `amenity=dentist` is not
+  already a LayerId and is usable (not empty; well under ~8–10k).
+  `amenity=veterinary` and `amenity=supermarket` were not needed.
+  Preview pubs, the wind-turbines chip, and `amenity=embassy` are not
+  this extract. The upcoming health stub is untouched. No second preview
+  chip. Disused sites still tagged `amenity=dentist` are included.
+  Extract includes **nodes, ways, and relations**; ways and relations are
+  Overpass centre points, not footprints. A site may appear both as a
+  relation and as member ways/nodes if both carry `amenity=dentist`
+  (dedupe by OSM `type/id` only). Counts are OSM objects, not distinct
+  dentists. **No `name=*` filter** because an England-alone Overpass
+  count without `name=*` was 6270 (nodes 3869 + ways 2396 + relations
+  5), well inside the ~8–10k soft guideline. A loose British Isles
+  bbox was 7151 (nodes 4591 + ways 2554 + relations 6), also well under
+  ~8k (that box starts at 49.8°N, so it excludes Jersey and Guernsey).
+  Unnamed dentists are kept (353 pipeline-filled `"Dentist"`).
+  Admin-clipped result is 7135 (nodes 4573 / ways 2556 / relations 6).
+  Mainland France bleed is 0 (Channel coast risk checked; southernmost
+  retained point is Jersey `node/9621039582` The Dental Studio).
+  Isle of Man admin-clip is 19 (hard bbox matches). Jersey admin-clip is
+  3 (hard bbox matches). Guernsey admin-clip is 7 (hard bbox matches;
+  no Sark dentist). Easternmost retained point is Suffolk
+  (`way/1102559447`, ~1.756°E), not France. No prior dentist preview
   chip existed.
 
 - Isle of Man has only 2 OSM hospitals at extract time — likely under-tagged
