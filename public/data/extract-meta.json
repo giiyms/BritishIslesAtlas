@@ -1588,5 +1588,41 @@
       "france_bleed_note": "Mainland France bleed checked after extract with the hard bbox heuristic (in_france_bleed). Admin polygons clip coastal France; southernmost retained points should be Channel Islands, not mainland France. Jersey/Guernsey/Sark flags in the hard boxes are disclosed separately when they differ from the admin clip.",
       "channel_islands_detail": "Guernsey admin-clip is 3 vs hard main-island bbox 2. The extra point is way/420026585 (pipeline name \"Prison\", no OSM name) at 49.431N, 2.357W, on Sark in the Bailiwick of Guernsey polygon, not mainland France. Jersey admin-clip is 1 and matches the hard bbox (HMP La Moye, way/425800764, 49.179N, 2.219W). Isle of Man admin-clip is 2 and matches the hard bbox. Southernmost retained point is Jersey, not France."
     }
+  },
+  "clinics": {
+    "extracted_at": "2026-10-03T04:55:14Z",
+    "method": "Overpass per-nation/territory bbox tiles clipped to OSM admin polygons (Nominatim); endpoint overpass.openstreetmap.fr",
+    "license": "ODbL 1.0",
+    "endpoint": "https://overpass.openstreetmap.fr/api/interpreter",
+    "layer": "clinics",
+    "count": 3723,
+    "coverage": "Admin-area extract (ENG/SCT/WLS/NIR/IE/IM/GG/JE); IoM≈3; GG≈11; JE≈6; northern France bleed≈0",
+    "region_counts": {
+      "england": 2629,
+      "scotland": 257,
+      "wales": 163,
+      "northern-ireland": 84,
+      "ireland": 570,
+      "isle-of-man": 3,
+      "guernsey": 11,
+      "jersey": 6
+    },
+    "limitations": {
+      "isle_of_man": 3,
+      "channel_islands": 17,
+      "guernsey": 11,
+      "jersey": 6,
+      "northern_france_approx": 0,
+      "ways_as_centre_points": 1847,
+      "relations_as_centre_points": 86,
+      "pipeline_generic_names": 152,
+      "pipeline_note_repeats_brand": 981,
+      "note_semantics": "pipeline field (brand/operator or 'OpenStreetMap'), not OSM note=*",
+      "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
+      "tag_choice": "Atlas preferred amenity=clinic is not already a LayerId and is usable (not empty; well under ~8-10k). This layer is amenity=clinic only. It does not include amenity=doctors, amenity=hospital, healthcare=* without amenity=clinic, or amenity=dentist. amenity=veterinary and amenity=supermarket were not needed. amenity=pub (preview pubs), wind turbines, and amenity=embassy are not this layer and were not retried.",
+      "counting_caveat": "amenity=clinic only; amenity=doctors, amenity=hospital, healthcare=* alone, and amenity=dentist are omitted; amenity=veterinary / amenity=supermarket / amenity=pub / wind turbines / amenity=embassy are not this layer; no second preview chip; feature counts are OSM objects not distinct clinics (a site may be several nodes/ways/relations); disused sites still tagged amenity=clinic are included; multipolygon / site relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry amenity=clinic; no name=* filter (unnamed clinics kept)",
+      "name_filter": "no name=* filter (unnamed clinics kept). England-alone Overpass count without name=* (bbox ~49.9-55.8N, -6.5-2.0E, not admin-clipped; overpass.openstreetmap.fr, OSM base 2026-10-03T04:50:05Z) was 3076 (nodes 1490 + ways 1525 + relations 61), well inside the ~8-10k soft guideline. A loose British Isles bbox (49.8-61.0N, -10.8-1.9E, not admin-clipped, includes some northern France; OSM base 2026-10-03T04:52:03Z) was 3714 (nodes 1790 + ways 1838 + relations 86), also well under ~8k. The same England bbox with name=* was 2958 (nodes 1470 + ways 1429 + relations 59; OSM base 2026-10-03T04:51:05Z); the loose BI bbox with name=* was 3564 (nodes 1763 + ways 1718 + relations 83; OSM base 2026-10-03T04:53:15Z) before admin clip.",
+      "france_bleed_note": "Mainland France bleed checked after extract with the hard bbox heuristic (in_france_bleed). Admin polygons clip coastal France; southernmost retained points should be Channel Islands, not mainland France. Jersey/Guernsey/Sark flags in the hard boxes are disclosed separately when they differ from the admin clip."
+    }
   }
 }

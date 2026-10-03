@@ -48,7 +48,8 @@ fire stations by `scripts/extract_osm_fire_stations.py`; police by
 `scripts/extract_osm_courthouses.py`; nightclubs by
 `scripts/extract_osm_nightclubs.py`; windmills by
 `scripts/extract_osm_windmills.py`; prisons by
-`scripts/extract_osm_prisons.py`.
+`scripts/extract_osm_prisons.py`; clinics by
+`scripts/extract_osm_clinics.py`.
 Westminster constituencies (GB) are ingested separately by
 `scripts/ingest_ons_pcon2024.py` from the ONS ArcGIS FeatureServer (not Overpass).
 Shared OSM pipeline:
@@ -61,7 +62,7 @@ Shared OSM pipeline:
 3. **Clip** results to the admin polygon (+ ~200 m buffer) so mainland France
    and cross-border spill are dropped.
 4. Deduplicate by OSM `type/id`. Ways are stored as **centre points**
-   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme-parks, viewpoints, arts-centres, aquariums, piers, ruins, golf-courses, galleries, marketplaces, nature-reserves, camp-sites, memorials, sports-centres, caravan-sites, fitness-centres, community-centres, post-offices, playgrounds, beaches, swimming-pools, pharmacies, townhalls, places-of-worship, lighthouses, courthouses, nightclubs, windmills, and prisons extractors
+   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme-parks, viewpoints, arts-centres, aquariums, piers, ruins, golf-courses, galleries, marketplaces, nature-reserves, camp-sites, memorials, sports-centres, caravan-sites, fitness-centres, community-centres, post-offices, playgrounds, beaches, swimming-pools, pharmacies, townhalls, places-of-worship, lighthouses, courthouses, nightclubs, windmills, prisons, and clinics extractors
    also query **relations** and store them as centre points the same way;
    other layers remain node+way only unless noted.
 
@@ -1236,6 +1237,32 @@ Pipeline `note` repeats brand or operator on 54 of 203.
 
 
 
+## Clinics (`clinics`)
+
+| | |
+|---|---|
+| **File** | `public/data/clinics.geojson` |
+| **Features** | 3723 points (not a round cap) |
+| **Coverage** | Same admin-area footprint: England 2629, Scotland 257, Wales 163, Northern Ireland 84, Ireland 570, Isle of Man 3, Guernsey 11, Jersey 6. **Northern France bleed = 0** (hard bbox heuristic flags 0). Southernmost point is Bath Street Medical Centre (`way/461391490`, 49.187°N, 2.102°W), inside the Jersey admin polygon — not mainland France. Easternmost point (~1.76°E, ~52.48°N, East Coast Community Healthcare CIC `node/13060661008`) is the Suffolk coast, not France (four retained points sit east of 1.55°E, all near 52.5–52.6°N). Hard main-island bbox checks match the admin clip: IoM ≈ 3, Guernsey ≈ 11, Jersey ≈ 6. No Sark clinic was retained (Guernsey points all sit west of 2.40°W). The 17 points south of 49.8°N are exactly those Jersey (6) and Guernsey (11) features. |
+| **Sample vs full** | Admin-area extract of OSM `amenity=clinic` at extract time (nodes, ways, **and relations**). **Tag choice:** Atlas preferred `amenity=clinic` is **not** already a LayerId and is **usable** (not empty, and well under ~8–10k). This layer is `amenity=clinic` only. It does **not** include `amenity=doctors`, `amenity=hospital`, `healthcare=*` without `amenity=clinic`, or `amenity=dentist`. `amenity=veterinary` and `amenity=supermarket` were not needed. `amenity=pub` remains the preview pubs chip and is not this layer. Wind turbines (`generator:source=wind` / `power=generator`, LayerId `wind`) are not this layer. `amenity=embassy` was not retried. No second preview chip is added. Disused sites that remain tagged `amenity=clinic` **are** included. **No `name=*` filter** because an England-alone Overpass count without `name=*` was 3076 (nodes 1490 + ways 1525 + relations 61; bbox roughly 49.9–55.8°N, −6.5–2.0°E, not admin-clipped; overpass.openstreetmap.fr, OSM base 2026-10-03T04:50:05Z), well inside the ~8–10k soft guideline, and a loose British Isles bbox (49.8–61.0°N, −10.8–1.9°E, not admin-clipped, includes some northern France and **excludes** Jersey/Guernsey south of 49.8°N; OSM base 2026-10-03T04:52:03Z) was 3714 (nodes 1790 + ways 1838 + relations 86), also well under ~8k. The same England bbox with `name=*` was 2958 (nodes 1470 + ways 1429 + relations 59; OSM base 2026-10-03T04:51:05Z); the loose BI bbox with `name=*` was 3564 (nodes 1763 + ways 1718 + relations 83; OSM base 2026-10-03T04:53:15Z) before admin clip. Unnamed clinics are kept (152 pipeline-filled `"Clinic"`). Admin-clipped result is **3723** (nodes 1790 / ways 1847 / relations 86). The loose box omits 17 Channel Islands points, so 3714 + 17 = 3731 versus the admin total 3723: about 8 loose-bbox hits were dropped by the admin clip (coastal spill), and the retained set flags **0** mainland France. **Feature counts are OSM objects, not distinct clinics** (a site may appear as several nodes/ways/relations). Large sites mapped as multipolygon / site relations are included via Overpass centre points (Heathrow lesson). Default regional tiling `--max-span 2.0`. No prior clinic preview chip existed. The upcoming health stub is untouched. |
+| **Source** | [OpenStreetMap](https://www.openstreetmap.org/) via Overpass API |
+| **Query** | `amenity=clinic` nodes, ways, and relations (`out center tags`) |
+| **Endpoint used** | `https://overpass.openstreetmap.fr/api/interpreter` |
+| **Extract date (UTC)** | 2026-10-03T04:55:14Z |
+| **Method** | Same admin-area pipeline as prisons / windmills (`scripts/extract_osm_clinics.py`), including OSM relations; default tile span 2.0° |
+| **License** | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/) — © OpenStreetMap contributors |
+| **Attribution** | © OpenStreetMap contributors |
+
+### Property semantics (pipeline)
+
+Same pipeline fields as the other OSM layers (`name`, optional `brand`/`operator`, `osm_id`,
+`osm_url`, pipeline `note`, `layer`, `source`). Generic missing names fill as
+`"Clinic"`. Ways as centre points: 1847 of 3723; relations as centre points:
+86 of 3723; nodes: 1790 of 3723. Pipeline-filled generic names: 152 (no OSM `name=*`).
+Pipeline `note` repeats brand or operator on 981 of 3723.
+
+
+
 ## Constituencies (`constituencies`)
 
 | | |
@@ -1784,6 +1811,33 @@ Popup shows **name + PCON24CD only** in this PR — no candidates, polls, or end
   (hard bbox matches). Guernsey admin-clip is 3 vs hard main-island bbox
   ≈ 2 (`way/420026585` sits on Sark, east of the hard Guernsey box, not
   France). No prior prison preview chip existed.
+
+- Clinics layer is `amenity=clinic` only (not `amenity=doctors`,
+  `amenity=hospital`, `healthcare=*` without `amenity=clinic`, or
+  `amenity=dentist`). Atlas preferred `amenity=clinic` is not already a
+  LayerId and is usable (not empty; well under ~8–10k).
+  `amenity=veterinary` and `amenity=supermarket` were not needed.
+  Preview pubs, the wind-turbines chip, and `amenity=embassy` are not
+  this extract. The upcoming health stub is untouched. No second preview
+  chip. Disused sites still tagged `amenity=clinic` are included.
+  Extract includes **nodes, ways, and relations**; ways and relations are
+  Overpass centre points, not footprints. A site may appear both as a
+  relation and as member ways/nodes if both carry `amenity=clinic`
+  (dedupe by OSM `type/id` only). Counts are OSM objects, not distinct
+  clinics. **No `name=*` filter** because an England-alone Overpass
+  count without `name=*` was 3076 (nodes 1490 + ways 1525 + relations
+  61), well inside the ~8–10k soft guideline. A loose British Isles
+  bbox was 3714 (nodes 1790 + ways 1838 + relations 86), also well under
+  ~8k (that box starts at 49.8°N, so it excludes Jersey and Guernsey).
+  Unnamed clinics are kept (152 pipeline-filled `"Clinic"`).
+  Admin-clipped result is 3723 (nodes 1790 / ways 1847 / relations 86).
+  Mainland France bleed is 0 (Channel coast risk checked; southernmost
+  retained point is Jersey `way/461391490` Bath Street Medical Centre).
+  Isle of Man admin-clip is 3 (hard bbox matches). Jersey admin-clip is
+  6 (hard bbox matches). Guernsey admin-clip is 11 (hard bbox matches;
+  no Sark clinic). Easternmost retained point is Suffolk
+  (`node/13060661008`, ~1.76°E), not France. No prior clinic preview
+  chip existed.
 
 - Isle of Man has only 2 OSM hospitals at extract time — likely under-tagged
   relative to known sites; Channel Islands admin-clip counts are GG 4 / JE 4
