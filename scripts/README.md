@@ -711,3 +711,37 @@ loose BI bbox with `name=*` was 188 (nodes 4 + ways 172 + relations 12).
 Unnamed prisons are kept. Disused sites that remain tagged `amenity=prison`
 are included. Guernsey admin-clip includes Sark (`way/420026585`); that is
 not mainland France.
+
+## `extract_osm_clinics.py`
+
+Rebuilds `public/data/clinics.geojson` (and merges into `extract-meta.json`)
+using the same admin-area Overpass + polygon-clip pipeline, querying
+`amenity=clinic` (nodes, ways, and relations; `out center`). Does **not**
+include `amenity=doctors`, `amenity=hospital`, `healthcare=*` without
+`amenity=clinic`, or `amenity=dentist`. Does **not** include
+`amenity=veterinary` or `amenity=supermarket` (not needed; clinic is usable).
+Does **not** ship `amenity=pub`, wind turbines, or `amenity=embassy`. No
+second preview chip is added for these points. Preview pubs and the
+wind-turbines chip are untouched.
+
+Tag choice: Atlas preferred `amenity=clinic` is not already a LayerId and is
+usable (not empty, and well under ~8–10k). `amenity=dentist`,
+`amenity=veterinary`, and `amenity=supermarket` were not needed.
+
+```bash
+python3 scripts/extract_osm_clinics.py
+```
+
+Default `--max-span 2.0`. **No `name=*` filter** because an England-alone
+Overpass count without `name=*` (bbox roughly 49.9–55.8°N, −6.5–2.0°E, not
+admin-clipped; overpass.openstreetmap.fr, OSM base 2026-10-03T04:50:05Z) was
+3076 (nodes 1490 + ways 1525 + relations 61), well inside the ~8–10k soft
+guideline. A loose British Isles bbox (49.8–61.0°N, −10.8–1.9°E, not
+admin-clipped, includes some northern France; OSM base 2026-10-03T04:52:03Z)
+was 3714 (nodes 1790 + ways 1838 + relations 86), also well under ~8k. The
+same England bbox with `name=*` was 2958 (nodes 1470 + ways 1429 + relations
+59; OSM base 2026-10-03T04:51:05Z); the loose BI bbox with `name=*` was 3564
+(nodes 1763 + ways 1718 + relations 83; OSM base 2026-10-03T04:53:15Z).
+Unnamed clinics are kept. Disused sites that remain tagged `amenity=clinic`
+are included. Jersey/Guernsey/Sark points inside the admin polygons are not
+mainland France.

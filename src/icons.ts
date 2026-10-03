@@ -140,6 +140,9 @@ export const ICONS = {
   prisons: icon(
     `<path d="M4.5 20.6h15"/><path d="M6.2 20.6V7.2h11.6v13.4"/><path d="M6.2 7.2 12 3.8l5.8 3.4"/><path d="M8.6 20.6V10.2M12 20.6V10.2M15.4 20.6V10.2"/><path d="M6.8 10.2h10.4"/>`,
   ),
+  clinics: icon(
+    `<path d="M4.5 20.5h15"/><path d="M6.2 20.5V9.2h11.6v11.3"/><path d="M6.2 9.2 12 5.2l5.8 4"/><path d="M12 12.2v5.2M9.4 14.8h5.2"/>`,
+  ),
   churches: icon(
     `<path d="M12 3v3M10.2 4.6h3.6"/><path d="M6 21V11.2L12 7l6 4.2V21"/><path d="M10 21v-4h4v4"/><path d="M4 21h16"/>`,
   ),
