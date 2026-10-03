@@ -745,3 +745,37 @@ same England bbox with `name=*` was 2958 (nodes 1470 + ways 1429 + relations
 Unnamed clinics are kept. Disused sites that remain tagged `amenity=clinic`
 are included. Jersey/Guernsey/Sark points inside the admin polygons are not
 mainland France.
+
+## `extract_osm_dentists.py`
+
+Rebuilds `public/data/dentists.geojson` (and merges into `extract-meta.json`)
+using the same admin-area Overpass + polygon-clip pipeline, querying
+`amenity=dentist` (nodes, ways, and relations; `out center`). Does **not**
+include `amenity=doctors`, `amenity=clinic` (already shipped),
+`amenity=hospital`, or `healthcare=dentist` alone without `amenity=dentist`.
+Does **not** include `amenity=veterinary` or `amenity=supermarket` (not
+needed; dentist is usable). Does **not** ship `amenity=pub`, wind turbines,
+or `amenity=embassy`. No second preview chip is added for these points.
+Preview pubs and the wind-turbines chip are untouched.
+
+Tag choice: Atlas preferred `amenity=dentist` is not already a LayerId and is
+usable (not empty, and well under ~8–10k). `amenity=veterinary` and
+`amenity=supermarket` were not needed.
+
+```bash
+python3 scripts/extract_osm_dentists.py
+```
+
+Default `--max-span 2.0`. **No `name=*` filter** because an England-alone
+Overpass count without `name=*` (bbox roughly 49.9–55.8°N, −6.5–2.0°E, not
+admin-clipped; overpass.openstreetmap.fr, OSM base 2026-10-03T05:09:31Z) was
+6270 (nodes 3869 + ways 2396 + relations 5), well inside the ~8–10k soft
+guideline. A loose British Isles bbox (49.8–61.0°N, −10.8–1.9°E, not
+admin-clipped, includes some northern France and excludes Jersey/Guernsey
+south of 49.8°N; OSM base 2026-10-03T05:12:34Z) was 7151 (nodes 4591 + ways
+2554 + relations 6), also well under ~8k. The same England bbox with
+`name=*` was 5965 (nodes 3698 + ways 2263 + relations 4; OSM base
+2026-10-03T05:11:32Z); the loose BI bbox with `name=*` was 6794 (nodes 4390
++ ways 2399 + relations 5; OSM base 2026-10-03T05:13:30Z). Unnamed dentists
+are kept. Disused sites that remain tagged `amenity=dentist` are included.
+Jersey/Guernsey/Sark points inside the admin polygons are not mainland France.
