@@ -44,7 +44,7 @@ export function mountPanel(
   upcomingGrid.setAttribute("aria-describedby", "layer-status");
   const note = document.createElement("p");
   note.className = "panel-note";
-  note.textContent = "Petrol, EV, power, hospitals, fire stations, police, castles, libraries, universities, museums, railway stations, aerodromes, ferry terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme parks, viewpoints, arts centres, aquariums, piers, ruins, golf courses, galleries, marketplaces, nature reserves, camp sites, memorials, sports centres, caravan sites, fitness centres, community centres, playgrounds, beaches, swimming pools, pharmacies, town halls, places of worship, and post offices: © OpenStreetMap contributors (ODbL). Constituencies: ONS July 2024 BGC (OGL v3; contains OS + National Statistics data © Crown copyright). Other layers are preview geometry.";
+  note.textContent = "Petrol, EV, power, hospitals, fire stations, police, castles, libraries, universities, museums, railway stations, aerodromes, ferry terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme parks, viewpoints, arts centres, aquariums, piers, ruins, golf courses, galleries, marketplaces, nature reserves, camp sites, memorials, sports centres, caravan sites, fitness centres, community centres, playgrounds, beaches, swimming pools, pharmacies, town halls, places of worship, lighthouses, and post offices: © OpenStreetMap contributors (ODbL). Constituencies: ONS July 2024 BGC (OGL v3; contains OS + National Statistics data © Crown copyright). Other layers are preview geometry.";
 
   for (const layer of LAYERS) {
     const button = document.createElement("button");

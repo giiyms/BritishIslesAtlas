@@ -125,6 +125,9 @@ export const ICONS = {
   "places-of-worship": icon(
     `<path d="M12 2.4v3.2M10.1 4.1h3.8"/><path d="M5.5 21V11.4L12 6.6l6.5 4.8V21"/><path d="M10 21v-4.2h4V21"/><path d="M3.6 21h16.8"/><circle cx="12" cy="13.2" r="1.15" fill="currentColor" stroke="none"/>`,
   ),
+  lighthouses: icon(
+    `<path d="M10.2 21.2h3.6"/><path d="M11 21.2V11.2h2v10"/><path d="M8.2 11.2h7.6"/><path d="M9.2 8.4 12 3.6l2.8 4.8"/><path d="M12 3.6V2.2"/><path d="M7.4 13.2l-2.2 1.4M16.6 13.2l2.2 1.4M7.4 16.4l-2.2 1.4M16.6 16.4l2.2 1.4"/>`,
+  ),
   churches: icon(
     `<path d="M12 3v3M10.2 4.6h3.6"/><path d="M6 21V11.2L12 7l6 4.2V21"/><path d="M10 21v-4h4v4"/><path d="M4 21h16"/>`,
   ),

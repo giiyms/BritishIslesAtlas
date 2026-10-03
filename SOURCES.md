@@ -43,7 +43,8 @@ fire stations by `scripts/extract_osm_fire_stations.py`; police by
 `scripts/extract_osm_swimming_pools.py`; pharmacies by
 `scripts/extract_osm_pharmacies.py`; town halls by
 `scripts/extract_osm_townhalls.py`; places of worship by
-`scripts/extract_osm_places_of_worship.py`.
+`scripts/extract_osm_places_of_worship.py`; lighthouses by
+`scripts/extract_osm_lighthouses.py`.
 Westminster constituencies (GB) are ingested separately by
 `scripts/ingest_ons_pcon2024.py` from the ONS ArcGIS FeatureServer (not Overpass).
 Shared OSM pipeline:
@@ -56,7 +57,7 @@ Shared OSM pipeline:
 3. **Clip** results to the admin polygon (+ ~200 m buffer) so mainland France
    and cross-border spill are dropped.
 4. Deduplicate by OSM `type/id`. Ways are stored as **centre points**
-   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme-parks, viewpoints, arts-centres, aquariums, piers, ruins, golf-courses, galleries, marketplaces, nature-reserves, camp-sites, memorials, sports-centres, caravan-sites, fitness-centres, community-centres, post-offices, playgrounds, beaches, swimming-pools, pharmacies, townhalls, and places-of-worship extractors
+   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme-parks, viewpoints, arts-centres, aquariums, piers, ruins, golf-courses, galleries, marketplaces, nature-reserves, camp-sites, memorials, sports-centres, caravan-sites, fitness-centres, community-centres, post-offices, playgrounds, beaches, swimming-pools, pharmacies, townhalls, places-of-worship, and lighthouses extractors
    also query **relations** and store them as centre points the same way;
    other layers remain node+way only unless noted.
 
@@ -1099,6 +1100,33 @@ Religion tags present are mostly `christian` (40381), then `muslim` (1367),
 denominations; 345 features have a name but no `religion=*`.
 
 
+
+## Lighthouses (`lighthouses`)
+
+| | |
+|---|---|
+| **File** | `public/data/lighthouses.geojson` |
+| **Features** | 582 points (not a round cap) |
+| **Coverage** | Same admin-area footprint: England 170, Scotland 228, Wales 41, Northern Ireland 16, Ireland 88, Isle of Man 22, Guernsey 13, Jersey 4. **Northern France bleed = 0** (hard bbox heuristic flags 0). Southernmost point is an unnamed lighthouse (`node/1543875461`, 49.169°N, 2.085°W), inside the Jersey admin polygon — not mainland France. Easternmost point (~1.76°E, ~52.49°N, Lowestoft Lighthouse `node/1538513948`) is the East Anglian coast, not France. Hard main-island bbox checks: IoM ≈ 22, GG ≈ 9, JE ≈ 4. Guernsey Bailiwick admin-clip is 13 vs hard main-island bbox ≈ 9 (Alderney / Sark lights included in the Bailiwick polygon). |
+| **Sample vs full** | Admin-area extract of OSM `man_made=lighthouse` at extract time (nodes, ways, **and relations**). `man_made=beacon`, `seamark:type=light_major` alone without `man_made=lighthouse`, and `historic=yes` without `man_made=lighthouse` are **not** included. Disused sites that remain tagged `man_made=lighthouse` **are** included. **No `name=*` filter** because an England-alone Overpass count without `name=*` was 314 (nodes 180 + ways 132 + relations 2; bbox roughly 49.9–55.8°N, −6.5–2.0°E, not admin-clipped), well inside the ~8–10k soft guideline, and a loose British Isles bbox (49.8–61.0°N, −10.8–1.9°E, not admin-clipped, includes some northern France) was 585 (nodes 337 + ways 246 + relations 2), also well under ~8k. The same England bbox with `name=*` was 234 (nodes 122 + ways 110 + relations 2); the loose BI bbox with `name=*` was 452 (nodes 246 + ways 204 + relations 2) before admin clip. Unnamed lighthouses are kept (127 pipeline-filled `"Lighthouse"`). Admin-clipped result is **582** (nodes 340 / ways 240 / relations 2). **Feature counts are OSM objects, not distinct lighthouses** (a site may appear as several nodes/ways/relations). Large sites mapped as multipolygon / site relations are included via Overpass centre points (Heathrow lesson). Default regional tiling `--max-span 2.0`. No prior lighthouse preview chip existed; this layer does not replace any scaffold geometry. |
+| **Source** | [OpenStreetMap](https://www.openstreetmap.org/) via Overpass API |
+| **Query** | `man_made=lighthouse` nodes, ways, and relations (`out center tags`) |
+| **Endpoint used** | `https://overpass.openstreetmap.fr/api/interpreter` |
+| **Extract date (UTC)** | 2026-10-03T03:21:32Z |
+| **Method** | Same admin-area pipeline as town halls / places of worship (`scripts/extract_osm_lighthouses.py`), including OSM relations; default tile span 2.0° |
+| **License** | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/) — © OpenStreetMap contributors |
+| **Attribution** | © OpenStreetMap contributors |
+
+### Property semantics (pipeline)
+
+Same pipeline fields as the other OSM layers (`name`, optional `brand`/`operator`, `osm_id`,
+`osm_url`, pipeline `note`, `layer`, `source`). Generic missing names fill as
+`"Lighthouse"`. Ways as centre points: 240 of 582; relations as centre points:
+2 of 582; nodes: 340 of 582. Pipeline-filled generic names: 127 (no OSM `name=*`).
+Pipeline `note` repeats brand or operator on 52 of 582.
+
+
+
 ## Constituencies (`constituencies`)
 
 | | |
@@ -1538,6 +1566,24 @@ Popup shows **name + PCON24CD only** in this PR — no candidates, polls, or end
   Bailiwick polygon) / JE 59. Preview `churches`, `mosques`, and
   `other-religious` layers are still scaffold geometry, not this extract.
   The static file is large (~13 MB) because named density stays high.
+
+- Lighthouses layer is `man_made=lighthouse` only (not `man_made=beacon`,
+  `seamark:type=light_major` alone without `man_made=lighthouse`, or
+  `historic=yes` without that tag). Disused sites still tagged
+  `man_made=lighthouse` are included. Extract includes **nodes, ways, and
+  relations**; ways and relations are Overpass centre points, not footprints.
+  A site may appear both as a relation and as member ways/nodes if both carry
+  `man_made=lighthouse` (dedupe by OSM `type/id` only). Counts are OSM
+  objects, not distinct lighthouses. **No `name=*` filter** because an
+  England-alone Overpass count without `name=*` was 314 (nodes 180 + ways
+  132 + relations 2), well inside the ~8–10k soft guideline. A loose British
+  Isles bbox was 585 (nodes 337 + ways 246 + relations 2), also well under
+  ~8k. Unnamed lighthouses are kept (127 pipeline-filled `"Lighthouse"`).
+  Admin-clipped result is 582 (nodes 340 / ways 240 / relations 2). Mainland
+  France bleed is 0 (Channel coast risk checked; southernmost retained point
+  is Jersey). Isle of Man admin-clip is 22; Channel Islands GG 13 (hard
+  main-island bbox ≈ 9; Alderney / Sark included in Bailiwick polygon) /
+  JE 4. No prior lighthouse preview chip existed.
 
 - Isle of Man has only 2 OSM hospitals at extract time — likely under-tagged
   relative to known sites; Channel Islands admin-clip counts are GG 4 / JE 4
