@@ -677,3 +677,37 @@ relations 0), also well under ~8k. The same England bbox with `name=*` was
 249 (nodes 98 + ways 151 + relations 0); the loose BI bbox with `name=*` was
 257 (nodes 100 + ways 157 + relations 0). Unnamed windmills are kept.
 Disused mills that remain tagged `man_made=windmill` are included.
+
+## `extract_osm_prisons.py`
+
+Rebuilds `public/data/prisons.geojson` (and merges into `extract-meta.json`)
+using the same admin-area Overpass + polygon-clip pipeline, querying
+`amenity=prison` (nodes, ways, and relations; `out center`). Does **not**
+include `historic=prison`, `building=prison`, or `amenity=police` without
+`amenity=prison`. Does **not** include `diplomatic=*`, `office=diplomatic`,
+`amenity=embassy`, `amenity=consulate`, or `amenity=clinic`. No second
+preview chip is added for these points. Preview pubs and the wind-turbines
+chip are untouched.
+
+Tag choice: Atlas preferred `amenity=embassy` is not already a LayerId, but
+it is unusable (deprecated; taginfo 60 worldwide as of 2026-10-02; global
+Overpass on 2026-10-03 returned 0 inside a rough British Isles box; England
+and loose BI bbox counts were 0). Fallback `amenity=prison` is usable (not
+empty, and well under ~8–10k). `amenity=clinic` was not needed.
+
+```bash
+python3 scripts/extract_osm_prisons.py
+```
+
+Default `--max-span 2.0`. **No `name=*` filter** because an England-alone
+Overpass count without `name=*` (bbox roughly 49.9–55.8°N, −6.5–2.0°E, not
+admin-clipped; overpass.openstreetmap.fr, OSM base 2026-10-03T04:31:51Z) was
+178 (nodes 4 + ways 164 + relations 10), well inside the ~8–10k soft
+guideline. A loose British Isles bbox (49.8–61.0°N, −10.8–1.9°E, not
+admin-clipped, includes some northern France; OSM base 2026-10-03T04:32:51Z)
+was 200 (nodes 4 + ways 184 + relations 12), also well under ~8k. The same
+England bbox with `name=*` was 166 (nodes 4 + ways 152 + relations 10); the
+loose BI bbox with `name=*` was 188 (nodes 4 + ways 172 + relations 12).
+Unnamed prisons are kept. Disused sites that remain tagged `amenity=prison`
+are included. Guernsey admin-clip includes Sark (`way/420026585`); that is
+not mainland France.

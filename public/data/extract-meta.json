@@ -1550,5 +1550,43 @@
       "name_filter": "no name=* filter (unnamed windmills kept). England-alone Overpass count without name=* (bbox ~49.9-55.8N, -6.5-2.0E, not admin-clipped; overpass.openstreetmap.fr, OSM base 2026-10-03T04:10:59Z) was 555 (nodes 276 + ways 279 + relations 0), well inside the ~8-10k soft guideline. A loose British Isles bbox (49.8-61.0N, -10.8-1.9E, not admin-clipped, includes some northern France) was 581 (nodes 283 + ways 298 + relations 0), also well under ~8k. The same England bbox with name=* was 249 (nodes 98 + ways 151 + relations 0); the loose BI bbox with name=* was 257 (nodes 100 + ways 157 + relations 0) before admin clip.",
       "france_bleed_note": "Mainland France bleed checked after extract with the hard bbox heuristic (in_france_bleed). Admin polygons clip coastal France; southernmost retained points should be Channel Islands, not mainland France."
     }
+  },
+  "prisons": {
+    "extracted_at": "2026-10-03T04:35:58Z",
+    "method": "Overpass per-nation/territory bbox tiles clipped to OSM admin polygons (Nominatim); endpoint overpass.openstreetmap.fr",
+    "license": "ODbL 1.0",
+    "endpoint": "https://overpass.openstreetmap.fr/api/interpreter",
+    "layer": "prisons",
+    "count": 203,
+    "coverage": "Admin-area extract (ENG/SCT/WLS/NIR/IE/IM/GG/JE); IoM≈2; GG≈2; JE≈1; northern France bleed≈0",
+    "region_counts": {
+      "england": 158,
+      "scotland": 18,
+      "wales": 6,
+      "northern-ireland": 4,
+      "ireland": 11,
+      "isle-of-man": 2,
+      "guernsey": 3,
+      "jersey": 1
+    },
+    "limitations": {
+      "isle_of_man": 2,
+      "channel_islands": 3,
+      "guernsey": 2,
+      "jersey": 1,
+      "northern_france_approx": 0,
+      "ways_as_centre_points": 187,
+      "relations_as_centre_points": 12,
+      "pipeline_generic_names": 14,
+      "pipeline_note_repeats_brand": 54,
+      "note_semantics": "pipeline field (brand/operator or 'OpenStreetMap'), not OSM note=*",
+      "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
+      "tag_choice": "Atlas preferred amenity=embassy is not already a LayerId but is unusable: deprecated (wiki 2018-12-01) in favour of office=diplomatic; taginfo 2026-10-02 counts 60 worldwide (nodes 57 + ways 3 + relations 0); global Overpass (overpass.openstreetmap.fr, OSM base 2026-10-03T04:31:51Z) returned 60 elements and 0 in a rough British Isles box. England and loose BI amenity=embassy counts were 0. This layer does not ship amenity=embassy and does not include diplomatic=*, office=diplomatic, or amenity=consulate. Fallback amenity=prison is usable (not empty; well under ~8-10k). amenity=clinic was not needed. amenity=pub (preview pubs) and wind turbines were not used.",
+      "counting_caveat": "amenity=prison only; historic=prison, building=prison, and amenity=police without amenity=prison are omitted; diplomatic=* / office=diplomatic / amenity=embassy / amenity=consulate / amenity=clinic are not this layer; no second preview chip; feature counts are OSM objects not distinct prisons (a site may be several nodes/ways/relations); disused sites still tagged amenity=prison are included; multipolygon / site relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry amenity=prison; no name=* filter (unnamed prisons kept)",
+      "name_filter": "no name=* filter (unnamed prisons kept). England-alone Overpass count without name=* (bbox ~49.9-55.8N, -6.5-2.0E, not admin-clipped; overpass.openstreetmap.fr, OSM base 2026-10-03T04:31:51Z) was 178 (nodes 4 + ways 164 + relations 10), well inside the ~8-10k soft guideline. A loose British Isles bbox (49.8-61.0N, -10.8-1.9E, not admin-clipped, includes some northern France; OSM base 2026-10-03T04:32:51Z) was 200 (nodes 4 + ways 184 + relations 12), also well under ~8k. The same England bbox with name=* was 166 (nodes 4 + ways 152 + relations 10); the loose BI bbox with name=* was 188 (nodes 4 + ways 172 + relations 12) before admin clip.",
+      "embassy_unusable": "amenity=embassy not shipped. Global 60 / British Isles 0 at extract planning time (see tag_choice).",
+      "france_bleed_note": "Mainland France bleed checked after extract with the hard bbox heuristic (in_france_bleed). Admin polygons clip coastal France; southernmost retained points should be Channel Islands, not mainland France. Jersey/Guernsey/Sark flags in the hard boxes are disclosed separately when they differ from the admin clip.",
+      "channel_islands_detail": "Guernsey admin-clip is 3 vs hard main-island bbox 2. The extra point is way/420026585 (pipeline name \"Prison\", no OSM name) at 49.431N, 2.357W, on Sark in the Bailiwick of Guernsey polygon, not mainland France. Jersey admin-clip is 1 and matches the hard bbox (HMP La Moye, way/425800764, 49.179N, 2.219W). Isle of Man admin-clip is 2 and matches the hard bbox. Southernmost retained point is Jersey, not France."
+    }
   }
 }
