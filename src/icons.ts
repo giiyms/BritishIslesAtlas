@@ -134,6 +134,9 @@ export const ICONS = {
   nightclubs: icon(
     `<circle cx="12" cy="12" r="3.1"/><path d="M12 3.2v2.2M12 18.6v2.2M3.2 12h2.2M18.6 12h2.2"/><path d="M5.7 5.7l1.6 1.6M16.7 16.7l1.6 1.6M18.3 5.7l-1.6 1.6M7.3 16.7l-1.6 1.6"/>`,
   ),
+  windmills: icon(
+    `<path d="M12 21.2V9.6"/><path d="M9.2 21.2h5.6"/><path d="M10.2 21.2V14.2h3.6v7"/><circle cx="12" cy="9.4" r="1.15"/><path d="M12 9.4 5.2 5.6M12 9.4l6.8 3.8M12 9.4 6.4 15.2M12 9.4l5.6-5.8"/>`,
+  ),
   churches: icon(
     `<path d="M12 3v3M10.2 4.6h3.6"/><path d="M6 21V11.2L12 7l6 4.2V21"/><path d="M10 21v-4h4v4"/><path d="M4 21h16"/>`,
   ),

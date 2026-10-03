@@ -647,3 +647,33 @@ not admin-clipped, includes some northern France) was 1190 (nodes 744 + ways
 was 1006 (nodes 598 + ways 406 + relations 2); the loose BI bbox with `name=*`
 was 1167 (nodes 730 + ways 435 + relations 2). Unnamed nightclubs are kept.
 Disused sites that remain tagged `amenity=nightclub` are included.
+
+## `extract_osm_windmills.py`
+
+Rebuilds `public/data/windmills.geojson` (and merges into `extract-meta.json`)
+using the same admin-area Overpass + polygon-clip pipeline, querying
+`man_made=windmill` (nodes, ways, and relations; `out center`). Does **not**
+include `generator:source=wind`, `power=generator` alone, `man_made=watermill`,
+or `historic=windmill` without `man_made=windmill`. The upcoming wind-turbines
+preview chip (LayerId `wind`) is separate and is not replaced. No second
+preview chip is added for these points.
+
+Tag choice: Atlas preferred `man_made=windmill`, which is not already a
+LayerId. `leisure=marina` is already LayerId `marinas`. Fallbacks
+`amenity=embassy` and `amenity=prison` were not needed because
+`man_made=windmill` is usable (not empty, and well under ~8–10k).
+
+```bash
+python3 scripts/extract_osm_windmills.py
+```
+
+Default `--max-span 2.0`. **No `name=*` filter** because an England-alone
+Overpass count without `name=*` (bbox roughly 49.9–55.8°N, −6.5–2.0°E, not
+admin-clipped; overpass.openstreetmap.fr, OSM base 2026-10-03T04:10:59Z) was
+555 (nodes 276 + ways 279 + relations 0), well inside the ~8–10k soft
+guideline. A loose British Isles bbox (49.8–61.0°N, −10.8–1.9°E, not
+admin-clipped, includes some northern France) was 581 (nodes 283 + ways 298 +
+relations 0), also well under ~8k. The same England bbox with `name=*` was
+249 (nodes 98 + ways 151 + relations 0); the loose BI bbox with `name=*` was
+257 (nodes 100 + ways 157 + relations 0). Unnamed windmills are kept.
+Disused mills that remain tagged `man_made=windmill` are included.
