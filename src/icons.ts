@@ -137,6 +137,9 @@ export const ICONS = {
   windmills: icon(
     `<path d="M12 21.2V9.6"/><path d="M9.2 21.2h5.6"/><path d="M10.2 21.2V14.2h3.6v7"/><circle cx="12" cy="9.4" r="1.15"/><path d="M12 9.4 5.2 5.6M12 9.4l6.8 3.8M12 9.4 6.4 15.2M12 9.4l5.6-5.8"/>`,
   ),
+  prisons: icon(
+    `<path d="M4.5 20.6h15"/><path d="M6.2 20.6V7.2h11.6v13.4"/><path d="M6.2 7.2 12 3.8l5.8 3.4"/><path d="M8.6 20.6V10.2M12 20.6V10.2M15.4 20.6V10.2"/><path d="M6.8 10.2h10.4"/>`,
+  ),
   churches: icon(
     `<path d="M12 3v3M10.2 4.6h3.6"/><path d="M6 21V11.2L12 7l6 4.2V21"/><path d="M10 21v-4h4v4"/><path d="M4 21h16"/>`,
   ),

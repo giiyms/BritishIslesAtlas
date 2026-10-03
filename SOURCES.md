@@ -47,7 +47,8 @@ fire stations by `scripts/extract_osm_fire_stations.py`; police by
 `scripts/extract_osm_lighthouses.py`; courthouses by
 `scripts/extract_osm_courthouses.py`; nightclubs by
 `scripts/extract_osm_nightclubs.py`; windmills by
-`scripts/extract_osm_windmills.py`.
+`scripts/extract_osm_windmills.py`; prisons by
+`scripts/extract_osm_prisons.py`.
 Westminster constituencies (GB) are ingested separately by
 `scripts/ingest_ons_pcon2024.py` from the ONS ArcGIS FeatureServer (not Overpass).
 Shared OSM pipeline:
@@ -60,7 +61,7 @@ Shared OSM pipeline:
 3. **Clip** results to the admin polygon (+ ~200 m buffer) so mainland France
    and cross-border spill are dropped.
 4. Deduplicate by OSM `type/id`. Ways are stored as **centre points**
-   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme-parks, viewpoints, arts-centres, aquariums, piers, ruins, golf-courses, galleries, marketplaces, nature-reserves, camp-sites, memorials, sports-centres, caravan-sites, fitness-centres, community-centres, post-offices, playgrounds, beaches, swimming-pools, pharmacies, townhalls, places-of-worship, lighthouses, courthouses, nightclubs, and windmills extractors
+   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme-parks, viewpoints, arts-centres, aquariums, piers, ruins, golf-courses, galleries, marketplaces, nature-reserves, camp-sites, memorials, sports-centres, caravan-sites, fitness-centres, community-centres, post-offices, playgrounds, beaches, swimming-pools, pharmacies, townhalls, places-of-worship, lighthouses, courthouses, nightclubs, windmills, and prisons extractors
    also query **relations** and store them as centre points the same way;
    other layers remain node+way only unless noted.
 
@@ -1209,6 +1210,32 @@ Same pipeline fields as the other OSM layers (`name`, optional `brand`/`operator
 0 of 571; nodes: 281 of 571. Pipeline-filled generic names: 321 (no OSM `name=*`).
 Pipeline `note` repeats brand or operator on 7 of 571.
 
+## Prisons (`prisons`)
+
+| | |
+|---|---|
+| **File** | `public/data/prisons.geojson` |
+| **Features** | 203 points (not a round cap) |
+| **Coverage** | Same admin-area footprint: England 158, Scotland 18, Wales 6, Northern Ireland 4, Ireland 11, Isle of Man 2, Guernsey 3, Jersey 1. **Northern France bleed = 0** (hard bbox heuristic flags 0). Southernmost point is HMP La Moye (`way/425800764`, 49.179°N, 2.219°W), inside the Jersey admin polygon — not mainland France. Easternmost point (~1.46°E, ~52.06°N, HMP Warren Hill `way/108211312`) is the Suffolk coast, not France. Hard main-island bbox checks: IoM ≈ 2 (matches admin-clip), JE ≈ 1 (matches). Guernsey admin-clip is 3 vs hard main-island bbox ≈ 2: the extra point is an unnamed site stored as `"Prison"` (`way/420026585`, 49.431°N, 2.357°W) on **Sark** (Bailiwick of Guernsey), east of the hard box’s −2.40° edge, not mainland France. |
+| **Sample vs full** | Admin-area extract of OSM `amenity=prison` at extract time (nodes, ways, **and relations**). **Tag choice:** Atlas preferred `amenity=embassy`, which is **not** already a LayerId, but it is **unusable** for this atlas. The tag was deprecated (wiki vote 2018-12-01) in favour of `office=diplomatic`. Taginfo (`data_until` 2026-10-02T00:59:10Z) counts **60** worldwide (nodes 57 + ways 3 + relations 0). A global Overpass fetch (`overpass.openstreetmap.fr`, OSM base 2026-10-03T04:31:51Z) returned those 60 elements and **0** inside a rough British Isles box (49.0–61.2°N, −11.0–2.2°E). England-alone and loose British Isles bbox counts for `amenity=embassy` were 0 (nodes 0 + ways 0 + relations 0; OSM base 2026-10-03T04:26:36Z). This layer therefore does **not** ship `amenity=embassy`, and does **not** include `diplomatic=*`, `office=diplomatic`, or `amenity=consulate`. Fallback `amenity=prison` is usable (not empty, and well under ~8–10k). `amenity=clinic` was not needed. `historic=prison`, `building=prison`, and `amenity=police` without `amenity=prison` are **not** included. `amenity=pub` remains the preview pubs chip and is not this layer. Wind turbines (`generator:source=wind` / `power=generator`, LayerId `wind`) are not this layer. No second preview chip is added. Disused sites that remain tagged `amenity=prison` **are** included. **No `name=*` filter** because an England-alone Overpass count without `name=*` was 178 (nodes 4 + ways 164 + relations 10; bbox roughly 49.9–55.8°N, −6.5–2.0°E, not admin-clipped; overpass.openstreetmap.fr, OSM base 2026-10-03T04:31:51Z), well inside the ~8–10k soft guideline, and a loose British Isles bbox (49.8–61.0°N, −10.8–1.9°E, not admin-clipped, includes some northern France; OSM base 2026-10-03T04:32:51Z) was 200 (nodes 4 + ways 184 + relations 12), also well under ~8k. The same England bbox with `name=*` was 166 (nodes 4 + ways 152 + relations 10); the loose BI bbox with `name=*` was 188 (nodes 4 + ways 172 + relations 12) before admin clip. Unnamed prisons are kept (14 pipeline-filled `"Prison"`). Admin-clipped result is **203** (nodes 4 / ways 187 / relations 12). **Feature counts are OSM objects, not distinct prisons** (a site may appear as several nodes/ways/relations). Large sites mapped as multipolygon / site relations are included via Overpass centre points (Heathrow lesson). Default regional tiling `--max-span 2.0`. No prior prison preview chip existed. |
+| **Source** | [OpenStreetMap](https://www.openstreetmap.org/) via Overpass API |
+| **Query** | `amenity=prison` nodes, ways, and relations (`out center tags`) |
+| **Endpoint used** | `https://overpass.openstreetmap.fr/api/interpreter` |
+| **Extract date (UTC)** | 2026-10-03T04:35:58Z |
+| **Method** | Same admin-area pipeline as windmills / nightclubs (`scripts/extract_osm_prisons.py`), including OSM relations; default tile span 2.0° |
+| **License** | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/) — © OpenStreetMap contributors |
+| **Attribution** | © OpenStreetMap contributors |
+
+### Property semantics (pipeline)
+
+Same pipeline fields as the other OSM layers (`name`, optional `brand`/`operator`, `osm_id`,
+`osm_url`, pipeline `note`, `layer`, `source`). Generic missing names fill as
+`"Prison"`. Ways as centre points: 187 of 203; relations as centre points:
+12 of 203; nodes: 4 of 203. Pipeline-filled generic names: 14 (no OSM `name=*`).
+Pipeline `note` repeats brand or operator on 54 of 203.
+
+
+
 ## Constituencies (`constituencies`)
 
 | | |
@@ -1729,6 +1756,34 @@ Popup shows **name + PCON24CD only** in this PR — no candidates, polls, or end
   (hard bbox matches). Guernsey admin-clip is 1 vs hard main-island bbox
   ≈ 0 (`node/274398603` sits just east of the hard box on Guernsey itself,
   not France). No prior windmill preview chip existed.
+
+- Prisons layer is `amenity=prison` only (not `historic=prison`,
+  `building=prison`, or `amenity=police` without `amenity=prison`).
+  Atlas preferred `amenity=embassy` is not already a LayerId but is
+  **unusable**: deprecated (wiki 2018-12-01) in favour of
+  `office=diplomatic`; taginfo 2026-10-02 counts 60 worldwide; global
+  Overpass (OSM base 2026-10-03T04:31:51Z) returned 60 and **0** in a
+  rough British Isles box. England and loose BI `amenity=embassy` counts
+  were 0. This extract does not ship `amenity=embassy` and does not
+  include `diplomatic=*`, `office=diplomatic`, or `amenity=consulate`.
+  `amenity=clinic` was not needed. Preview pubs and the wind-turbines
+  chip are not this extract. Disused sites still tagged `amenity=prison`
+  are included. Extract includes **nodes, ways, and relations**; ways and
+  relations are Overpass centre points, not footprints. A site may appear
+  both as a relation and as member ways/nodes if both carry
+  `amenity=prison` (dedupe by OSM `type/id` only). Counts are OSM
+  objects, not distinct prisons. **No `name=*` filter** because an
+  England-alone Overpass count without `name=*` was 178 (nodes 4 + ways
+  164 + relations 10), well inside the ~8–10k soft guideline. A loose
+  British Isles bbox was 200 (nodes 4 + ways 184 + relations 12), also
+  well under ~8k. Unnamed prisons are kept (14 pipeline-filled
+  `"Prison"`). Admin-clipped result is 203 (nodes 4 / ways 187 /
+  relations 12). Mainland France bleed is 0 (Channel coast risk checked;
+  southernmost retained point is Jersey `way/425800764` HMP La Moye).
+  Isle of Man admin-clip is 2 (hard bbox matches). Jersey admin-clip is 1
+  (hard bbox matches). Guernsey admin-clip is 3 vs hard main-island bbox
+  ≈ 2 (`way/420026585` sits on Sark, east of the hard Guernsey box, not
+  France). No prior prison preview chip existed.
 
 - Isle of Man has only 2 OSM hospitals at extract time — likely under-tagged
   relative to known sites; Channel Islands admin-clip counts are GG 4 / JE 4
