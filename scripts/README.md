@@ -597,3 +597,25 @@ not admin-clipped, includes some northern France) was 585 (nodes 337 + ways
 was 234 (nodes 122 + ways 110 + relations 2); the loose BI bbox with `name=*`
 was 452 (nodes 246 + ways 204 + relations 2). Unnamed lighthouses are kept.
 Disused sites that remain tagged `man_made=lighthouse` are included.
+
+## `extract_osm_courthouses.py`
+
+Rebuilds `public/data/courthouses.geojson` (and merges into `extract-meta.json`)
+using the same admin-area Overpass + polygon-clip pipeline, querying
+`amenity=courthouse` (nodes, ways, and relations; `out center`). Does **not**
+include `office=lawyer`, `amenity=police`, `amenity=prison`, or `building=civic`
+without `amenity=courthouse`. No prior courthouse preview chip existed.
+
+```bash
+python3 scripts/extract_osm_courthouses.py
+```
+
+Default `--max-span 2.0`. **No `name=*` filter** because an England-alone
+Overpass count without `name=*` (bbox roughly 49.9–55.8°N, −6.5–2.0°E, not
+admin-clipped) was 412 (nodes 85 + ways 308 + relations 19), well inside the
+~8–10k soft guideline. A loose British Isles bbox (49.8–61.0°N, −10.8–1.9°E,
+not admin-clipped, includes some northern France) was 518 (nodes 104 + ways
+393 + relations 21), also well under ~8k. The same England bbox with `name=*`
+was 394 (nodes 82 + ways 295 + relations 17); the loose BI bbox with `name=*`
+was 485 (nodes 100 + ways 367 + relations 18). Unnamed courthouses are kept.
+Disused sites that remain tagged `amenity=courthouse` are included.

@@ -128,6 +128,9 @@ export const ICONS = {
   lighthouses: icon(
     `<path d="M10.2 21.2h3.6"/><path d="M11 21.2V11.2h2v10"/><path d="M8.2 11.2h7.6"/><path d="M9.2 8.4 12 3.6l2.8 4.8"/><path d="M12 3.6V2.2"/><path d="M7.4 13.2l-2.2 1.4M16.6 13.2l2.2 1.4M7.4 16.4l-2.2 1.4M16.6 16.4l2.2 1.4"/>`,
   ),
+  courthouses: icon(
+    `<path d="M3.4 9.2 12 4.2l8.6 5"/><path d="M4.6 9.2h14.8"/><path d="M6.2 9.2V19.6M9.4 9.2V19.6M12 9.2V19.6M14.6 9.2V19.6M17.8 9.2V19.6"/><path d="M4 19.8h16"/>`,
+  ),
   churches: icon(
     `<path d="M12 3v3M10.2 4.6h3.6"/><path d="M6 21V11.2L12 7l6 4.2V21"/><path d="M10 21v-4h4v4"/><path d="M4 21h16"/>`,
   ),

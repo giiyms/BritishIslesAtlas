@@ -1443,5 +1443,40 @@
       "name_filter": "no name=* filter (unnamed lighthouses kept). England-alone Overpass count without name=* (bbox ~49.9-55.8N, -6.5-2.0E, not admin-clipped) was 314 (nodes 180 + ways 132 + relations 2), well inside the ~8-10k soft guideline. A loose British Isles bbox (49.8-61.0N, -10.8-1.9E, not admin-clipped, includes some northern France) was 585 (nodes 337 + ways 246 + relations 2), also well under ~8k. The same England bbox with name=* was 234 (nodes 122 + ways 110 + relations 2); the loose BI bbox with name=* was 452 (nodes 246 + ways 204 + relations 2) before admin clip.",
       "france_bleed_note": "Mainland France bleed checked after extract with the hard bbox heuristic (in_france_bleed). Admin polygons clip coastal France; southernmost retained points should be Channel Islands, not mainland France."
     }
+  },
+  "courthouses": {
+    "extracted_at": "2026-10-03T03:40:00Z",
+    "method": "Overpass per-nation/territory bbox tiles clipped to OSM admin polygons (Nominatim); endpoint overpass.openstreetmap.fr",
+    "license": "ODbL 1.0",
+    "endpoint": "https://overpass.openstreetmap.fr/api/interpreter",
+    "layer": "courthouses",
+    "count": 514,
+    "coverage": "Admin-area extract (ENG/SCT/WLS/NIR/IE/IM/GG/JE); IoM≈1; GG≈1; JE≈1; northern France bleed≈0",
+    "region_counts": {
+      "england": 326,
+      "scotland": 46,
+      "wales": 28,
+      "northern-ireland": 20,
+      "ireland": 91,
+      "isle-of-man": 1,
+      "guernsey": 1,
+      "jersey": 1
+    },
+    "limitations": {
+      "isle_of_man": 1,
+      "channel_islands": 2,
+      "guernsey": 1,
+      "jersey": 1,
+      "northern_france_approx": 0,
+      "ways_as_centre_points": 387,
+      "relations_as_centre_points": 22,
+      "pipeline_generic_names": 34,
+      "pipeline_note_repeats_brand": 80,
+      "note_semantics": "pipeline field (brand/operator or 'OpenStreetMap'), not OSM note=*",
+      "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
+      "counting_caveat": "amenity=courthouse only; office=lawyer, amenity=police, amenity=prison, and building=civic without amenity=courthouse are omitted; feature counts are OSM objects not distinct courthouses (a site may be several nodes/ways/relations); disused sites still tagged amenity=courthouse are included; multipolygon / site relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry amenity=courthouse; no name=* filter (unnamed courthouses kept)",
+      "name_filter": "no name=* filter (unnamed courthouses kept). England-alone Overpass count without name=* (bbox ~49.9-55.8N, -6.5-2.0E, not admin-clipped) was 412 (nodes 85 + ways 308 + relations 19), well inside the ~8-10k soft guideline. A loose British Isles bbox (49.8-61.0N, -10.8-1.9E, not admin-clipped, includes some northern France) was 518 (nodes 104 + ways 393 + relations 21), also well under ~8k. The same England bbox with name=* was 394 (nodes 82 + ways 295 + relations 17); the loose BI bbox with name=* was 485 (nodes 100 + ways 367 + relations 18) before admin clip.",
+      "france_bleed_note": "Mainland France bleed checked after extract with the hard bbox heuristic (in_france_bleed). Admin polygons clip coastal France; southernmost retained points should be Channel Islands, not mainland France."
+    }
   }
 }

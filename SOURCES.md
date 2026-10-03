@@ -44,7 +44,8 @@ fire stations by `scripts/extract_osm_fire_stations.py`; police by
 `scripts/extract_osm_pharmacies.py`; town halls by
 `scripts/extract_osm_townhalls.py`; places of worship by
 `scripts/extract_osm_places_of_worship.py`; lighthouses by
-`scripts/extract_osm_lighthouses.py`.
+`scripts/extract_osm_lighthouses.py`; courthouses by
+`scripts/extract_osm_courthouses.py`.
 Westminster constituencies (GB) are ingested separately by
 `scripts/ingest_ons_pcon2024.py` from the ONS ArcGIS FeatureServer (not Overpass).
 Shared OSM pipeline:
@@ -57,7 +58,7 @@ Shared OSM pipeline:
 3. **Clip** results to the admin polygon (+ ~200 m buffer) so mainland France
    and cross-border spill are dropped.
 4. Deduplicate by OSM `type/id`. Ways are stored as **centre points**
-   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme-parks, viewpoints, arts-centres, aquariums, piers, ruins, golf-courses, galleries, marketplaces, nature-reserves, camp-sites, memorials, sports-centres, caravan-sites, fitness-centres, community-centres, post-offices, playgrounds, beaches, swimming-pools, pharmacies, townhalls, places-of-worship, and lighthouses extractors
+   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme-parks, viewpoints, arts-centres, aquariums, piers, ruins, golf-courses, galleries, marketplaces, nature-reserves, camp-sites, memorials, sports-centres, caravan-sites, fitness-centres, community-centres, post-offices, playgrounds, beaches, swimming-pools, pharmacies, townhalls, places-of-worship, lighthouses, and courthouses extractors
    also query **relations** and store them as centre points the same way;
    other layers remain node+way only unless noted.
 
@@ -1127,6 +1128,33 @@ Pipeline `note` repeats brand or operator on 52 of 582.
 
 
 
+
+## Courthouses (`courthouses`)
+
+| | |
+|---|---|
+| **File** | `public/data/courthouses.geojson` |
+| **Features** | 514 points (not a round cap) |
+| **Coverage** | Same admin-area footprint: England 326, Scotland 46, Wales 28, Northern Ireland 20, Ireland 91, Isle of Man 1, Guernsey 1, Jersey 1. **Northern France bleed = 0** (hard bbox heuristic flags 0). Southernmost point is Magistrate's Court (`relation/7358557`, 49.187°N, 2.109°W), inside the Jersey admin polygon — not mainland France. Easternmost point (~1.72°E, ~52.61°N, Great Yarmouth Magistrate's Court `way/175898114`) is the East Anglian coast, not France. Hard main-island bbox checks: IoM ≈ 1, GG ≈ 1, JE ≈ 1 (match the admin-clip counts). |
+| **Sample vs full** | Admin-area extract of OSM `amenity=courthouse` at extract time (nodes, ways, **and relations**). `office=lawyer`, `amenity=police`, `amenity=prison`, and `building=civic` without `amenity=courthouse` are **not** included. Disused sites that remain tagged `amenity=courthouse` **are** included. **No `name=*` filter** because an England-alone Overpass count without `name=*` was 412 (nodes 85 + ways 308 + relations 19; bbox roughly 49.9–55.8°N, −6.5–2.0°E, not admin-clipped), well inside the ~8–10k soft guideline, and a loose British Isles bbox (49.8–61.0°N, −10.8–1.9°E, not admin-clipped, includes some northern France) was 518 (nodes 104 + ways 393 + relations 21), also well under ~8k. The same England bbox with `name=*` was 394 (nodes 82 + ways 295 + relations 17); the loose BI bbox with `name=*` was 485 (nodes 100 + ways 367 + relations 18) before admin clip. Unnamed courthouses are kept (34 pipeline-filled `"Courthouse"`). Admin-clipped result is **514** (nodes 105 / ways 387 / relations 22). **Feature counts are OSM objects, not distinct courthouses** (a site may appear as several nodes/ways/relations). Large sites mapped as multipolygon / site relations are included via Overpass centre points (Heathrow lesson). Default regional tiling `--max-span 2.0`. No prior courthouse preview chip existed; this layer does not replace any scaffold geometry. |
+| **Source** | [OpenStreetMap](https://www.openstreetmap.org/) via Overpass API |
+| **Query** | `amenity=courthouse` nodes, ways, and relations (`out center tags`) |
+| **Endpoint used** | `https://overpass.openstreetmap.fr/api/interpreter` |
+| **Extract date (UTC)** | 2026-10-03T03:40:00Z |
+| **Method** | Same admin-area pipeline as lighthouses / town halls (`scripts/extract_osm_courthouses.py`), including OSM relations; default tile span 2.0° |
+| **License** | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/) — © OpenStreetMap contributors |
+| **Attribution** | © OpenStreetMap contributors |
+
+### Property semantics (pipeline)
+
+Same pipeline fields as the other OSM layers (`name`, optional `brand`/`operator`, `osm_id`,
+`osm_url`, pipeline `note`, `layer`, `source`). Generic missing names fill as
+`"Courthouse"`. Ways as centre points: 387 of 514; relations as centre points:
+22 of 514; nodes: 105 of 514. Pipeline-filled generic names: 34 (no OSM `name=*`).
+Pipeline `note` repeats brand or operator on 80 of 514.
+
+
+
 ## Constituencies (`constituencies`)
 
 | | |
@@ -1584,6 +1612,24 @@ Popup shows **name + PCON24CD only** in this PR — no candidates, polls, or end
   is Jersey). Isle of Man admin-clip is 22; Channel Islands GG 13 (hard
   main-island bbox ≈ 9; Alderney / Sark included in Bailiwick polygon) /
   JE 4. No prior lighthouse preview chip existed.
+
+- Courthouses layer is `amenity=courthouse` only (not `office=lawyer`,
+  `amenity=police`, `amenity=prison`, or `building=civic` without
+  `amenity=courthouse`). Disused sites still tagged `amenity=courthouse`
+  are included. Extract includes **nodes, ways, and relations**; ways and
+  relations are Overpass centre points, not footprints. A site may appear
+  both as a relation and as member ways/nodes if both carry
+  `amenity=courthouse` (dedupe by OSM `type/id` only). Counts are OSM
+  objects, not distinct courthouses. **No `name=*` filter** because an
+  England-alone Overpass count without `name=*` was 412 (nodes 85 + ways
+  308 + relations 19), well inside the ~8–10k soft guideline. A loose
+  British Isles bbox was 518 (nodes 104 + ways 393 + relations 21), also
+  well under ~8k. Unnamed courthouses are kept (34 pipeline-filled
+  `"Courthouse"`). Admin-clipped result is 514 (nodes 105 / ways 387 /
+  relations 22). Mainland France bleed is 0 (Channel coast risk checked;
+  southernmost retained point is Jersey). Isle of Man admin-clip is 1;
+  Channel Islands GG 1 / JE 1 (hard main-island bbox matches). No prior
+  courthouse preview chip existed.
 
 - Isle of Man has only 2 OSM hospitals at extract time — likely under-tagged
   relative to known sites; Channel Islands admin-clip counts are GG 4 / JE 4
