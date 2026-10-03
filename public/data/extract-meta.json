@@ -1372,5 +1372,41 @@
       "name_filter": "no name=* filter (unnamed town halls kept). England-alone Overpass count without name=* (bbox ~49.9-55.8N, -6.5-2.0E, not admin-clipped) was 1539 (nodes 302 + ways 1190 + relations 47), well inside the ~8-10k soft guideline. A loose British Isles bbox (49.8-61.0N, -10.8-1.9E, not admin-clipped, includes some northern France) was 1826 (nodes 411 + ways 1365 + relations 50), also well under ~8k. The same England bbox with name=* was 1423 (nodes 266 + ways 1113 + relations 44); the loose BI bbox with name=* was 1675 (nodes 362 + ways 1266 + relations 47) before admin clip.",
       "france_bleed_note": "Mainland France bleed checked after extract with the hard bbox heuristic (in_france_bleed). Admin polygons clip coastal France; southernmost retained points should be Channel Islands, not mainland France."
     }
+  },
+  "places-of-worship": {
+    "extracted_at": "2026-10-03T01:39:22Z",
+    "method": "Overpass per-nation/territory bbox tiles clipped to OSM admin polygons (Nominatim); endpoint overpass.openstreetmap.fr",
+    "license": "ODbL 1.0",
+    "endpoint": "https://overpass.openstreetmap.fr/api/interpreter",
+    "layer": "places-of-worship",
+    "count": 43032,
+    "coverage": "Admin-area extract (ENG/SCT/WLS/NIR/IE/IM/GG/JE); IoM≈94; GG≈37; JE≈59; northern France bleed≈0",
+    "region_counts": {
+      "england": 32260,
+      "scotland": 3136,
+      "wales": 2699,
+      "northern-ireland": 1627,
+      "ireland": 3114,
+      "isle-of-man": 94,
+      "guernsey": 43,
+      "jersey": 59
+    },
+    "limitations": {
+      "isle_of_man": 94,
+      "channel_islands": 96,
+      "guernsey": 37,
+      "jersey": 59,
+      "northern_france_approx": 0,
+      "ways_as_centre_points": 38190,
+      "relations_as_centre_points": 204,
+      "pipeline_generic_names": 0,
+      "pipeline_note_repeats_brand": 755,
+      "note_semantics": "pipeline field (brand/operator or 'OpenStreetMap'), not OSM note=*",
+      "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
+      "counting_caveat": "amenity=place_of_worship only; building=church without amenity=place_of_worship, amenity=monastery alone, and tourism=attraction alone are omitted; not filtered by religion=* (religion copied onto properties when tagged); feature counts are OSM objects not distinct places of worship (a site may be several nodes/ways/relations); disused sites still tagged amenity=place_of_worship are included; multipolygon / site relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry amenity=place_of_worship; name=* required (unnamed places of worship omitted)",
+      "name_filter": "name=* required (unnamed places of worship omitted). England-alone Overpass count without name=* (bbox ~49.9-55.8N, -6.5-2.0E, not admin-clipped) was 39954 (nodes 4454 + ways 35340 + relations 160), far past the ~8-10k soft guideline. The same England bbox with name=* was 37859 (nodes 4028 + ways 33673 + relations 158). Named density is still high; the filter drops only unnamed objects.",
+      "with_religion_tag": 42687,
+      "france_bleed_note": "Mainland France bleed checked after extract with the hard bbox heuristic (in_france_bleed). Admin polygons clip coastal France; southernmost retained points should be Channel Islands, not mainland France."
+    }
   }
 }
