@@ -528,3 +528,26 @@ includes some northern France) was 11051 (nodes 8110 + ways 2932 + relations
 ways 2592 + relations 8); the loose BI bbox with `name=*` was 10452 (nodes
 7610 + ways 2834 + relations 8) before admin clip. Unnamed pharmacies are
 omitted. Most UK pharmacies are named (Boots, Lloyds, and independents).
+
+## `extract_osm_townhalls.py`
+
+Rebuilds `public/data/townhalls.geojson` (and merges into `extract-meta.json`)
+using the same admin-area Overpass + polygon-clip pipeline, querying
+`amenity=townhall` (nodes, ways, and relations; `out center`). Does **not**
+include `amenity=community_centre` (already a separate layer),
+`amenity=public_building` alone, `office=government`, or `building=civic`
+without `amenity=townhall`.
+
+```bash
+python3 scripts/extract_osm_townhalls.py
+```
+
+Default `--max-span 2.0`. **No `name=*` filter.** An England-alone Overpass
+count without `name=*` (bbox roughly 49.9–55.8°N, −6.5–2.0°E, not
+admin-clipped) was 1539 (nodes 302 + ways 1190 + relations 47), well inside
+the ~8–10k soft guideline. A loose British Isles bbox (49.8–61.0°N,
+−10.8–1.9°E, not admin-clipped, includes some northern France) was 1826
+(nodes 411 + ways 1365 + relations 50), also well under ~8k. The same
+England bbox with `name=*` was 1423 (nodes 266 + ways 1113 + relations 44);
+the loose BI bbox with `name=*` was 1675 (nodes 362 + ways 1266 + relations
+47). Unnamed town halls are kept.

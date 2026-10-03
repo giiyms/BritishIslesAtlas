@@ -41,7 +41,8 @@ fire stations by `scripts/extract_osm_fire_stations.py`; police by
 `scripts/extract_osm_playgrounds.py`; beaches by
 `scripts/extract_osm_beaches.py`; swimming pools by
 `scripts/extract_osm_swimming_pools.py`; pharmacies by
-`scripts/extract_osm_pharmacies.py`.
+`scripts/extract_osm_pharmacies.py`; town halls by
+`scripts/extract_osm_townhalls.py`.
 Westminster constituencies (GB) are ingested separately by
 `scripts/ingest_ons_pcon2024.py` from the ONS ArcGIS FeatureServer (not Overpass).
 Shared OSM pipeline:
@@ -54,7 +55,7 @@ Shared OSM pipeline:
 3. **Clip** results to the admin polygon (+ ~200 m buffer) so mainland France
    and cross-border spill are dropped.
 4. Deduplicate by OSM `type/id`. Ways are stored as **centre points**
-   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme-parks, viewpoints, arts-centres, aquariums, piers, ruins, golf-courses, galleries, marketplaces, nature-reserves, camp-sites, memorials, sports-centres, caravan-sites, fitness-centres, community-centres, post-offices, playgrounds, beaches, swimming-pools, and pharmacies extractors
+   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme-parks, viewpoints, arts-centres, aquariums, piers, ruins, golf-courses, galleries, marketplaces, nature-reserves, camp-sites, memorials, sports-centres, caravan-sites, fitness-centres, community-centres, post-offices, playgrounds, beaches, swimming-pools, pharmacies, and townhalls extractors
    also query **relations** and store them as centre points the same way;
    other layers remain node+way only unless noted.
 
@@ -1040,6 +1041,34 @@ pipeline generic label; they are not unnamed fills). Pipeline `note` repeats bra
 or operator on 4335 of 10310.
 
 
+
+## Town halls (`townhalls`)
+
+| | |
+|---|---|
+| **File** | `public/data/townhalls.geojson` |
+| **Features** | 1330 points (not a round cap) |
+| **Coverage** | Same admin-area footprint: England 899, Scotland 188, Wales 79, Northern Ireland 36, Ireland 112, Isle of Man 5, Guernsey 1, Jersey 10. **Northern France bleed = 0** (hard bbox heuristic flags 0). Southernmost point is Parish Hall (`node/1783493217`, 49.184°N, 2.052°W), inside the Jersey admin polygon — not mainland France. Easternmost point (~1.73°E, ~52.61°N, Greyfriars House `way/175586161`) is the Norfolk coast, not France. Hard main-island bbox checks match the admin clip: IoM ≈ 5, GG ≈ 1, JE ≈ 10. |
+| **Sample vs full** | Admin-area extract of OSM `amenity=townhall` at extract time (nodes, ways, **and relations**). `amenity=community_centre` (already its own layer), `amenity=public_building` alone, `office=government`, and `building=civic` without `amenity=townhall` are **not** included. Disused sites that remain tagged `amenity=townhall` **are** included. **No `name=*` filter** because an England-alone Overpass count without `name=*` was 1539 (nodes 302 + ways 1190 + relations 47; bbox roughly 49.9–55.8°N, −6.5–2.0°E, not admin-clipped), well inside the ~8–10k soft guideline, and a loose British Isles bbox (49.8–61.0°N, −10.8–1.9°E, not admin-clipped, includes some northern France) was 1826 (nodes 411 + ways 1365 + relations 50), also well under ~8k. The same England bbox with `name=*` was 1423 (nodes 266 + ways 1113 + relations 44); the loose BI bbox with `name=*` was 1675 (nodes 362 + ways 1266 + relations 47) before admin clip. Unnamed town halls are kept (114 pipeline-filled `"Town hall"`). Admin-clipped result is **1330** (nodes 274 / ways 1009 / relations 47). **Feature counts are OSM objects, not distinct town halls** (a site may appear as several nodes/ways/relations; e.g. St Lawrence, Jersey, has a parish-hall way plus a nearby node, and St John has two overlapping ways). Large sites mapped as multipolygon / site relations are included via Overpass centre points (Heathrow lesson). Default regional tiling `--max-span 2.0`. |
+| **Source** | [OpenStreetMap](https://www.openstreetmap.org/) via Overpass API |
+| **Query** | `amenity=townhall` nodes, ways, and relations (`out center tags`) |
+| **Endpoint used** | `https://overpass.openstreetmap.fr/api/interpreter` |
+| **Extract date (UTC)** | 2026-10-03T01:18:32Z |
+| **Method** | Same admin-area pipeline as pharmacies / swimming pools / post offices (`scripts/extract_osm_townhalls.py`), including OSM relations; default tile span 2.0° |
+| **License** | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/) — © OpenStreetMap contributors |
+| **Attribution** | © OpenStreetMap contributors |
+
+### Property semantics (pipeline)
+
+Same pipeline fields as the other OSM layers (`name`, optional `brand`/`operator`, `osm_id`,
+`osm_url`, pipeline `note`, `layer`, `source`). Generic missing names fill as
+`"Town hall"`. Ways as centre points: 1009 of 1330; relations as centre points:
+47 of 1330; nodes: 274 of 1330. Pipeline-filled generic names: 114 (no OSM `name=*`).
+None of the retained OSM `name=*` values are exactly the string `"Town hall"`
+(capitalisation such as `"Town Hall"` is kept as mapped). Pipeline `note` repeats brand
+or operator on 201 of 1330.
+
+
 ## Constituencies (`constituencies`)
 
 | | |
@@ -1440,6 +1469,25 @@ Popup shows **name + PCON24CD only** in this PR — no candidates, polls, or end
   6139 + ways 2592 + relations 8). Unnamed pharmacies are omitted. Admin-clipped
   named result is 10310 (nodes 7476 / ways 2826 / relations 8). Mainland France
   bleed is 0. Isle of Man admin-clip is 22; Channel Islands GG 14 / JE 24.
+
+
+- Town halls layer is `amenity=townhall` only (not `amenity=community_centre`,
+  `amenity=public_building` alone, `office=government`, or `building=civic`
+  without `amenity=townhall`). Disused sites still tagged `amenity=townhall`
+  are included. Extract includes **nodes, ways, and relations**; ways and
+  relations are Overpass centre points, not footprints. A site may appear
+  both as a relation and as member ways/nodes if both carry `amenity=townhall`
+  (dedupe by OSM `type/id` only). Counts are OSM objects, not distinct town
+  halls. **No `name=*` filter** because an England-alone Overpass count
+  without `name=*` was 1539 (nodes 302 + ways 1190 + relations 47), well
+  inside the ~8–10k soft guideline, and a loose British Isles bbox (not
+  admin-clipped, includes some northern France) was 1826, also well under
+  ~8k. The same England bbox with `name=*` was 1423 (nodes 266 + ways 1113
+  + relations 44). Unnamed town halls are kept (114 pipeline-filled
+  `"Town hall"`). Admin-clipped result is 1330 (nodes 274 / ways 1009 /
+  relations 47). Mainland France bleed is 0. Isle of Man admin-clip is 5;
+  Channel Islands GG 1 / JE 10 (Guernsey is likely under-tagged: only
+  Castel Douzaine Room carries `amenity=townhall`).
 
 - Isle of Man has only 2 OSM hospitals at extract time — likely under-tagged
   relative to known sites; Channel Islands admin-clip counts are GG 4 / JE 4

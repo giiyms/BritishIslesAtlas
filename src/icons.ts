@@ -119,6 +119,9 @@ export const ICONS = {
   pharmacies: icon(
     `<rect x="4" y="4" width="16" height="16" rx="3.2"/><path d="M12 7.2v9.6M7.2 12h9.6"/>`,
   ),
+  townhalls: icon(
+    `<path d="M4 20.5h16"/><path d="M5.5 20.5V11.2h13v9.3"/><path d="M3.5 11.2 12 5.2l8.5 6"/><path d="M8 20.5v-5h3v5"/><path d="M13 15.5h2.2M13 18h2.2"/><path d="M12 5.2V3.4"/>`,
+  ),
   churches: icon(
     `<path d="M12 3v3M10.2 4.6h3.6"/><path d="M6 21V11.2L12 7l6 4.2V21"/><path d="M10 21v-4h4v4"/><path d="M4 21h16"/>`,
   ),

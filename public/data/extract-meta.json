@@ -1337,5 +1337,40 @@
       "name_filter": "require name=* (unnamed pharmacies omitted). England-alone Overpass count without name=* (bbox ~49.9-55.8N, -6.5-2.0E, not admin-clipped) was 9235 (nodes 6554 + ways 2673 + relations 8), at the upper edge of the ~8-10k soft guideline for England alone. A loose British Isles bbox (49.8-61.0N, -10.8-1.9E, not admin-clipped, includes some northern France) was 11051 (nodes 8110 + ways 2932 + relations 9), past ~10k. The same England bbox with name=* was 8739 (nodes 6139 + ways 2592 + relations 8); the loose BI bbox with name=* was 10452 (nodes 7610 + ways 2834 + relations 8) before admin clip. Most UK pharmacies are named (Boots, Lloyds, and independents).",
       "france_bleed_note": "Mainland France bleed checked after extract with the hard bbox heuristic (in_france_bleed). Admin polygons clip coastal France; southernmost retained points should be Channel Islands, not mainland France."
     }
+  },
+  "townhalls": {
+    "extracted_at": "2026-10-03T01:18:32Z",
+    "method": "Overpass per-nation/territory bbox tiles clipped to OSM admin polygons (Nominatim); endpoint overpass.openstreetmap.fr",
+    "license": "ODbL 1.0",
+    "endpoint": "https://overpass.openstreetmap.fr/api/interpreter",
+    "layer": "townhalls",
+    "count": 1330,
+    "coverage": "Admin-area extract (ENG/SCT/WLS/NIR/IE/IM/GG/JE); IoM≈5; GG≈1; JE≈10; northern France bleed≈0",
+    "region_counts": {
+      "england": 899,
+      "scotland": 188,
+      "wales": 79,
+      "northern-ireland": 36,
+      "ireland": 112,
+      "isle-of-man": 5,
+      "guernsey": 1,
+      "jersey": 10
+    },
+    "limitations": {
+      "isle_of_man": 5,
+      "channel_islands": 11,
+      "guernsey": 1,
+      "jersey": 10,
+      "northern_france_approx": 0,
+      "ways_as_centre_points": 1009,
+      "relations_as_centre_points": 47,
+      "pipeline_generic_names": 114,
+      "pipeline_note_repeats_brand": 201,
+      "note_semantics": "pipeline field (brand/operator or 'OpenStreetMap'), not OSM note=*",
+      "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
+      "counting_caveat": "amenity=townhall only; amenity=community_centre, amenity=public_building alone, office=government, and building=civic without amenity=townhall are omitted; feature counts are OSM objects not distinct town halls (a site may be several nodes/ways/relations); disused sites still tagged amenity=townhall are included; multipolygon / site relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry amenity=townhall; no name=* filter (unnamed town halls kept)",
+      "name_filter": "no name=* filter (unnamed town halls kept). England-alone Overpass count without name=* (bbox ~49.9-55.8N, -6.5-2.0E, not admin-clipped) was 1539 (nodes 302 + ways 1190 + relations 47), well inside the ~8-10k soft guideline. A loose British Isles bbox (49.8-61.0N, -10.8-1.9E, not admin-clipped, includes some northern France) was 1826 (nodes 411 + ways 1365 + relations 50), also well under ~8k. The same England bbox with name=* was 1423 (nodes 266 + ways 1113 + relations 44); the loose BI bbox with name=* was 1675 (nodes 362 + ways 1266 + relations 47) before admin clip.",
+      "france_bleed_note": "Mainland France bleed checked after extract with the hard bbox heuristic (in_france_bleed). Admin polygons clip coastal France; southernmost retained points should be Channel Islands, not mainland France."
+    }
   }
 }
