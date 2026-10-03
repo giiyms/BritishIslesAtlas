@@ -40,7 +40,8 @@ fire stations by `scripts/extract_osm_fire_stations.py`; police by
 `scripts/extract_osm_post_offices.py`; playgrounds by
 `scripts/extract_osm_playgrounds.py`; beaches by
 `scripts/extract_osm_beaches.py`; swimming pools by
-`scripts/extract_osm_swimming_pools.py`.
+`scripts/extract_osm_swimming_pools.py`; pharmacies by
+`scripts/extract_osm_pharmacies.py`.
 Westminster constituencies (GB) are ingested separately by
 `scripts/ingest_ons_pcon2024.py` from the ONS ArcGIS FeatureServer (not Overpass).
 Shared OSM pipeline:
@@ -53,7 +54,7 @@ Shared OSM pipeline:
 3. **Clip** results to the admin polygon (+ ~200 m buffer) so mainland France
    and cross-border spill are dropped.
 4. Deduplicate by OSM `type/id`. Ways are stored as **centre points**
-   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme-parks, viewpoints, arts-centres, aquariums, piers, ruins, golf-courses, galleries, marketplaces, nature-reserves, camp-sites, memorials, sports-centres, caravan-sites, fitness-centres, community-centres, post-offices, playgrounds, beaches, and swimming-pools extractors
+   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme-parks, viewpoints, arts-centres, aquariums, piers, ruins, golf-courses, galleries, marketplaces, nature-reserves, camp-sites, memorials, sports-centres, caravan-sites, fitness-centres, community-centres, post-offices, playgrounds, beaches, swimming-pools, and pharmacies extractors
    also query **relations** and store them as centre points the same way;
    other layers remain node+way only unless noted.
 
@@ -1011,6 +1012,34 @@ Same pipeline fields as the other OSM layers (`name`, optional `brand`/`operator
 3 of 552; nodes: 188 of 552. Pipeline-filled generic names: 0 (named-only extract).
 
 
+
+## Pharmacies (`pharmacies`)
+
+| | |
+|---|---|
+| **File** | `public/data/pharmacies.geojson` |
+| **Features** | 10310 points (not a round cap) |
+| **Coverage** | Same admin-area footprint: England 7390, Scotland 866, Wales 381, Northern Ireland 208, Ireland 1405, Isle of Man 22, Guernsey 14, Jersey 24. **Northern France bleed = 0** (hard bbox heuristic flags 0). Southernmost point is Boots in St Helier, Jersey (`node/8861081402`, 49.180°N, 2.084°W), inside the Jersey admin polygon — not mainland France. Easternmost point (~1.76°E, ~52.49°N, High Street Pharmacy `node/12954176556`) is the Suffolk coast, not France. Hard main-island bbox checks match the admin clip: IoM ≈ 22, GG ≈ 14, JE ≈ 24. |
+| **Sample vs full** | Admin-area extract of OSM `amenity=pharmacy` at extract time (nodes, ways, **and relations**). `amenity=clinic`, `amenity=doctors`, `shop=chemist` without `amenity=pharmacy`, and `healthcare=pharmacy` alone without `amenity=pharmacy` are **not** included. Disused sites that remain tagged `amenity=pharmacy` **are** included. **Named-only** (`name=*` required) because an England-alone Overpass count without `name=*` was 9235 (nodes 6554 + ways 2673 + relations 8; bbox roughly 49.9–55.8°N, −6.5–2.0°E, not admin-clipped), at the upper edge of the ~8–10k soft guideline for England alone, and a loose British Isles bbox (49.8–61.0°N, −10.8–1.9°E, not admin-clipped, includes some northern France) was 11051 (nodes 8110 + ways 2932 + relations 9), past ~10k. The same England bbox with `name=*` was 8739 (nodes 6139 + ways 2592 + relations 8); the loose BI bbox with `name=*` was 10452 (nodes 7610 + ways 2834 + relations 8) before admin clip. Unnamed pharmacies are omitted. Admin-clipped named result is **10310** (nodes 7476 / ways 2826 / relations 8). **Feature counts are OSM objects, not distinct pharmacies** (a site may appear as several nodes/ways/relations). Large sites mapped as multipolygon / site relations are included via Overpass centre points (Heathrow lesson). Default regional tiling `--max-span 2.0`. |
+| **Source** | [OpenStreetMap](https://www.openstreetmap.org/) via Overpass API |
+| **Query** | `amenity=pharmacy` + `name=*` nodes, ways, and relations (`out center tags`) |
+| **Endpoint used** | `https://overpass.openstreetmap.fr/api/interpreter` |
+| **Extract date (UTC)** | 2026-10-03T00:26:01Z |
+| **Method** | Same admin-area pipeline as swimming pools / beaches / post offices (`scripts/extract_osm_pharmacies.py`), including OSM relations; default tile span 2.0° |
+| **License** | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/) — © OpenStreetMap contributors |
+| **Attribution** | © OpenStreetMap contributors |
+
+### Property semantics (pipeline)
+
+Same pipeline fields as the other OSM layers (`name`, optional `brand`/`operator`, `osm_id`,
+`osm_url`, pipeline `note`, `layer`, `source`). Generic missing names would fill as
+`"Pharmacy"`. Ways as centre points: 2826 of 10310; relations as centre points:
+8 of 10310; nodes: 7476 of 10310. Features whose `name` is exactly `"Pharmacy"`: 12
+(these still carry OSM `name=*`, which is the string Pharmacy, so they match the
+pipeline generic label; they are not unnamed fills). Pipeline `note` repeats brand
+or operator on 4335 of 10310.
+
+
 ## Constituencies (`constituencies`)
 
 | | |
@@ -1395,6 +1424,22 @@ Popup shows **name + PCON24CD only** in this PR — no candidates, polls, or end
   + relations 20), far above the ~8–10k soft guideline (mostly unnamed
   private backyard pools); the same England bbox with `name=*` was 478
   (nodes 151 + ways 324 + relations 3). Unnamed pools are omitted.
+
+- Pharmacies layer is `amenity=pharmacy` only (not `amenity=clinic`,
+  `amenity=doctors`, `shop=chemist` without `amenity=pharmacy`, or
+  `healthcare=pharmacy` alone). Disused sites still tagged
+  `amenity=pharmacy` are included. Extract includes **nodes, ways, and
+  relations**; ways and relations are Overpass centre points, not footprints.
+  A site may appear both as a relation and as member ways/nodes if both carry
+  `amenity=pharmacy` (dedupe by OSM `type/id` only). Counts are OSM objects,
+  not distinct pharmacies. **Named-only** (`name=*` required) because an
+  England-alone Overpass count without `name=*` was 9235 (nodes 6554 + ways
+  2673 + relations 8), at the upper edge of the ~8–10k soft guideline, and a
+  loose British Isles bbox (not admin-clipped, includes some northern France)
+  was 11051, past ~10k. The same England bbox with `name=*` was 8739 (nodes
+  6139 + ways 2592 + relations 8). Unnamed pharmacies are omitted. Admin-clipped
+  named result is 10310 (nodes 7476 / ways 2826 / relations 8). Mainland France
+  bleed is 0. Isle of Man admin-clip is 22; Channel Islands GG 14 / JE 24.
 
 - Isle of Man has only 2 OSM hospitals at extract time — likely under-tagged
   relative to known sites; Channel Islands admin-clip counts are GG 4 / JE 4

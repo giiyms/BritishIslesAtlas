@@ -504,3 +504,27 @@ England-alone Overpass count without `name=*` (bbox roughly 49.9–55.8°N,
 20), far past the ~8–10k soft guideline — mostly unnamed private backyard
 pools. The same England bbox with `name=*` was 478 (nodes 151 + ways 324 +
 relations 3). Unnamed pools are omitted.
+
+
+## `extract_osm_pharmacies.py`
+
+Rebuilds `public/data/pharmacies.geojson` (and merges into `extract-meta.json`)
+using the same admin-area Overpass + polygon-clip pipeline, querying
+`amenity=pharmacy` (nodes, ways, and relations; `out center`). Does **not**
+include `amenity=clinic`, `amenity=doctors`, `shop=chemist` without
+`amenity=pharmacy`, or `healthcare=pharmacy` alone without `amenity=pharmacy`.
+
+```bash
+python3 scripts/extract_osm_pharmacies.py
+```
+
+Default `--max-span 2.0`. **Named-only** (`name=*` required) because an
+England-alone Overpass count without `name=*` (bbox roughly 49.9–55.8°N,
+−6.5–2.0°E, not admin-clipped) was 9235 (nodes 6554 + ways 2673 + relations
+8), at the upper edge of the ~8–10k soft guideline for England alone, and a
+loose British Isles bbox (49.8–61.0°N, −10.8–1.9°E, not admin-clipped,
+includes some northern France) was 11051 (nodes 8110 + ways 2932 + relations
+9), past ~10k. The same England bbox with `name=*` was 8739 (nodes 6139 +
+ways 2592 + relations 8); the loose BI bbox with `name=*` was 10452 (nodes
+7610 + ways 2834 + relations 8) before admin clip. Unnamed pharmacies are
+omitted. Most UK pharmacies are named (Boots, Lloyds, and independents).

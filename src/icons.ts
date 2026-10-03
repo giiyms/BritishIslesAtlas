@@ -116,6 +116,9 @@ export const ICONS = {
   "swimming-pools": icon(
     `<rect x="3.5" y="6.5" width="17" height="11" rx="2"/><path d="M6.2 10.4c1.1.8 2 .8 3.1 0s2-.8 3.1 0 2 .8 3.1 0 1.7.8 2.3.5"/><path d="M6.2 14.2c1.1.8 2 .8 3.1 0s2-.8 3.1 0 2 .8 3.1 0"/>`,
   ),
+  pharmacies: icon(
+    `<rect x="4" y="4" width="16" height="16" rx="3.2"/><path d="M12 7.2v9.6M7.2 12h9.6"/>`,
+  ),
   churches: icon(
     `<path d="M12 3v3M10.2 4.6h3.6"/><path d="M6 21V11.2L12 7l6 4.2V21"/><path d="M10 21v-4h4v4"/><path d="M4 21h16"/>`,
   ),
