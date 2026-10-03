@@ -1478,5 +1478,41 @@
       "name_filter": "no name=* filter (unnamed courthouses kept). England-alone Overpass count without name=* (bbox ~49.9-55.8N, -6.5-2.0E, not admin-clipped) was 412 (nodes 85 + ways 308 + relations 19), well inside the ~8-10k soft guideline. A loose British Isles bbox (49.8-61.0N, -10.8-1.9E, not admin-clipped, includes some northern France) was 518 (nodes 104 + ways 393 + relations 21), also well under ~8k. The same England bbox with name=* was 394 (nodes 82 + ways 295 + relations 17); the loose BI bbox with name=* was 485 (nodes 100 + ways 367 + relations 18) before admin clip.",
       "france_bleed_note": "Mainland France bleed checked after extract with the hard bbox heuristic (in_france_bleed). Admin polygons clip coastal France; southernmost retained points should be Channel Islands, not mainland France."
     }
+  },
+  "nightclubs": {
+    "extracted_at": "2026-10-03T03:54:38Z",
+    "method": "Overpass per-nation/territory bbox tiles clipped to OSM admin polygons (Nominatim); endpoint overpass.openstreetmap.fr",
+    "license": "ODbL 1.0",
+    "endpoint": "https://overpass.openstreetmap.fr/api/interpreter",
+    "layer": "nightclubs",
+    "count": 1182,
+    "coverage": "Admin-area extract (ENG/SCT/WLS/NIR/IE/IM/GG/JE); IoM≈1; GG≈2; JE≈1; northern France bleed≈0",
+    "region_counts": {
+      "england": 933,
+      "scotland": 103,
+      "wales": 44,
+      "northern-ireland": 16,
+      "ireland": 82,
+      "isle-of-man": 1,
+      "guernsey": 2,
+      "jersey": 1
+    },
+    "limitations": {
+      "isle_of_man": 1,
+      "channel_islands": 3,
+      "guernsey": 2,
+      "jersey": 1,
+      "northern_france_approx": 0,
+      "ways_as_centre_points": 442,
+      "relations_as_centre_points": 2,
+      "pipeline_generic_names": 23,
+      "pipeline_note_repeats_brand": 79,
+      "note_semantics": "pipeline field (brand/operator or 'OpenStreetMap'), not OSM note=*",
+      "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
+      "tag_choice": "Atlas preferred amenity=theatre (already LayerId theatres). Fallbacks amenity=cinema, leisure=stadium, and amenity=ferry_terminal are already LayerIds cinemas, stadiums, and ferry-terminals. Next unused tag in the civic/leisure entertainment family: amenity=nightclub.",
+      "counting_caveat": "amenity=nightclub only; amenity=bar, amenity=pub, amenity=theatre, amenity=casino, and leisure=dance without amenity=nightclub are omitted; the existing preview pubs chip is not this layer and is not replaced; feature counts are OSM objects not distinct nightclubs (a site may be several nodes/ways/relations); disused sites still tagged amenity=nightclub are included; multipolygon / site relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry amenity=nightclub; no name=* filter (unnamed nightclubs kept)",
+      "name_filter": "no name=* filter (unnamed nightclubs kept). England-alone Overpass count without name=* (bbox ~49.9-55.8N, -6.5-2.0E, not admin-clipped) was 1023 (nodes 607 + ways 414 + relations 2), well inside the ~8-10k soft guideline. A loose British Isles bbox (49.8-61.0N, -10.8-1.9E, not admin-clipped, includes some northern France) was 1190 (nodes 744 + ways 444 + relations 2), also well under ~8k. The same England bbox with name=* was 1006 (nodes 598 + ways 406 + relations 2); the loose BI bbox with name=* was 1167 (nodes 730 + ways 435 + relations 2) before admin clip.",
+      "france_bleed_note": "Mainland France bleed checked after extract with the hard bbox heuristic (in_france_bleed). Admin polygons clip coastal France; southernmost retained points should be Channel Islands, not mainland France."
+    }
   }
 }

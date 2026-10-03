@@ -619,3 +619,31 @@ not admin-clipped, includes some northern France) was 518 (nodes 104 + ways
 was 394 (nodes 82 + ways 295 + relations 17); the loose BI bbox with `name=*`
 was 485 (nodes 100 + ways 367 + relations 18). Unnamed courthouses are kept.
 Disused sites that remain tagged `amenity=courthouse` are included.
+
+## `extract_osm_nightclubs.py`
+
+Rebuilds `public/data/nightclubs.geojson` (and merges into `extract-meta.json`)
+using the same admin-area Overpass + polygon-clip pipeline, querying
+`amenity=nightclub` (nodes, ways, and relations; `out center`). Does **not**
+include `amenity=bar`, `amenity=pub` (the preview pubs chip is separate and is
+not replaced), `amenity=theatre`, `amenity=casino`, or `leisure=dance` without
+`amenity=nightclub`. No prior nightclub preview chip existed.
+
+Tag choice: Atlas preferred `amenity=theatre`, already a LayerId (`theatres`).
+Fallbacks `amenity=cinema`, `leisure=stadium`, and `amenity=ferry_terminal` are
+already LayerIds (`cinemas`, `stadiums`, `ferry-terminals`). Next unused tag in
+the civic/leisure entertainment family is `amenity=nightclub`.
+
+```bash
+python3 scripts/extract_osm_nightclubs.py
+```
+
+Default `--max-span 2.0`. **No `name=*` filter** because an England-alone
+Overpass count without `name=*` (bbox roughly 49.9–55.8°N, −6.5–2.0°E, not
+admin-clipped) was 1023 (nodes 607 + ways 414 + relations 2), well inside the
+~8–10k soft guideline. A loose British Isles bbox (49.8–61.0°N, −10.8–1.9°E,
+not admin-clipped, includes some northern France) was 1190 (nodes 744 + ways
+444 + relations 2), also well under ~8k. The same England bbox with `name=*`
+was 1006 (nodes 598 + ways 406 + relations 2); the loose BI bbox with `name=*`
+was 1167 (nodes 730 + ways 435 + relations 2). Unnamed nightclubs are kept.
+Disused sites that remain tagged `amenity=nightclub` are included.
