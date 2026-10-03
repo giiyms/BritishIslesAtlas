@@ -551,3 +551,26 @@ the ~8–10k soft guideline. A loose British Isles bbox (49.8–61.0°N,
 England bbox with `name=*` was 1423 (nodes 266 + ways 1113 + relations 44);
 the loose BI bbox with `name=*` was 1675 (nodes 362 + ways 1266 + relations
 47). Unnamed town halls are kept.
+
+## `extract_osm_places_of_worship.py`
+
+Rebuilds `public/data/places-of-worship.geojson` (and merges into `extract-meta.json`)
+using the same admin-area Overpass + polygon-clip pipeline, querying
+`amenity=place_of_worship` (nodes, ways, and relations; `out center`). Does **not**
+include `building=church` without `amenity=place_of_worship`, `amenity=monastery`
+alone, or `tourism=attraction` alone. Does **not** filter by `religion=*`
+(when `religion=*` is present it is copied onto the feature). Preview layers
+`churches`, `mosques`, and `other-religious` stay as scaffold geometry and are
+not replaced by this extract.
+
+```bash
+python3 scripts/extract_osm_places_of_worship.py
+```
+
+Default `--max-span 2.0`. **Named-only** (`name=*` required) because an
+England-alone Overpass count without `name=*` (bbox roughly 49.9–55.8°N,
+−6.5–2.0°E, not admin-clipped) was 39954 (nodes 4454 + ways 35340 + relations
+160), far past the ~8–10k soft guideline. The same England bbox with `name=*`
+was 37859 (nodes 4028 + ways 33673 + relations 158) — still dense, but the
+filter drops unnamed objects only. Unnamed places of worship are omitted.
+Disused sites that remain tagged `amenity=place_of_worship` are included.

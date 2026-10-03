@@ -122,6 +122,9 @@ export const ICONS = {
   townhalls: icon(
     `<path d="M4 20.5h16"/><path d="M5.5 20.5V11.2h13v9.3"/><path d="M3.5 11.2 12 5.2l8.5 6"/><path d="M8 20.5v-5h3v5"/><path d="M13 15.5h2.2M13 18h2.2"/><path d="M12 5.2V3.4"/>`,
   ),
+  "places-of-worship": icon(
+    `<path d="M12 2.4v3.2M10.1 4.1h3.8"/><path d="M5.5 21V11.4L12 6.6l6.5 4.8V21"/><path d="M10 21v-4.2h4V21"/><path d="M3.6 21h16.8"/><circle cx="12" cy="13.2" r="1.15" fill="currentColor" stroke="none"/>`,
+  ),
   churches: icon(
     `<path d="M12 3v3M10.2 4.6h3.6"/><path d="M6 21V11.2L12 7l6 4.2V21"/><path d="M10 21v-4h4v4"/><path d="M4 21h16"/>`,
   ),

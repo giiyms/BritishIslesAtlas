@@ -42,7 +42,8 @@ fire stations by `scripts/extract_osm_fire_stations.py`; police by
 `scripts/extract_osm_beaches.py`; swimming pools by
 `scripts/extract_osm_swimming_pools.py`; pharmacies by
 `scripts/extract_osm_pharmacies.py`; town halls by
-`scripts/extract_osm_townhalls.py`.
+`scripts/extract_osm_townhalls.py`; places of worship by
+`scripts/extract_osm_places_of_worship.py`.
 Westminster constituencies (GB) are ingested separately by
 `scripts/ingest_ons_pcon2024.py` from the ONS ArcGIS FeatureServer (not Overpass).
 Shared OSM pipeline:
@@ -55,7 +56,7 @@ Shared OSM pipeline:
 3. **Clip** results to the admin polygon (+ ~200 m buffer) so mainland France
    and cross-border spill are dropped.
 4. Deduplicate by OSM `type/id`. Ways are stored as **centre points**
-   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme-parks, viewpoints, arts-centres, aquariums, piers, ruins, golf-courses, galleries, marketplaces, nature-reserves, camp-sites, memorials, sports-centres, caravan-sites, fitness-centres, community-centres, post-offices, playgrounds, beaches, swimming-pools, pharmacies, and townhalls extractors
+   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme-parks, viewpoints, arts-centres, aquariums, piers, ruins, golf-courses, galleries, marketplaces, nature-reserves, camp-sites, memorials, sports-centres, caravan-sites, fitness-centres, community-centres, post-offices, playgrounds, beaches, swimming-pools, pharmacies, townhalls, and places-of-worship extractors
    also query **relations** and store them as centre points the same way;
    other layers remain node+way only unless noted.
 
@@ -1069,6 +1070,35 @@ None of the retained OSM `name=*` values are exactly the string `"Town hall"`
 or operator on 201 of 1330.
 
 
+## Places of worship (`places-of-worship`)
+
+| | |
+|---|---|
+| **File** | `public/data/places-of-worship.geojson` |
+| **Features** | 43032 points (not a round cap; ~13 MB minified GeoJSON) |
+| **Coverage** | Same admin-area footprint: England 32260, Scotland 3136, Wales 2699, Northern Ireland 1627, Ireland 3114, Isle of Man 94, Guernsey 43, Jersey 59. **Northern France bleed = 0** (hard bbox heuristic flags 0). Southernmost point is St. Peter de La Rocque (`way/179754051`, 49.170°N, 2.036°W), inside the Jersey admin polygon — not mainland France. Easternmost point (~1.76°E, ~52.48°N, Christ Church `node/12521358331`) is the East Anglian coast, not France. Hard main-island bbox checks: IoM ≈ 94, GG ≈ 37, JE ≈ 59. Guernsey Bailiwick admin-clip is 43 vs hard main-island bbox ≈ 37 (Alderney, Sark, and Brecqhou chapels included in the Bailiwick polygon). |
+| **Sample vs full** | Admin-area extract of OSM `amenity=place_of_worship` at extract time (nodes, ways, **and relations**). `building=church` without `amenity=place_of_worship`, `amenity=monastery` alone, and `tourism=attraction` alone are **not** included. Not filtered by `religion=*` (when present, `religion` is copied onto properties). Disused sites that remain tagged `amenity=place_of_worship` **are** included. **`name=*` filter is on** because an England-alone Overpass count without `name=*` was 39954 (nodes 4454 + ways 35340 + relations 160; bbox roughly 49.9–55.8°N, −6.5–2.0°E, not admin-clipped), far past the ~8–10k soft guideline. The same England bbox with `name=*` was 37859 (nodes 4028 + ways 33673 + relations 158) — still dense; the filter drops only unnamed objects. Unnamed places of worship are omitted (0 pipeline-filled `"Place of worship"`). Admin-clipped result is **43032** (nodes 4638 / ways 38190 / relations 204). **Feature counts are OSM objects, not distinct places of worship** (a site may appear as several nodes/ways/relations). Large sites mapped as multipolygon / site relations are included via Overpass centre points (Heathrow lesson). Default regional tiling `--max-span 2.0`. Preview layers `churches`, `mosques`, and `other-religious` are unchanged scaffold geometry and are not this extract. |
+| **Source** | [OpenStreetMap](https://www.openstreetmap.org/) via Overpass API |
+| **Query** | `amenity=place_of_worship` + `name=*` nodes, ways, and relations (`out center tags`) |
+| **Endpoint used** | `https://overpass.openstreetmap.fr/api/interpreter` |
+| **Extract date (UTC)** | 2026-10-03T01:39:22Z |
+| **Method** | Same admin-area pipeline as town halls / pharmacies (`scripts/extract_osm_places_of_worship.py`), including OSM relations; default tile span 2.0° |
+| **License** | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/) — © OpenStreetMap contributors |
+| **Attribution** | © OpenStreetMap contributors |
+
+### Property semantics (pipeline)
+
+Same pipeline fields as the other OSM layers (`name`, optional `brand`/`operator`, `osm_id`,
+`osm_url`, pipeline `note`, `layer`, `source`), plus `religion` when OSM `religion=*`
+is set (42687 of 43032). Generic missing names would fill as `"Place of worship"`;
+none do, because `name=*` is required. Ways as centre points: 38190 of 43032;
+relations as centre points: 204 of 43032; nodes: 4638 of 43032. Pipeline-filled
+generic names: 0. Pipeline `note` repeats brand or operator on 755 of 43032.
+Religion tags present are mostly `christian` (40381), then `muslim` (1367),
+`jewish` (202), `sikh` (201), `hindu` (162), `buddhist` (130), and smaller
+denominations; 345 features have a name but no `religion=*`.
+
+
 ## Constituencies (`constituencies`)
 
 | | |
@@ -1488,6 +1518,26 @@ Popup shows **name + PCON24CD only** in this PR — no candidates, polls, or end
   relations 47). Mainland France bleed is 0. Isle of Man admin-clip is 5;
   Channel Islands GG 1 / JE 10 (Guernsey is likely under-tagged: only
   Castel Douzaine Room carries `amenity=townhall`).
+
+- Places of worship layer is `amenity=place_of_worship` only (not
+  `building=church` without that amenity, `amenity=monastery` alone, or
+  `tourism=attraction` alone). Not filtered by `religion=*`; the tag is
+  copied onto properties when present. Disused sites still tagged
+  `amenity=place_of_worship` are included. Extract includes **nodes, ways, and
+  relations**; ways and relations are Overpass centre points, not footprints.
+  A site may appear both as a relation and as member ways/nodes if both carry
+  `amenity=place_of_worship` (dedupe by OSM `type/id` only). Counts are OSM
+  objects, not distinct places of worship. **Named-only** (`name=*` required)
+  because an England-alone Overpass count without `name=*` was 39954 (nodes
+  4454 + ways 35340 + relations 160), far past the ~8–10k soft guideline. The
+  same England bbox with `name=*` was 37859 (nodes 4028 + ways 33673 +
+  relations 158) — still dense; unnamed objects only are omitted. Admin-clipped
+  named result is 43032 (nodes 4638 / ways 38190 / relations 204). Mainland
+  France bleed is 0. Isle of Man admin-clip is 94; Channel Islands GG 43
+  (hard main-island bbox ≈ 37; Alderney / Sark / Brecqhou included in the
+  Bailiwick polygon) / JE 59. Preview `churches`, `mosques`, and
+  `other-religious` layers are still scaffold geometry, not this extract.
+  The static file is large (~13 MB) because named density stays high.
 
 - Isle of Man has only 2 OSM hospitals at extract time — likely under-tagged
   relative to known sites; Channel Islands admin-clip counts are GG 4 / JE 4

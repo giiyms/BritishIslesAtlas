@@ -256,13 +256,13 @@ export function createAtlas(container: HTMLElement): Atlas {
 
   let loaded = false;
   const ordered = [...LAYERS].sort((a, b) => a.z - b.z);
-  const OSM_STATIC = new Set<LayerId>(["petrol", "ev", "power", "hospitals", "fire-stations", "police", "castles", "libraries", "universities", "museums", "railway-stations", "aerodromes", "ferry-terminals", "marinas", "zoos", "theatres", "battlefields", "cinemas", "stadiums", "theme-parks", "viewpoints", "arts-centres", "aquariums", "piers", "ruins", "golf-courses", "galleries", "marketplaces", "nature-reserves", "camp-sites", "memorials", "sports-centres", "caravan-sites", "fitness-centres", "community-centres", "playgrounds", "post-offices", "beaches", "swimming-pools", "pharmacies", "townhalls"]);
+  const OSM_STATIC = new Set<LayerId>(["petrol", "ev", "power", "hospitals", "fire-stations", "police", "castles", "libraries", "universities", "museums", "railway-stations", "aerodromes", "ferry-terminals", "marinas", "zoos", "theatres", "battlefields", "cinemas", "stadiums", "theme-parks", "viewpoints", "arts-centres", "aquariums", "piers", "ruins", "golf-courses", "galleries", "marketplaces", "nature-reserves", "camp-sites", "memorials", "sports-centres", "caravan-sites", "fitness-centres", "community-centres", "playgrounds", "post-offices", "beaches", "swimming-pools", "pharmacies", "townhalls", "places-of-worship"]);
   const clustered = new Set<LayerId>([
-    "pubs", "schools", "churches", "post-offices", "mosques", "other-religious", "petrol", "ev", "power", "hospitals", "fire-stations", "police", "castles", "libraries", "universities", "museums", "railway-stations", "aerodromes", "ferry-terminals", "marinas", "zoos", "theatres", "battlefields", "cinemas", "stadiums", "theme-parks", "viewpoints", "arts-centres", "aquariums", "piers", "ruins", "golf-courses", "galleries", "marketplaces", "nature-reserves", "camp-sites", "memorials", "sports-centres", "caravan-sites", "fitness-centres", "community-centres", "playgrounds", "beaches", "swimming-pools", "pharmacies", "townhalls",
+    "pubs", "schools", "churches", "post-offices", "mosques", "other-religious", "petrol", "ev", "power", "hospitals", "fire-stations", "police", "castles", "libraries", "universities", "museums", "railway-stations", "aerodromes", "ferry-terminals", "marinas", "zoos", "theatres", "battlefields", "cinemas", "stadiums", "theme-parks", "viewpoints", "arts-centres", "aquariums", "piers", "ruins", "golf-courses", "galleries", "marketplaces", "nature-reserves", "camp-sites", "memorials", "sports-centres", "caravan-sites", "fitness-centres", "community-centres", "playgrounds", "beaches", "swimming-pools", "pharmacies", "townhalls", "places-of-worship",
     "census", "weather", "crime", "legends",
   ]);
   const minZoom = (id: LayerId) => id === "post-offices" ? 7 :
-    ["pubs", "schools", "churches", "other-religious", "mosques", "petrol", "ev", "libraries", "universities", "museums", "railway-stations", "aerodromes", "ferry-terminals", "marinas", "zoos", "theatres", "battlefields", "cinemas", "stadiums", "theme-parks", "viewpoints", "arts-centres", "aquariums", "piers", "ruins", "golf-courses", "galleries", "marketplaces", "nature-reserves", "camp-sites", "memorials", "sports-centres", "caravan-sites", "fitness-centres", "community-centres", "playgrounds", "beaches", "swimming-pools", "pharmacies", "townhalls"].includes(id) ? 6 : 0;
+    ["pubs", "schools", "churches", "other-religious", "mosques", "petrol", "ev", "libraries", "universities", "museums", "railway-stations", "aerodromes", "ferry-terminals", "marinas", "zoos", "theatres", "battlefields", "cinemas", "stadiums", "theme-parks", "viewpoints", "arts-centres", "aquariums", "piers", "ruins", "golf-courses", "galleries", "marketplaces", "nature-reserves", "camp-sites", "memorials", "sports-centres", "caravan-sites", "fitness-centres", "community-centres", "playgrounds", "beaches", "swimming-pools", "pharmacies", "townhalls", "places-of-worship"].includes(id) ? 6 : 0;
   const layerIds = (id: LayerId) => id === "roads" ? [id, "roads-hit"] :
     id === "constituencies" ? [id, `${id}-outline`] :
     clustered.has(id) ? [id, `${id}-cluster`, `${id}-cluster-count`] : [id];
@@ -416,13 +416,14 @@ export function createAtlas(container: HTMLElement): Atlas {
       return;
     }
     const brand = properties.brand ? String(properties.brand) : "";
+    const religion = properties.religion ? String(properties.religion) : "";
     const note = properties.note != null && String(properties.note).length
       ? String(properties.note)
       : OSM_STATIC.has(layerId as LayerId)
         ? "OpenStreetMap"
         : "Preview stub";
     const osmUrl = properties.osm_url ? String(properties.osm_url) : "";
-    const metaBits = [layer?.label ?? "Layer", brand && brand !== name ? brand : ""].filter(Boolean);
+    const metaBits = [layer?.label ?? "Layer", brand && brand !== name ? brand : "", religion].filter(Boolean);
     popup.setLngLat(event.lngLat).setHTML(
       `<strong>${escapeHtml(name)}</strong>` +
       `<div class="popup-meta">${escapeHtml(metaBits.join(" · "))}</div>` +
