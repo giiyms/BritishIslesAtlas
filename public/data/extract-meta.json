@@ -1514,5 +1514,41 @@
       "name_filter": "no name=* filter (unnamed nightclubs kept). England-alone Overpass count without name=* (bbox ~49.9-55.8N, -6.5-2.0E, not admin-clipped) was 1023 (nodes 607 + ways 414 + relations 2), well inside the ~8-10k soft guideline. A loose British Isles bbox (49.8-61.0N, -10.8-1.9E, not admin-clipped, includes some northern France) was 1190 (nodes 744 + ways 444 + relations 2), also well under ~8k. The same England bbox with name=* was 1006 (nodes 598 + ways 406 + relations 2); the loose BI bbox with name=* was 1167 (nodes 730 + ways 435 + relations 2) before admin clip.",
       "france_bleed_note": "Mainland France bleed checked after extract with the hard bbox heuristic (in_france_bleed). Admin polygons clip coastal France; southernmost retained points should be Channel Islands, not mainland France."
     }
+  },
+  "windmills": {
+    "extracted_at": "2026-10-03T04:15:13Z",
+    "method": "Overpass per-nation/territory bbox tiles clipped to OSM admin polygons (Nominatim); endpoint overpass.openstreetmap.fr",
+    "license": "ODbL 1.0",
+    "endpoint": "https://overpass.openstreetmap.fr/api/interpreter",
+    "layer": "windmills",
+    "count": 571,
+    "coverage": "Admin-area extract (ENG/SCT/WLS/NIR/IE/IM/GG/JE); IoM≈2; GG≈0; JE≈1; northern France bleed≈0",
+    "region_counts": {
+      "england": 469,
+      "scotland": 12,
+      "wales": 36,
+      "northern-ireland": 16,
+      "ireland": 34,
+      "isle-of-man": 2,
+      "guernsey": 1,
+      "jersey": 1
+    },
+    "limitations": {
+      "isle_of_man": 2,
+      "channel_islands": 1,
+      "guernsey": 0,
+      "jersey": 1,
+      "northern_france_approx": 0,
+      "ways_as_centre_points": 290,
+      "relations_as_centre_points": 0,
+      "pipeline_generic_names": 321,
+      "pipeline_note_repeats_brand": 7,
+      "note_semantics": "pipeline field (brand/operator or 'OpenStreetMap'), not OSM note=*",
+      "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
+      "tag_choice": "Atlas preferred man_made=windmill (not already a LayerId). leisure=marina is already LayerId marinas. Fallbacks amenity=embassy and amenity=prison were not needed because man_made=windmill is usable (not empty; well under ~8-10k).",
+      "counting_caveat": "man_made=windmill only; generator:source=wind, power=generator alone, man_made=watermill, and historic=windmill without man_made=windmill are omitted; the upcoming wind-turbines preview chip (LayerId wind) is not this layer and is not replaced; feature counts are OSM objects not distinct windmills (a site may be several nodes/ways/relations); disused mills still tagged man_made=windmill are included; multipolygon / site relations use Overpass centre points (not footprints), and a site may appear both as a relation and as member ways if both carry man_made=windmill; no name=* filter (unnamed windmills kept)",
+      "name_filter": "no name=* filter (unnamed windmills kept). England-alone Overpass count without name=* (bbox ~49.9-55.8N, -6.5-2.0E, not admin-clipped; overpass.openstreetmap.fr, OSM base 2026-10-03T04:10:59Z) was 555 (nodes 276 + ways 279 + relations 0), well inside the ~8-10k soft guideline. A loose British Isles bbox (49.8-61.0N, -10.8-1.9E, not admin-clipped, includes some northern France) was 581 (nodes 283 + ways 298 + relations 0), also well under ~8k. The same England bbox with name=* was 249 (nodes 98 + ways 151 + relations 0); the loose BI bbox with name=* was 257 (nodes 100 + ways 157 + relations 0) before admin clip.",
+      "france_bleed_note": "Mainland France bleed checked after extract with the hard bbox heuristic (in_france_bleed). Admin polygons clip coastal France; southernmost retained points should be Channel Islands, not mainland France."
+    }
   }
 }

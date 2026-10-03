@@ -46,7 +46,8 @@ fire stations by `scripts/extract_osm_fire_stations.py`; police by
 `scripts/extract_osm_places_of_worship.py`; lighthouses by
 `scripts/extract_osm_lighthouses.py`; courthouses by
 `scripts/extract_osm_courthouses.py`; nightclubs by
-`scripts/extract_osm_nightclubs.py`.
+`scripts/extract_osm_nightclubs.py`; windmills by
+`scripts/extract_osm_windmills.py`.
 Westminster constituencies (GB) are ingested separately by
 `scripts/ingest_ons_pcon2024.py` from the ONS ArcGIS FeatureServer (not Overpass).
 Shared OSM pipeline:
@@ -59,7 +60,7 @@ Shared OSM pipeline:
 3. **Clip** results to the admin polygon (+ ~200 m buffer) so mainland France
    and cross-border spill are dropped.
 4. Deduplicate by OSM `type/id`. Ways are stored as **centre points**
-   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme-parks, viewpoints, arts-centres, aquariums, piers, ruins, golf-courses, galleries, marketplaces, nature-reserves, camp-sites, memorials, sports-centres, caravan-sites, fitness-centres, community-centres, post-offices, playgrounds, beaches, swimming-pools, pharmacies, townhalls, places-of-worship, lighthouses, courthouses, and nightclubs extractors
+   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme-parks, viewpoints, arts-centres, aquariums, piers, ruins, golf-courses, galleries, marketplaces, nature-reserves, camp-sites, memorials, sports-centres, caravan-sites, fitness-centres, community-centres, post-offices, playgrounds, beaches, swimming-pools, pharmacies, townhalls, places-of-worship, lighthouses, courthouses, nightclubs, and windmills extractors
    also query **relations** and store them as centre points the same way;
    other layers remain node+way only unless noted.
 
@@ -1183,6 +1184,31 @@ Pipeline `note` repeats brand or operator on 79 of 1182.
 
 
 
+
+## Windmills (`windmills`)
+
+| | |
+|---|---|
+| **File** | `public/data/windmills.geojson` |
+| **Features** | 571 points (not a round cap) |
+| **Coverage** | Same admin-area footprint: England 469, Scotland 12, Wales 36, Northern Ireland 16, Ireland 34, Isle of Man 2, Guernsey 1, Jersey 1. **Northern France bleed = 0** (hard bbox heuristic flags 0). Southernmost point is an unnamed mill stored as `"Windmill"` (`way/227363311`, 49.234°N, 2.184°W), inside the Jersey admin polygon — not mainland France. Easternmost point (~1.66°E, ~52.61°N, Lockgate Windmill `way/117357494`) is the East Anglian coast, not France. Hard main-island bbox checks: IoM ≈ 2 (matches admin-clip), JE ≈ 1 (matches). Guernsey admin-clip is 1 vs hard main-island bbox ≈ 0: the retained point is Mill (`node/274398603`, 49.431°N, 2.362°W), on Guernsey just east of the hard box’s −2.40° edge, not mainland France and not an outer-Bailiwick island. |
+| **Sample vs full** | Admin-area extract of OSM `man_made=windmill` at extract time (nodes, ways, **and relations**). **Tag choice:** Atlas preferred `man_made=windmill`, which is **not** already a LayerId. `leisure=marina` is already LayerId `marinas`, so it was not reused. Fallbacks `amenity=embassy` and `amenity=prison` were **not** needed because `man_made=windmill` is usable (not empty, and well under the ~8–10k soft cap). `generator:source=wind`, `power=generator` alone, `man_made=watermill`, and `historic=windmill` without `man_made=windmill` are **not** included. The upcoming wind-turbines preview chip (LayerId `wind`, “Upcoming · preview wind areas”) is separate scaffold geometry and is **not** replaced or duplicated by this layer. No second preview chip is added. Disused mills that remain tagged `man_made=windmill` **are** included. **No `name=*` filter** because an England-alone Overpass count without `name=*` was 555 (nodes 276 + ways 279 + relations 0; bbox roughly 49.9–55.8°N, −6.5–2.0°E, not admin-clipped; overpass.openstreetmap.fr, OSM base 2026-10-03T04:10:59Z), well inside the ~8–10k soft guideline, and a loose British Isles bbox (49.8–61.0°N, −10.8–1.9°E, not admin-clipped, includes some northern France) was 581 (nodes 283 + ways 298 + relations 0), also well under ~8k. The same England bbox with `name=*` was 249 (nodes 98 + ways 151 + relations 0); the loose BI bbox with `name=*` was 257 (nodes 100 + ways 157 + relations 0) before admin clip. Unnamed windmills are kept (321 pipeline-filled `"Windmill"`). Admin-clipped result is **571** (nodes 281 / ways 290 / relations 0). Relations were queried (`out center`) and none matched `man_made=windmill` in this footprint. **Feature counts are OSM objects, not distinct windmills** (a site may appear as several nodes/ways/relations). Large sites mapped as multipolygon / site relations are included via Overpass centre points when present (Heathrow lesson). Default regional tiling `--max-span 2.0`. No prior windmill preview chip existed; this layer does not replace the upcoming wind-turbines stub. |
+| **Source** | [OpenStreetMap](https://www.openstreetmap.org/) via Overpass API |
+| **Query** | `man_made=windmill` nodes, ways, and relations (`out center tags`) |
+| **Endpoint used** | `https://overpass.openstreetmap.fr/api/interpreter` |
+| **Extract date (UTC)** | 2026-10-03T04:15:13Z |
+| **Method** | Same admin-area pipeline as nightclubs / courthouses (`scripts/extract_osm_windmills.py`), including OSM relations; default tile span 2.0° |
+| **License** | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/) — © OpenStreetMap contributors |
+| **Attribution** | © OpenStreetMap contributors |
+
+### Property semantics (pipeline)
+
+Same pipeline fields as the other OSM layers (`name`, optional `brand`/`operator`, `osm_id`,
+`osm_url`, pipeline `note`, `layer`, `source`). Generic missing names fill as
+`"Windmill"`. Ways as centre points: 290 of 571; relations as centre points:
+0 of 571; nodes: 281 of 571. Pipeline-filled generic names: 321 (no OSM `name=*`).
+Pipeline `note` repeats brand or operator on 7 of 571.
+
 ## Constituencies (`constituencies`)
 
 | | |
@@ -1679,6 +1705,30 @@ Popup shows **name + PCON24CD only** in this PR — no candidates, polls, or end
   bleed is 0 (Channel coast risk checked; southernmost retained point is
   Jersey). Isle of Man admin-clip is 1; Channel Islands GG 2 / JE 1
   (hard main-island bbox matches). No prior nightclub preview chip existed.
+
+- Windmills layer is `man_made=windmill` only (not `generator:source=wind`,
+  `power=generator` alone, `man_made=watermill`, or `historic=windmill`
+  without `man_made=windmill`). Atlas preferred `man_made=windmill` is not
+  already a LayerId; `leisure=marina` is already LayerId `marinas`. Fallbacks
+  `amenity=embassy` and `amenity=prison` were not needed. The upcoming
+  wind-turbines preview chip (LayerId `wind`) is not this extract and is not
+  replaced. Disused mills still tagged `man_made=windmill` are included.
+  Extract includes **nodes, ways, and relations**; ways and relations are
+  Overpass centre points, not footprints. Relations were queried and **0**
+  matched in this footprint. A site may appear both as a relation and as
+  member ways/nodes if both carry `man_made=windmill` (dedupe by OSM
+  `type/id` only). Counts are OSM objects, not distinct windmills. **No
+  `name=*` filter** because an England-alone Overpass count without
+  `name=*` was 555 (nodes 276 + ways 279 + relations 0), well inside the
+  ~8–10k soft guideline. A loose British Isles bbox was 581 (nodes 283 +
+  ways 298 + relations 0), also well under ~8k. Unnamed windmills are kept
+  (321 pipeline-filled `"Windmill"`). Admin-clipped result is 571 (nodes
+  281 / ways 290 / relations 0). Mainland France bleed is 0 (Channel coast
+  risk checked; southernmost retained point is Jersey `way/227363311`).
+  Isle of Man admin-clip is 2 (hard bbox matches). Jersey admin-clip is 1
+  (hard bbox matches). Guernsey admin-clip is 1 vs hard main-island bbox
+  ≈ 0 (`node/274398603` sits just east of the hard box on Guernsey itself,
+  not France). No prior windmill preview chip existed.
 
 - Isle of Man has only 2 OSM hospitals at extract time — likely under-tagged
   relative to known sites; Channel Islands admin-clip counts are GG 4 / JE 4
