@@ -45,7 +45,8 @@ fire stations by `scripts/extract_osm_fire_stations.py`; police by
 `scripts/extract_osm_townhalls.py`; places of worship by
 `scripts/extract_osm_places_of_worship.py`; lighthouses by
 `scripts/extract_osm_lighthouses.py`; courthouses by
-`scripts/extract_osm_courthouses.py`.
+`scripts/extract_osm_courthouses.py`; nightclubs by
+`scripts/extract_osm_nightclubs.py`.
 Westminster constituencies (GB) are ingested separately by
 `scripts/ingest_ons_pcon2024.py` from the ONS ArcGIS FeatureServer (not Overpass).
 Shared OSM pipeline:
@@ -58,7 +59,7 @@ Shared OSM pipeline:
 3. **Clip** results to the admin polygon (+ ~200 m buffer) so mainland France
    and cross-border spill are dropped.
 4. Deduplicate by OSM `type/id`. Ways are stored as **centre points**
-   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme-parks, viewpoints, arts-centres, aquariums, piers, ruins, golf-courses, galleries, marketplaces, nature-reserves, camp-sites, memorials, sports-centres, caravan-sites, fitness-centres, community-centres, post-offices, playgrounds, beaches, swimming-pools, pharmacies, townhalls, places-of-worship, lighthouses, and courthouses extractors
+   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme-parks, viewpoints, arts-centres, aquariums, piers, ruins, golf-courses, galleries, marketplaces, nature-reserves, camp-sites, memorials, sports-centres, caravan-sites, fitness-centres, community-centres, post-offices, playgrounds, beaches, swimming-pools, pharmacies, townhalls, places-of-worship, lighthouses, courthouses, and nightclubs extractors
    also query **relations** and store them as centre points the same way;
    other layers remain node+way only unless noted.
 
@@ -1155,6 +1156,33 @@ Pipeline `note` repeats brand or operator on 80 of 514.
 
 
 
+
+## Nightclubs (`nightclubs`)
+
+| | |
+|---|---|
+| **File** | `public/data/nightclubs.geojson` |
+| **Features** | 1182 points (not a round cap) |
+| **Coverage** | Same admin-area footprint: England 933, Scotland 103, Wales 44, Northern Ireland 16, Ireland 82, Isle of Man 1, Guernsey 2, Jersey 1. **Northern France bleed = 0** (hard bbox heuristic flags 0). Southernmost point is Rojo (`node/1804838655`, 49.185°N, 2.103°W), inside the Jersey admin polygon — not mainland France. Easternmost point (~1.74°E, ~52.61°N, Mandarin `node/8879454630`) is the East Anglian coast, not France. Hard main-island bbox checks: IoM ≈ 1, GG ≈ 2, JE ≈ 1 (match the admin-clip counts). |
+| **Sample vs full** | Admin-area extract of OSM `amenity=nightclub` at extract time (nodes, ways, **and relations**). **Tag choice:** Atlas preferred `amenity=theatre`, already shipped as LayerId `theatres`. Fallbacks `amenity=cinema`, `leisure=stadium`, and `amenity=ferry_terminal` are already LayerIds (`cinemas`, `stadiums`, `ferry-terminals`). Next unused tag in the civic/leisure entertainment family is `amenity=nightclub`. `amenity=bar`, `amenity=pub`, `amenity=theatre`, `amenity=casino`, and `leisure=dance` without `amenity=nightclub` are **not** included. The existing preview pubs chip is separate scaffold geometry and is **not** replaced or duplicated by this layer. Disused sites that remain tagged `amenity=nightclub` **are** included. **No `name=*` filter** because an England-alone Overpass count without `name=*` was 1023 (nodes 607 + ways 414 + relations 2; bbox roughly 49.9–55.8°N, −6.5–2.0°E, not admin-clipped), well inside the ~8–10k soft guideline, and a loose British Isles bbox (49.8–61.0°N, −10.8–1.9°E, not admin-clipped, includes some northern France) was 1190 (nodes 744 + ways 444 + relations 2), also well under ~8k. The same England bbox with `name=*` was 1006 (nodes 598 + ways 406 + relations 2); the loose BI bbox with `name=*` was 1167 (nodes 730 + ways 435 + relations 2) before admin clip. Unnamed nightclubs are kept (23 pipeline-filled `"Nightclub"`). Admin-clipped result is **1182** (nodes 738 / ways 442 / relations 2). **Feature counts are OSM objects, not distinct nightclubs** (a site may appear as several nodes/ways/relations). Large sites mapped as multipolygon / site relations are included via Overpass centre points (Heathrow lesson). Default regional tiling `--max-span 2.0`. No prior nightclub preview chip existed; this layer does not replace any scaffold geometry. |
+| **Source** | [OpenStreetMap](https://www.openstreetmap.org/) via Overpass API |
+| **Query** | `amenity=nightclub` nodes, ways, and relations (`out center tags`) |
+| **Endpoint used** | `https://overpass.openstreetmap.fr/api/interpreter` |
+| **Extract date (UTC)** | 2026-10-03T03:54:38Z |
+| **Method** | Same admin-area pipeline as courthouses / lighthouses (`scripts/extract_osm_nightclubs.py`), including OSM relations; default tile span 2.0° |
+| **License** | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/) — © OpenStreetMap contributors |
+| **Attribution** | © OpenStreetMap contributors |
+
+### Property semantics (pipeline)
+
+Same pipeline fields as the other OSM layers (`name`, optional `brand`/`operator`, `osm_id`,
+`osm_url`, pipeline `note`, `layer`, `source`). Generic missing names fill as
+`"Nightclub"`. Ways as centre points: 442 of 1182; relations as centre points:
+2 of 1182; nodes: 738 of 1182. Pipeline-filled generic names: 23 (no OSM `name=*`).
+Pipeline `note` repeats brand or operator on 79 of 1182.
+
+
+
 ## Constituencies (`constituencies`)
 
 | | |
@@ -1630,6 +1658,27 @@ Popup shows **name + PCON24CD only** in this PR — no candidates, polls, or end
   southernmost retained point is Jersey). Isle of Man admin-clip is 1;
   Channel Islands GG 1 / JE 1 (hard main-island bbox matches). No prior
   courthouse preview chip existed.
+
+- Nightclubs layer is `amenity=nightclub` only (not `amenity=bar`,
+  `amenity=pub`, `amenity=theatre`, `amenity=casino`, or `leisure=dance`
+  without `amenity=nightclub`). Atlas preferred `amenity=theatre` (already
+  LayerId `theatres`); fallbacks `amenity=cinema`, `leisure=stadium`, and
+  `amenity=ferry_terminal` are already LayerIds `cinemas`, `stadiums`, and
+  `ferry-terminals`. The preview pubs chip is not this extract and is not
+  replaced. Disused sites still tagged `amenity=nightclub` are included.
+  Extract includes **nodes, ways, and relations**; ways and relations are
+  Overpass centre points, not footprints. A site may appear both as a
+  relation and as member ways/nodes if both carry `amenity=nightclub`
+  (dedupe by OSM `type/id` only). Counts are OSM objects, not distinct
+  nightclubs. **No `name=*` filter** because an England-alone Overpass
+  count without `name=*` was 1023 (nodes 607 + ways 414 + relations 2),
+  well inside the ~8–10k soft guideline. A loose British Isles bbox was
+  1190 (nodes 744 + ways 444 + relations 2), also well under ~8k. Unnamed
+  nightclubs are kept (23 pipeline-filled `"Nightclub"`). Admin-clipped
+  result is 1182 (nodes 738 / ways 442 / relations 2). Mainland France
+  bleed is 0 (Channel coast risk checked; southernmost retained point is
+  Jersey). Isle of Man admin-clip is 1; Channel Islands GG 2 / JE 1
+  (hard main-island bbox matches). No prior nightclub preview chip existed.
 
 - Isle of Man has only 2 OSM hospitals at extract time — likely under-tagged
   relative to known sites; Channel Islands admin-clip counts are GG 4 / JE 4
