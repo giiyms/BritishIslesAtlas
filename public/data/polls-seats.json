@@ -1,5 +1,5 @@
 {
-  "retrieved_at": "2026-10-05T11:14:48Z",
+  "retrieved_at": "2026-10-05T11:25:20Z",
   "notes": [
     "Seat-level projections from publicly published tables only.",
     "Never invent numbers. Empty provider slots use link-out.",
@@ -14,7 +14,7 @@
       "faq_url": "https://www.electoralcalculus.co.uk/faq.html",
       "fieldwork": "04 Sep 2026 – 29 Sep 2026",
       "updated": "30 September 2026",
-      "retrieved_at": "2026-10-05T11:14:50Z",
+      "retrieved_at": "2026-10-05T11:25:23Z",
       "seat_count": 632,
       "unmatched_names": [
         "Antrim East",
@@ -12059,7 +12059,7 @@
       "url": "https://www.moreincommon.org.uk/research/more-in-commons-september-2026-mrp/",
       "data_url": "https://www.moreincommon.org.uk/wp-content/uploads/2026/09/Sep26-MRP.xlsx",
       "fieldwork": "September 2026 MRP (published 26 Sep 2026)",
-      "retrieved_at": "2026-10-05T11:14:51Z",
+      "retrieved_at": "2026-10-05T11:25:24Z",
       "seat_count": 632,
       "unmatched_names": [],
       "notes": [

@@ -9,6 +9,7 @@ for popup reasons when recomputing.
 from __future__ import annotations
 
 import json
+import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -26,10 +27,9 @@ def now_iso() -> str:
 
 
 def is_lab_con(value: str | None) -> bool:
-    n = (value or "").strip().lower()
-    return n in {"labour", "lab", "conservative", "con", "tory", "conservatives"} or n.startswith(
-        "labour"
-    ) or n.startswith("conservative")
+    # Any word token, so "Scottish Labour" / "The Conservative Party" / "other:Tories" are caught.
+    tokens = re.split(r"[^a-z]+", (value or "").strip().lower())
+    return any(t in {"labour", "lab", "conservative", "con", "tory", "conservatives", "tories"} for t in tokens)
 
 
 def score_party(poll: dict, party: str) -> float:

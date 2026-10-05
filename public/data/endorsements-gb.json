@@ -1,5 +1,5 @@
 {
-  "retrieved_at": "2026-10-05T11:14:51Z",
+  "retrieved_at": "2026-10-05T11:25:25Z",
   "counts": {
     "reform": 632,
     "restore": 0,
@@ -27903,7 +27903,7 @@
     }
   },
   "sources": {
-    "candidates_retrieved_at": "2026-10-05T11:14:04Z",
-    "polls_retrieved_at": "2026-10-05T11:14:48Z"
+    "candidates_retrieved_at": "2026-10-05T11:25:18Z",
+    "polls_retrieved_at": "2026-10-05T11:25:20Z"
   }
 }

@@ -90,6 +90,10 @@ def extract_main_table(html: str) -> list[list[str]]:
         col_index = {strip_tags(c).casefold(): i for i, c in enumerate(cols)}
 
         def find_col(*names: str) -> int | None:
+            # Exact header first: substring "con" would otherwise hit "date(s)conducted".
+            for name in names:
+                if name in col_index:
+                    return col_index[name]
             for name in names:
                 for key, idx in col_index.items():
                     if name in key:

@@ -50,15 +50,15 @@ export interface EndorseResult {
   neverLabCon: true;
 }
 
-const LAB_CON = new Set(["labour", "lab", "conservative", "con", "tory", "conservatives"]);
+const LAB_CON = new Set(["labour", "lab", "conservative", "con", "tory", "conservatives", "tories"]);
 
 function normParty(value: string | null | undefined): string {
   return (value ?? "").trim().toLowerCase();
 }
 
 function isLabOrCon(value: string | null | undefined): boolean {
-  const n = normParty(value);
-  return LAB_CON.has(n) || n.startsWith("labour") || n.startsWith("conservative");
+  // Any word token, so "Scottish Labour" / "The Conservative Party" / "other:Tories" are caught.
+  return normParty(value).split(/[^a-z]+/).some((token) => LAB_CON.has(token));
 }
 
 function scoreParty(poll: SeatPollRow, party: "reform" | "restore"): number {
@@ -258,7 +258,7 @@ export function decideEndorsement(input: EndorseInput): EndorseResult {
 
 export function assertNeverLabCon(result: EndorseResult): void {
   const pick = String(result.endorse).toLowerCase();
-  if (pick === "labour" || pick === "conservative" || pick.startsWith("other:lab") || pick.startsWith("other:con")) {
+  if (isLabOrCon(pick) || pick.startsWith("other:lab") || pick.startsWith("other:con")) {
     throw new Error(`Endorse engine returned forbidden pick: ${result.endorse}`);
   }
   if (!result.neverLabCon) {

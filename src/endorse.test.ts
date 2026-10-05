@@ -41,6 +41,36 @@ describe("decideEndorsement", () => {
     expectNeverLabCon(result);
   });
 
+  it("rejects Lab/Con override labels in any wording", () => {
+    for (const endorse of [
+      "other:Scottish Labour",
+      "other:Welsh Labour",
+      "other:The Conservative Party",
+      "other:Scottish Conservatives",
+      "other:Tories",
+      "other:Labour Co-operative",
+    ] as const) {
+      const result = decideEndorsement({
+        standing: { reform: "yes", restore: "yes" },
+        override: { pcon24cd: "E14000001", endorse },
+      });
+      expect(result.endorse).toBe("none");
+      expect(result.reason).toMatch(/Override rejected/);
+      expectNeverLabCon(result);
+    }
+    expect(() => assertNeverLabCon({ ...decideEndorsement({ standing: { reform: "yes", restore: "no" } }), endorse: "other:Scottish Labour" })).toThrow();
+  });
+
+  it("presumes Reform when Restore confirmed but Reform unconfirmed (fallback branch)", () => {
+    const result = decideEndorsement({
+      standing: { reform: "unknown", restore: "yes" },
+      polls: [{ provider: "mic", reformShare: 10, restoreShare: 30, labShare: 40, conShare: 10 }],
+    });
+    expect(result.endorse).toBe("reform");
+    expect(result.presumedReform).toBe(true);
+    expectNeverLabCon(result);
+  });
+
   it("returns none when neither standing", () => {
     const result = decideEndorsement({
       standing: { reform: "no", restore: "no" },

@@ -1,5 +1,5 @@
 {
-  "retrieved_at": "2026-10-05T11:14:09Z",
+  "retrieved_at": "2026-10-05T11:25:25Z",
   "scripts": [
     {
       "script": "fetch_candidates.py",
@@ -18,19 +18,19 @@
     }
   ],
   "candidates-gb": {
-    "retrieved_at": "2026-10-05T11:14:04Z",
+    "retrieved_at": "2026-10-05T11:25:18Z",
     "path": "/data/candidates-gb.json"
   },
   "polls-national": {
-    "retrieved_at": "2026-10-05T11:14:05Z",
+    "retrieved_at": "2026-10-05T11:25:20Z",
     "path": "/data/polls-national.json"
   },
   "polls-seats": {
-    "retrieved_at": "2026-10-05T11:14:05Z",
+    "retrieved_at": "2026-10-05T11:25:20Z",
     "path": "/data/polls-seats.json"
   },
   "endorsements-gb": {
-    "retrieved_at": "2026-10-05T11:14:09Z",
+    "retrieved_at": "2026-10-05T11:25:25Z",
     "path": "/data/endorsements-gb.json"
   }
 }
