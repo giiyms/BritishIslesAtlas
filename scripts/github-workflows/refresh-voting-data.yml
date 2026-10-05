@@ -22,19 +22,88 @@ jobs:
         run: pip install openpyxl
       - name: Refresh candidates + polls + endorsements
         run: python3 scripts/refresh_voting_data.py
-      - name: Commit if changed
+      - name: Commit if content changed (ignore timestamp-only)
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add public/data/candidates-gb.json \
-                  public/data/polls-national.json \
-                  public/data/polls-seats.json \
-                  public/data/endorsements-gb.json \
-                  public/data/voting-meta.json \
-                  public/data/overrides.json || true
-          if git diff --staged --quiet; then
-            echo "No data changes"
-          else
-            git commit -m "data: daily voting refresh ($(date -u +%Y-%m-%d))"
-            git push
-          fi
+          # Strip volatile timestamps before comparing so daily runs with
+          # identical polls/candidates do not create empty-noise commits.
+          python3 - <<'PY'
+          import json, re, subprocess, sys
+          from pathlib import Path
+
+          VOLATILE_KEYS = {
+              "retrieved_at",
+              "stale_retrieved_at",
+              "updated",
+          }
+
+          def strip(obj):
+              if isinstance(obj, dict):
+                  return {
+                      k: strip(v)
+                      for k, v in obj.items()
+                      if k not in VOLATILE_KEYS
+                  }
+              if isinstance(obj, list):
+                  return [strip(x) for x in obj]
+              return obj
+
+          paths = [
+              Path("public/data/candidates-gb.json"),
+              Path("public/data/polls-national.json"),
+              Path("public/data/polls-seats.json"),
+              Path("public/data/endorsements-gb.json"),
+              Path("public/data/overrides.json"),
+          ]
+          # voting-meta.json is always timestamp-driven; never alone force a commit.
+          content_changed = False
+          for path in paths:
+              if not path.exists():
+                  continue
+              # Compare working tree vs HEAD for this path with timestamps stripped
+              try:
+                  head = subprocess.check_output(
+                      ["git", "show", f"HEAD:{path.as_posix()}"],
+                      stderr=subprocess.DEVNULL,
+                  )
+                  head_doc = strip(json.loads(head.decode("utf-8")))
+              except (subprocess.CalledProcessError, json.JSONDecodeError):
+                  head_doc = None
+              try:
+                  work_doc = strip(json.loads(path.read_text(encoding="utf-8")))
+              except (OSError, json.JSONDecodeError):
+                  continue
+              if head_doc != work_doc:
+                  content_changed = True
+                  print(f"content change: {path}")
+          if not content_changed:
+              print("No substantive data changes (timestamp-only or identical); skip commit")
+              # Drop staged/unstaged timestamp-only edits so the job stays clean
+              subprocess.run(["git", "checkout", "--", "public/data"], check=False)
+              sys.exit(0)
+          subprocess.run(
+              [
+                  "git", "add",
+                  "public/data/candidates-gb.json",
+                  "public/data/polls-national.json",
+                  "public/data/polls-seats.json",
+                  "public/data/endorsements-gb.json",
+                  "public/data/voting-meta.json",
+                  "public/data/overrides.json",
+              ],
+              check=False,
+          )
+          # Re-check staged: if somehow empty, skip
+          diff = subprocess.run(["git", "diff", "--staged", "--quiet"])
+          if diff.returncode == 0:
+              print("No staged changes after add; skip commit")
+              sys.exit(0)
+          from datetime import datetime, timezone
+          day = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+          subprocess.check_call(
+              ["git", "commit", "-m", f"data: daily voting refresh ({day})"]
+          )
+          subprocess.check_call(["git", "push"])
+          print("Committed and pushed substantive voting-data refresh")
+          PY

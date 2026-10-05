@@ -1,8 +1,8 @@
 {
-  "retrieved_at": "2026-10-05T11:25:25Z",
+  "retrieved_at": "2026-10-05T14:44:17Z",
   "counts": {
-    "reform": 632,
-    "restore": 0,
+    "reform": 631,
+    "restore": 1,
     "none": 0,
     "override": 0,
     "other": 0
@@ -10,6 +10,7 @@
   "notes": [
     "Editorial endorsement map — not Electoral Commission advice.",
     "Never endorses Labour or Conservatives.",
+    "Restore-ahead rule: any trusted seat poll (EC/MIC) with Restore share > Reform share → Restore.",
     "2024 winner join from Commons Library CBP-10009 deferred (source blocked); follow-up."
   ],
   "seats": {
@@ -4901,7 +4902,7 @@
       "pcon24cd": "E14001174",
       "pcon24nm": "Clacton",
       "endorse": "reform",
-      "reason": "Restore not standing; default Reform",
+      "reason": "Restore not confirmed; default Reform",
       "isOverride": false,
       "presumedReform": false,
       "thirdPartyLead": null,
@@ -8299,7 +8300,7 @@
       "pcon24cd": "E14001251",
       "pcon24nm": "Gorton and Denton",
       "endorse": "reform",
-      "reason": "Restore not standing; default Reform",
+      "reason": "Restore not confirmed; default Reform",
       "isOverride": false,
       "presumedReform": false,
       "thirdPartyLead": "The Green Party",
@@ -8528,10 +8529,10 @@
     "E14001256": {
       "pcon24cd": "E14001256",
       "pcon24nm": "Great Yarmouth",
-      "endorse": "reform",
-      "reason": "Restore not confirmed; presumed Reform — confirm nearer nomination",
+      "endorse": "restore",
+      "reason": "More in Common projects Restore ahead of Reform here (28.2% vs 26.9%); Vote Restore to avoid splitting.",
       "isOverride": false,
-      "presumedReform": true,
+      "presumedReform": false,
       "thirdPartyLead": "Minor",
       "reform": {
         "standing": "unknown"
@@ -10025,7 +10026,7 @@
       "pcon24cd": "E14001290",
       "pcon24nm": "Holborn and St Pancras",
       "endorse": "reform",
-      "reason": "Both standing; polls inconclusive — default Reform (anti-split)",
+      "reason": "Both standing; seat polls favour Reform — default Reform (anti-split)",
       "isOverride": false,
       "presumedReform": false,
       "thirdPartyLead": null,
@@ -12685,7 +12686,7 @@
       "pcon24cd": "E14001350",
       "pcon24nm": "Makerfield",
       "endorse": "reform",
-      "reason": "Both standing; polls inconclusive — default Reform (anti-split)",
+      "reason": "Both standing; seat polls favour Reform — default Reform (anti-split)",
       "isOverride": false,
       "presumedReform": false,
       "thirdPartyLead": null,
@@ -24233,7 +24234,7 @@
       "pcon24cd": "S14000061",
       "pcon24nm": "Aberdeen South",
       "endorse": "reform",
-      "reason": "Restore not standing; default Reform",
+      "reason": "Restore not confirmed; default Reform",
       "isOverride": false,
       "presumedReform": false,
       "thirdPartyLead": null,
@@ -24463,7 +24464,7 @@
       "pcon24cd": "S14000066",
       "pcon24nm": "Arbroath and Broughty Ferry",
       "endorse": "reform",
-      "reason": "Restore not standing; default Reform",
+      "reason": "Restore not confirmed; default Reform",
       "isOverride": false,
       "presumedReform": false,
       "thirdPartyLead": "Nationalist",

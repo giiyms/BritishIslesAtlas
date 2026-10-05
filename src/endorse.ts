@@ -1,8 +1,9 @@
 /**
  * Pure anti-split endorsement decision tree for GB Westminster seats.
- * Locked rules (Daniel 2026-10-02): never Lab/Con; Daniel overrides win;
- * Restore only when confirmed standing AND trusted seat poll shows it the
- * stronger Lab/Con-beater; otherwise Reform (including presumed Reform).
+ * Locked rules (Daniel 2026-10-05): never Lab/Con; Daniel overrides win first;
+ * if ANY trusted seat poll (Electoral Calculus / More in Common) has Restore
+ * share strictly ahead of Reform → Restore (even without a DC-confirmed Restore
+ * candidate); otherwise Reform default/presumed.
  */
 
 export type Standing = "yes" | "no" | "unknown";
@@ -52,6 +53,10 @@ export interface EndorseResult {
 
 const LAB_CON = new Set(["labour", "lab", "conservative", "con", "tory", "conservatives", "tories"]);
 
+/** Trusted seat-poll providers (EC + MIC). Unknown providers are ignored for the Restore-ahead gate. */
+const TRUSTED_PROVIDER_RE =
+  /electoral[_\s-]?calculus|^ec$|more[_\s-]?in[_\s-]?common|^mic$/i;
+
 function normParty(value: string | null | undefined): string {
   return (value ?? "").trim().toLowerCase();
 }
@@ -61,21 +66,113 @@ function isLabOrCon(value: string | null | undefined): boolean {
   return normParty(value).split(/[^a-z]+/).some((token) => LAB_CON.has(token));
 }
 
-function scoreParty(poll: SeatPollRow, party: "reform" | "restore"): number {
-  const share = party === "reform" ? poll.reformShare : poll.restoreShare;
-  if (typeof share === "number" && Number.isFinite(share)) return share;
-  const winner = normParty(poll.projectedWinner);
-  if (!winner) return 0;
-  if (party === "reform" && (winner === "reform" || winner.includes("reform"))) return 1;
-  if (party === "restore" && (winner === "restore" || winner.includes("restore"))) return 1;
-  return 0;
+function isTrustedProvider(provider: string | null | undefined): boolean {
+  return TRUSTED_PROVIDER_RE.test((provider ?? "").trim());
 }
 
-function maxLabCon(poll: SeatPollRow): number {
-  const lab = typeof poll.labShare === "number" ? poll.labShare : 0;
-  const con = typeof poll.conShare === "number" ? poll.conShare : 0;
-  return Math.max(lab, con);
+function numericShare(value: number | null | undefined): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
+
+/** Restore strictly ahead of Reform on this poll (both shares must be numeric). */
+function restoreStrictlyAhead(poll: SeatPollRow): boolean {
+  const restore = numericShare(poll.restoreShare);
+  const reform = numericShare(poll.reformShare);
+  if (restore === null || reform === null) return false;
+  return restore > reform;
+}
+
+/** Reform strictly ahead of Restore on this poll (both shares must be numeric). */
+function reformStrictlyAhead(poll: SeatPollRow): boolean {
+  const restore = numericShare(poll.restoreShare);
+  const reform = numericShare(poll.reformShare);
+  if (restore === null || reform === null) return false;
+  return reform > restore;
+}
+
+function providerLabel(provider: string): string {
+  const p = provider.trim();
+  if (/more[_\s-]?in[_\s-]?common|^mic$/i.test(p)) return "More in Common";
+  if (/electoral[_\s-]?calculus|^ec$/i.test(p)) return "Electoral Calculus";
+  return p || "Seat poll";
+}
+
+export interface RestoreAheadDetail {
+  ahead: boolean;
+  disagree: boolean;
+  /** First trusted poll where Restore > Reform (for reason copy). */
+  lead?: { provider: string; restore: number; reform: number };
+}
+
+/**
+ * New locked rule: ANY trusted provider with restore_share > reform_share
+ * flips to Restore. No standing prerequisite. Sources that disagree still
+ * resolve to Restore ("a trusted seat poll").
+ */
+export function restoreAheadFromPolls(polls: SeatPollRow[]): RestoreAheadDetail {
+  const trusted = polls.filter((p) => isTrustedProvider(p.provider));
+  let lead: RestoreAheadDetail["lead"];
+  let anyRestoreAhead = false;
+  let anyReformAhead = false;
+
+  for (const poll of trusted) {
+    if (restoreStrictlyAhead(poll)) {
+      anyRestoreAhead = true;
+      if (!lead) {
+        lead = {
+          provider: providerLabel(poll.provider),
+          restore: numericShare(poll.restoreShare) as number,
+          reform: numericShare(poll.reformShare) as number,
+        };
+      }
+    } else if (reformStrictlyAhead(poll)) {
+      anyReformAhead = true;
+    }
+  }
+
+  return {
+    ahead: anyRestoreAhead,
+    disagree: anyRestoreAhead && anyReformAhead,
+    lead,
+  };
+}
+
+/** @deprecated alias kept for call-site clarity in tests; same as restoreAheadFromPolls(...).ahead */
+export function preferRestoreFromPolls(polls: SeatPollRow[]): boolean {
+  return restoreAheadFromPolls(polls).ahead;
+}
+
+function formatPct(n: number): string {
+  return Number.isInteger(n) ? String(n) : n.toFixed(1).replace(/\.0$/, "");
+}
+
+function restoreAheadReason(detail: RestoreAheadDetail): string {
+  const lead = detail.lead;
+  if (!lead) {
+    return "Trusted seat poll projects Restore ahead of Reform; Vote Restore to avoid splitting.";
+  }
+  const core = `${lead.provider} projects Restore ahead of Reform here (${formatPct(lead.restore)}% vs ${formatPct(lead.reform)}%); Vote Restore to avoid splitting.`;
+  if (detail.disagree) {
+    return `${core} Trusted seat-poll sources disagree — Restore still wins on the Restore-ahead rule.`;
+  }
+  return core;
+}
+
+function pollsFavourReform(polls: SeatPollRow[]): boolean {
+  const trusted = polls.filter((p) => isTrustedProvider(p.provider));
+  if (trusted.length === 0) return false;
+  let anyReform = false;
+  for (const poll of trusted) {
+    if (restoreStrictlyAhead(poll)) return false;
+    if (reformStrictlyAhead(poll)) anyReform = true;
+    // Provider with only reform share (EC: restore null) and positive reform also counts as favouring Reform
+    const restore = numericShare(poll.restoreShare);
+    const reform = numericShare(poll.reformShare);
+    if (restore === null && reform !== null && reform > 0) anyReform = true;
+  }
+  return anyReform;
+}
+
 
 function projectedThirdParty(polls: SeatPollRow[]): string | null {
   for (const poll of polls) {
@@ -101,38 +198,6 @@ function allSafeLabOrCon(polls: SeatPollRow[]): boolean {
     const lead = Math.max(lab, con);
     return lead > 0 && lead >= ref + 15 && lead >= res + 15;
   });
-}
-
-function preferRestoreFromPolls(polls: SeatPollRow[]): boolean {
-  if (polls.length === 0) return false;
-  let restoreBetter = 0;
-  let reformBetter = 0;
-  let anyCompetitiveRestore = false;
-
-  for (const poll of polls) {
-    const sRestore = scoreParty(poll, "restore");
-    const sReform = scoreParty(poll, "reform");
-    if (sRestore <= 0 && sReform <= 0) continue;
-    if (sRestore > sReform) {
-      restoreBetter += 1;
-      const bestAnti = Math.max(sRestore, sReform);
-      const labCon = maxLabCon(poll);
-      const winner = normParty(poll.projectedWinner);
-      const restoreWins = winner.includes("restore");
-      if (restoreWins || (labCon > 0 && bestAnti + 5 >= labCon) || sRestore >= sReform) {
-        anyCompetitiveRestore = true;
-      }
-    } else if (sReform > sRestore) {
-      reformBetter += 1;
-    }
-  }
-
-  // Unique better Lab/Con-beater: restore ahead on at least one trusted poll,
-  // and not clearly behind Reform on every scored poll.
-  if (restoreBetter > 0 && restoreBetter > reformBetter && anyCompetitiveRestore) {
-    return true;
-  }
-  return false;
 }
 
 /**
@@ -183,9 +248,21 @@ export function decideEndorsement(input: EndorseInput): EndorseResult {
     };
   }
 
+  // 2. Restore-ahead poll rule (no DC standing prerequisite)
+  const restoreAhead = restoreAheadFromPolls(polls);
+  if (restoreAhead.ahead) {
+    return {
+      ...base,
+      endorse: "restore",
+      reason: restoreAheadReason(restoreAhead),
+      isOverride: false,
+      presumedReform: false,
+    };
+  }
+
   const { reform, restore } = input.standing;
 
-  // 2. Explicitly neither standing
+  // 3. Explicitly neither standing
   if (reform === "no" && restore === "no") {
     return {
       ...base,
@@ -196,23 +273,32 @@ export function decideEndorsement(input: EndorseInput): EndorseResult {
     };
   }
 
-  // 3. Restore not standing / unknown → Reform (presumed if Reform unknown)
+  // 4. Restore not standing / unknown → Reform (presumed if Reform unknown)
   if (restore === "no" || restore === "unknown") {
     if (reform === "yes" || reform === "unknown") {
       const presumed = reform === "unknown";
+      const restoreUnknown = restore === "unknown";
+      let reason: string;
+      if (restoreUnknown) {
+        reason = presumed
+          ? "Restore not confirmed; presumed Reform — confirm nearer nomination"
+          : "Restore not confirmed; default Reform";
+      } else {
+        reason = presumed
+          ? "Restore not standing; presumed Reform — confirm nearer nomination"
+          : "Restore not standing; default Reform";
+      }
       return {
         ...base,
         endorse: "reform",
-        reason: presumed
-          ? "Restore not confirmed; presumed Reform — confirm nearer nomination"
-          : "Restore not standing; default Reform",
+        reason,
         isOverride: false,
         presumedReform: presumed,
       };
     }
   }
 
-  // 4. Only Restore among target parties
+  // 5. Only Restore among target parties
   if (reform === "no" && restore === "yes") {
     return {
       ...base,
@@ -223,30 +309,28 @@ export function decideEndorsement(input: EndorseInput): EndorseResult {
     };
   }
 
-  // 5. Both standing
+  // 6. Both standing (Restore-ahead already handled above)
   if (reform === "yes" && restore === "yes") {
-    if (preferRestoreFromPolls(polls)) {
-      return {
-        ...base,
-        endorse: "restore",
-        reason: "Both standing; seat poll shows Restore the stronger Lab/Con-beater",
-        isOverride: false,
-        presumedReform: false,
-      };
-    }
     const missing = polls.length === 0;
+    const favourReform = pollsFavourReform(polls);
+    let reason: string;
+    if (missing) {
+      reason = "Both standing; no seat poll loaded — default Reform (anti-split)";
+    } else if (favourReform) {
+      reason = "Both standing; seat polls favour Reform — default Reform (anti-split)";
+    } else {
+      reason = "Both standing; no Restore-ahead seat poll — default Reform (anti-split)";
+    }
     return {
       ...base,
       endorse: "reform",
-      reason: missing
-        ? "Both standing; no seat poll loaded — default Reform (anti-split)"
-        : "Both standing; polls inconclusive — default Reform (anti-split)",
+      reason,
       isOverride: false,
       presumedReform: false,
     };
   }
 
-  // Fallback (should be unreachable): presumed Reform
+  // Fallback: presumed Reform
   return {
     ...base,
     endorse: "reform",
@@ -283,3 +367,4 @@ export function colorForEndorse(
   if (endorse === "reform") return ENDORSE_COLORS.reform;
   return ENDORSE_COLORS.none;
 }
+

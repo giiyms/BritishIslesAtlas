@@ -46,6 +46,11 @@ Concept 1 is locked:
 - Light theme and clean cartography
 - Continuous scales, clustering, and density, with no fragmented zoom-number labels
 
+
+## Voting (editorial)
+
+GB Westminster seats can show an editorial **Reform / Restore Britain** endorsement layer (never Labour or Conservatives). Daniel per-seat overrides win first. If any trusted seat poll (Electoral Calculus or More in Common) has Restore's share strictly ahead of Reform's, the map picks **Restore** even when Democracy Club has no confirmed Restore candidate; otherwise Reform is the anti-split default. See `SOURCES.md` (Voting P1) and `src/endorse.ts`.
+
 ## Credits
 
 Hillshade tiles © Esri, USGS, NOAA. Water polygons © OpenStreetMap contributors, rendered via OpenMapTiles and OpenFreeMap. Petrol, EV, power, hospitals, fire stations, police, castles, libraries, universities, museums, railway stations, aerodromes, ferry terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme parks, viewpoints, arts centres, aquariums, piers, ruins, golf courses, galleries, marketplaces, nature reserves, camp sites, memorials, sports centres, caravan sites, fitness centres, community centres, playgrounds, beaches, swimming pools, pharmacies, town halls, places of worship, lighthouses, courthouses, nightclubs, windmills, prisons, clinics, dentists, and post offices layers © OpenStreetMap contributors (ODbL 1.0); see `SOURCES.md`. Constituencies: Contains Ordnance Survey data © Crown copyright and database right 2024; Contains National Statistics data © Crown copyright and database right 2024 (OGL v3.0). Search may query Nominatim and postcodes.io.

@@ -1936,6 +1936,9 @@ Popup shows **name + PCON24CD only** in this PR — no candidates, polls, or end
 
 Editorial **Reform / Restore Britain** endorsement map over GB Westminster seats (632).
 Never endorses Labour or Conservatives. Daniel per-seat overrides always win.
+**Restore-ahead rule (locked 2026-10-05):** any trusted seat poll (EC or More in Common)
+with Restore share strictly ahead of Reform → Vote Restore, even without a Democracy Club
+confirmed Restore candidate (hard example: Great Yarmouth `E14001256`, MIC 28.2% vs Ref 26.9%).
 This is an **editorial endorsement map**, not Electoral Commission advice. Seat MRP
 figures are **projections**, not results. Restore Britain candidate coverage in
 Democracy Club is **sparse** — most seats are presumed Reform under locked anti-split rules.
@@ -1970,7 +1973,7 @@ Democracy Club is **sparse** — most seats are presumed Reform under locked ant
 | **Electoral Calculus** | Public [`electdata_pred.txt`](https://www.electoralcalculus.co.uk/electdata_pred.txt) + [prediction page](https://www.electoralcalculus.co.uk/prediction_main.html). Loaded when fetch succeeds. **Does not break out Restore Britain** (`restore_share=null`). Attribution + retrieval date per [EC FAQ](https://www.electoralcalculus.co.uk/faq.html) Overview republication notes. |
 | **More in Common** | Public [Sep 2026 MRP XLSX](https://www.moreincommon.org.uk/wp-content/uploads/2026/09/Sep26-MRP.xlsx) linked from [research page](https://www.moreincommon.org.uk/research/more-in-commons-september-2026-mrp/). Includes Restore Britain column. |
 | **Script** | `scripts/fetch_polls_seats.py` |
-| **Caveats** | If a provider cannot be fetched, the slot is `link_out` with URL and empty `seats` — **never invent numbers**. Projections ≠ results. |
+| **Caveats** | If a provider cannot be fetched, **keep the last good provider block** and set `status=stale` (with `stale_error`); only use `link_out` + empty `seats` when there is no prior good block — **never invent numbers**, never blank a loaded strip on a transient failure. Projections ≠ results. |
 
 ### Overrides (`overrides`)
 
@@ -1987,8 +1990,10 @@ Democracy Club is **sparse** — most seats are presumed Reform under locked ant
 |---|---|
 | **Code** | `src/endorse.ts` (pure functions) + `scripts/build_endorsements.py` (map index) |
 | **Output** | `public/data/endorsements-gb.json` (632 seats coloured for the map) |
-| **Tests** | `src/endorse.test.ts` via `npm test` (vitest) — covers override, neither standing, restore-only, reform-default, both+polls, tie→reform, presumed Reform, never Lab/Con |
-| **Refresh** | `scripts/refresh_voting_data.py` + workflow template `scripts/github-workflows/refresh-voting-data.yml` (copy to `.github/workflows/` on merge — box `gh` token lacks `workflow` scope to push that path directly) |
+| **Locked decision (2026-10-05)** | (1) Daniel overrides win first (Lab/Con override values → `none`). (2) **Restore-ahead rule:** if **any** trusted seat poll (Electoral Calculus or More in Common) has Restore share **strictly greater** than Reform share → pick **Restore**, even when Democracy Club has **no confirmed Restore candidate**. If one trusted provider has Restore ahead and another has Reform ahead → **Restore still wins**; reason notes that sources disagree. (3) Otherwise existing tree: neither standing → `none`; Restore unknown/not standing → Reform (presumed when Reform unknown); only Restore standing → Restore; both standing without Restore-ahead → Reform. **Never Lab/Con.** |
+| **Reason copy** | Example: `More in Common projects Restore ahead of Reform here (28.2% vs 26.9%); Vote Restore to avoid splitting.` When polls clearly favour Reform (e.g. Holborn, Makerfield), say so — do not say "inconclusive". When Restore standing is `unknown`, say "not confirmed", not "not standing". |
+| **Tests** | `src/endorse.test.ts` via `npm test` (vitest) — covers override, Restore-ahead without DC candidate, providers disagree→Restore, Great Yarmouth-style MIC numbers, neither standing, restore-only, reform-default, both+polls favour Reform, tie→reform, presumed Reform, never Lab/Con |
+| **Refresh** | `scripts/refresh_voting_data.py` + workflow template `scripts/github-workflows/refresh-voting-data.yml` (copy to `.github/workflows/` on merge — box `gh` token lacks `workflow` scope to push that path directly). Cron **skips commit** when only timestamps would change / content is identical after stripping `retrieved_at`. |
 
 ### 2024 results
 

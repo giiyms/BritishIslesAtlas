@@ -3,6 +3,8 @@ import {
   assertNeverLabCon,
   colorForEndorse,
   decideEndorsement,
+  preferRestoreFromPolls,
+  restoreAheadFromPolls,
   type EndorseResult,
 } from "./endorse";
 
@@ -26,6 +28,27 @@ describe("decideEndorsement", () => {
       },
     });
     expect(result.endorse).toBe("restore");
+    expect(result.isOverride).toBe(true);
+    expect(result.reason).toContain("Daniel override");
+    expectNeverLabCon(result);
+  });
+
+  it("override still wins over Restore-ahead polls", () => {
+    const result = decideEndorsement({
+      standing: { reform: "unknown", restore: "unknown" },
+      polls: [
+        {
+          provider: "more_in_common",
+          reformShare: 26.9,
+          restoreShare: 28.2,
+          labShare: 15.4,
+          conShare: 17.8,
+          projectedWinner: "Restore Britain",
+        },
+      ],
+      override: { pcon24cd: "E14001256", endorse: "reform", note: "Hold Restore for now" },
+    });
+    expect(result.endorse).toBe("reform");
     expect(result.isOverride).toBe(true);
     expect(result.reason).toContain("Daniel override");
     expectNeverLabCon(result);
@@ -58,13 +81,30 @@ describe("decideEndorsement", () => {
       expect(result.reason).toMatch(/Override rejected/);
       expectNeverLabCon(result);
     }
-    expect(() => assertNeverLabCon({ ...decideEndorsement({ standing: { reform: "yes", restore: "no" } }), endorse: "other:Scottish Labour" })).toThrow();
+    expect(() =>
+      assertNeverLabCon({
+        ...decideEndorsement({ standing: { reform: "yes", restore: "no" } }),
+        endorse: "other:Scottish Labour",
+      }),
+    ).toThrow();
   });
 
-  it("presumes Reform when Restore confirmed but Reform unconfirmed (fallback branch)", () => {
+  it("picks Restore when ahead on poll even if Reform unconfirmed and Restore confirmed", () => {
+    // Previously fell through to presumed Reform; Restore-ahead now wins.
     const result = decideEndorsement({
       standing: { reform: "unknown", restore: "yes" },
       polls: [{ provider: "mic", reformShare: 10, restoreShare: 30, labShare: 40, conShare: 10 }],
+    });
+    expect(result.endorse).toBe("restore");
+    expect(result.presumedReform).toBe(false);
+    expect(result.reason).toMatch(/Restore ahead of Reform/);
+    expectNeverLabCon(result);
+  });
+
+  it("presumes Reform on fallback when Restore confirmed but no Restore-ahead poll", () => {
+    const result = decideEndorsement({
+      standing: { reform: "unknown", restore: "yes" },
+      polls: [{ provider: "mic", reformShare: 30, restoreShare: 5, labShare: 40, conShare: 10 }],
     });
     expect(result.endorse).toBe("reform");
     expect(result.presumedReform).toBe(true);
@@ -97,15 +137,18 @@ describe("decideEndorsement", () => {
     expect(result.endorse).toBe("reform");
     expect(result.presumedReform).toBe(true);
     expect(result.reason).toMatch(/presumed Reform/);
+    expect(result.reason).not.toMatch(/Restore not standing/);
     expectNeverLabCon(result);
   });
 
-  it("presumes Reform when Restore unknown and Reform confirmed", () => {
+  it("defaults Reform when Restore unknown and Reform confirmed (not 'not standing')", () => {
     const result = decideEndorsement({
       standing: { reform: "yes", restore: "unknown" },
     });
     expect(result.endorse).toBe("reform");
     expect(result.presumedReform).toBe(false);
+    expect(result.reason).toMatch(/Restore not confirmed/);
+    expect(result.reason).not.toMatch(/Restore not standing/);
     expectNeverLabCon(result);
   });
 
@@ -143,7 +186,37 @@ describe("decideEndorsement", () => {
       ],
     });
     expect(result.endorse).toBe("reform");
-    expect(result.reason).toMatch(/inconclusive|default Reform/);
+    expect(result.reason).not.toMatch(/inconclusive/);
+    expect(result.reason).toMatch(/default Reform/);
+    expectNeverLabCon(result);
+  });
+
+  it("says seat polls favour Reform when both standing and Reform ahead (not inconclusive)", () => {
+    // Holborn / Makerfield style
+    const result = decideEndorsement({
+      standing: { reform: "yes", restore: "yes" },
+      polls: [
+        {
+          provider: "electoral_calculus",
+          reformShare: 14.6,
+          restoreShare: null,
+          labShare: 40.0,
+          conShare: 7.1,
+          projectedWinner: "Labour",
+        },
+        {
+          provider: "more_in_common",
+          reformShare: 13.7,
+          restoreShare: 2.1,
+          labShare: 40.8,
+          conShare: 8.8,
+          projectedWinner: "Labour",
+        },
+      ],
+    });
+    expect(result.endorse).toBe("reform");
+    expect(result.reason).toMatch(/favour Reform/);
+    expect(result.reason).not.toMatch(/inconclusive/);
     expectNeverLabCon(result);
   });
 
@@ -162,7 +235,67 @@ describe("decideEndorsement", () => {
       ],
     });
     expect(result.endorse).toBe("restore");
-    expect(result.reason).toMatch(/stronger Lab\/Con-beater/);
+    expect(result.reason).toMatch(/Restore ahead of Reform/);
+    expectNeverLabCon(result);
+  });
+
+  it("picks Restore ahead without DC Restore candidate (Great Yarmouth-style MIC)", () => {
+    const result = decideEndorsement({
+      standing: { reform: "unknown", restore: "unknown" },
+      polls: [
+        {
+          provider: "electoral_calculus",
+          reformShare: 17.9,
+          restoreShare: null,
+          labShare: 22.9,
+          conShare: 18.2,
+          projectedWinner: "Minor",
+        },
+        {
+          provider: "more_in_common",
+          reformShare: 26.9,
+          restoreShare: 28.2,
+          labShare: 15.4,
+          conShare: 17.8,
+          projectedWinner: "Restore Britain",
+        },
+      ],
+    });
+    expect(result.endorse).toBe("restore");
+    expect(result.isOverride).toBe(false);
+    expect(result.presumedReform).toBe(false);
+    expect(result.reason).toMatch(/More in Common projects Restore ahead of Reform here \(28\.2% vs 26\.9%\)/);
+    expect(result.reason).toMatch(/Vote Restore to avoid splitting/);
+    // EC has null Restore — not a numeric Reform-ahead disagreement
+    expect(result.reason).not.toMatch(/disagree/);
+    expectNeverLabCon(result);
+  });
+
+  it("picks Restore when providers disagree (Restore still wins)", () => {
+    const result = decideEndorsement({
+      standing: { reform: "yes", restore: "unknown" },
+      polls: [
+        {
+          provider: "electoral_calculus",
+          reformShare: 30,
+          restoreShare: 20,
+          labShare: 25,
+          conShare: 15,
+          projectedWinner: "Reform",
+        },
+        {
+          provider: "more_in_common",
+          reformShare: 22,
+          restoreShare: 27,
+          labShare: 25,
+          conShare: 15,
+          projectedWinner: "Restore Britain",
+        },
+      ],
+    });
+    expect(result.endorse).toBe("restore");
+    expect(result.reason).toMatch(/disagree/);
+    expect(result.reason).toMatch(/Restore ahead/);
     expectNeverLabCon(result);
   });
 
@@ -220,6 +353,56 @@ describe("decideEndorsement", () => {
     expect(result.endorse).toBe("none");
     expect(result.isOverride).toBe(true);
     expectNeverLabCon(result);
+  });
+
+  it("Reform remains default when no Restore-ahead poll", () => {
+    const result = decideEndorsement({
+      standing: { reform: "unknown", restore: "unknown" },
+      polls: [
+        {
+          provider: "more_in_common",
+          reformShare: 38.7,
+          restoreShare: 10.9,
+          labShare: 13.0,
+          conShare: 26.2,
+          projectedWinner: "Reform UK",
+        },
+      ],
+    });
+    expect(result.endorse).toBe("reform");
+    expect(result.presumedReform).toBe(true);
+    expectNeverLabCon(result);
+  });
+});
+
+describe("restoreAheadFromPolls / preferRestoreFromPolls", () => {
+  it("flips on any trusted provider with restore_share > reform_share", () => {
+    expect(
+      preferRestoreFromPolls([
+        { provider: "more_in_common", reformShare: 26.9, restoreShare: 28.2 },
+        { provider: "electoral_calculus", reformShare: 17.9, restoreShare: null },
+      ]),
+    ).toBe(true);
+  });
+
+  it("does not flip on ties or Reform ahead", () => {
+    expect(preferRestoreFromPolls([{ provider: "mic", reformShare: 22, restoreShare: 22 }])).toBe(false);
+    expect(preferRestoreFromPolls([{ provider: "mic", reformShare: 30, restoreShare: 10 }])).toBe(false);
+  });
+
+  it("marks disagree when one trusted provider each way", () => {
+    const detail = restoreAheadFromPolls([
+      { provider: "ec", reformShare: 30, restoreShare: 10 },
+      { provider: "mic", reformShare: 20, restoreShare: 25 },
+    ]);
+    expect(detail.ahead).toBe(true);
+    expect(detail.disagree).toBe(true);
+  });
+
+  it("ignores untrusted providers", () => {
+    expect(
+      preferRestoreFromPolls([{ provider: "made_up_pollster", reformShare: 10, restoreShare: 40 }]),
+    ).toBe(false);
   });
 });
 

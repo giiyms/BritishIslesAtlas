@@ -5,8 +5,10 @@ Providers:
   - Electoral Calculus: public electdata_pred.txt (vote shares + chances)
   - More in Common: published Sep 2026 MRP XLSX (includes Restore Britain)
 
-If a source cannot be fetched under its terms / is unavailable, write an empty
-slot with link-out + honest note. Never invent numbers.
+If a source cannot be fetched under its terms / is unavailable, keep the last
+good provider block (status=stale) when one exists; otherwise write link-out with
+empty seats. Never invent numbers. Never blank a previously loaded provider on a
+transient fetch failure.
 """
 
 from __future__ import annotations
@@ -36,6 +38,76 @@ UA = "BritishIslesAtlas/fetch_polls_seats (https://github.com/giiyms/BritishIsle
 
 def now_iso() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def load_previous_providers() -> dict:
+    """Return previously written provider blocks (may be empty)."""
+    if not OUT.exists():
+        return {}
+    try:
+        prev = json.loads(OUT.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    providers = prev.get("providers") or {}
+    return providers if isinstance(providers, dict) else {}
+
+
+def keep_stale_or_link_out(
+    previous: dict | None,
+    *,
+    provider_name: str,
+    url: str,
+    data_url: str | None,
+    error: str,
+    extra_notes: list[str] | None = None,
+    faq_url: str | None = None,
+) -> dict:
+    """On fetch failure: keep last good seats and flag stale; else link_out."""
+    notes = list(extra_notes or [])
+    if previous and previous.get("status") in {"loaded", "stale"} and previous.get("seats"):
+        kept = dict(previous)
+        kept["status"] = "stale"
+        kept["stale"] = True
+        kept["stale_error"] = error
+        kept["stale_retrieved_at"] = now_iso()
+        kept["provider"] = provider_name
+        kept["url"] = url
+        if data_url:
+            kept["data_url"] = data_url
+        if faq_url:
+            kept["faq_url"] = faq_url
+        stale_note = (
+            f"Fetch failed ({error}); kept last good seat block and flagged stale. "
+            "Never blank previously loaded projections."
+        )
+        prev_notes = list(kept.get("notes") or [])
+        if stale_note not in prev_notes:
+            prev_notes.append(stale_note)
+        kept["notes"] = prev_notes
+        # Preserve seat_count from seats if missing
+        if "seat_count" not in kept:
+            kept["seat_count"] = len(kept.get("seats") or {})
+        return kept
+
+    out = {
+        "status": "link_out",
+        "provider": provider_name,
+        "url": url,
+        "error": error,
+        "notes": notes
+        + [
+            "Could not fetch; no prior good block to keep. Link-out only. Never invent numbers.",
+        ],
+        "seats": {},
+        "fieldwork": None,
+        "retrieved_at": now_iso(),
+    }
+    if data_url:
+        out["data_url"] = data_url
+    if faq_url:
+        out["faq_url"] = faq_url
+    return out
+
 
 
 def normalize_name(name: str) -> str:
@@ -160,26 +232,22 @@ def winner_from_shares(shares: dict[str, float | None]) -> str | None:
     return best_name
 
 
-def load_electoral_calculus(by_norm: dict[str, str]) -> dict:
+def load_electoral_calculus(by_norm: dict[str, str], previous: dict | None = None) -> dict:
     """Parse public electdata_pred.txt. EC does not break out Restore Britain."""
     try:
         raw = fetch_bytes(EC_URL)
     except (urllib.error.URLError, urllib.error.HTTPError) as exc:
-        return {
-            "status": "link_out",
-            "provider": "Electoral Calculus",
-            "url": EC_PAGE,
-            "data_url": EC_URL,
-            "faq_url": EC_FAQ,
-            "error": str(exc),
-            "notes": [
-                "Could not fetch electdata_pred.txt; link-out only.",
+        return keep_stale_or_link_out(
+            previous,
+            provider_name="Electoral Calculus",
+            url=EC_PAGE,
+            data_url=EC_URL,
+            faq_url=EC_FAQ,
+            error=str(exc),
+            extra_notes=[
                 "EC FAQ restricts republication of seat Overview extracts with attribution + date.",
             ],
-            "seats": {},
-            "fieldwork": None,
-            "retrieved_at": now_iso(),
-        }
+        )
 
     text = raw.decode("cp1252", errors="replace")
     # Fieldwork hint from prediction page (best-effort)
@@ -282,40 +350,31 @@ def load_electoral_calculus(by_norm: dict[str, str]) -> dict:
     }
 
 
-def load_more_in_common(by_norm: dict[str, str]) -> dict:
+def load_more_in_common(by_norm: dict[str, str], previous: dict | None = None) -> dict:
     try:
         raw = fetch_bytes(MIC_XLSX)
     except (urllib.error.URLError, urllib.error.HTTPError) as exc:
-        return {
-            "status": "link_out",
-            "provider": "More in Common",
-            "url": MIC_PAGE,
-            "data_url": MIC_XLSX,
-            "error": str(exc),
-            "notes": [
-                "Could not fetch Sep26-MRP.xlsx; link-out only. Never invent numbers.",
-            ],
-            "seats": {},
-            "fieldwork": None,
-            "retrieved_at": now_iso(),
-        }
+        return keep_stale_or_link_out(
+            previous,
+            provider_name="More in Common",
+            url=MIC_PAGE,
+            data_url=MIC_XLSX,
+            error=str(exc),
+        )
 
     try:
         import openpyxl
     except ImportError:
-        return {
-            "status": "link_out",
-            "provider": "More in Common",
-            "url": MIC_PAGE,
-            "data_url": MIC_XLSX,
-            "error": "openpyxl not installed",
-            "notes": [
-                "XLSX available but openpyxl missing in this environment; link-out only.",
+        return keep_stale_or_link_out(
+            previous,
+            provider_name="More in Common",
+            url=MIC_PAGE,
+            data_url=MIC_XLSX,
+            error="openpyxl not installed",
+            extra_notes=[
+                "XLSX available but openpyxl missing in this environment.",
             ],
-            "seats": {},
-            "fieldwork": "September 2026 MRP (see source page)",
-            "retrieved_at": now_iso(),
-        }
+        )
 
     with tempfile.NamedTemporaryFile(suffix=".xlsx") as tmp:
         tmp.write(raw)
@@ -333,15 +392,13 @@ def load_more_in_common(by_norm: dict[str, str]) -> dict:
                 sheet = rows
                 break
         if sheet is None:
-            return {
-                "status": "link_out",
-                "provider": "More in Common",
-                "url": MIC_PAGE,
-                "data_url": MIC_XLSX,
-                "error": "No constituency sheet found",
-                "seats": {},
-                "retrieved_at": now_iso(),
-            }
+            return keep_stale_or_link_out(
+                previous,
+                provider_name="More in Common",
+                url=MIC_PAGE,
+                data_url=MIC_XLSX,
+                error="No constituency sheet found",
+            )
 
         header = [str(c).strip() if c is not None else "" for c in sheet[0]]
 
@@ -365,15 +422,13 @@ def load_more_in_common(by_norm: dict[str, str]) -> dict:
         i_oth = col("other")
         i_win = col("winner")
         if i_name is None or i_lab is None:
-            return {
-                "status": "link_out",
-                "provider": "More in Common",
-                "url": MIC_PAGE,
-                "data_url": MIC_XLSX,
-                "error": f"Unexpected headers: {header}",
-                "seats": {},
-                "retrieved_at": now_iso(),
-            }
+            return keep_stale_or_link_out(
+                previous,
+                provider_name="More in Common",
+                url=MIC_PAGE,
+                data_url=MIC_XLSX,
+                error=f"Unexpected headers: {header}",
+            )
 
         seats: dict[str, dict] = {}
         unmatched: list[str] = []
@@ -435,13 +490,14 @@ def main() -> int:
     by_norm, by_code = load_pcon_index()
     assert len(by_code) == 632
     retrieved_at = now_iso()
-    ec = load_electoral_calculus(by_norm)
-    mic = load_more_in_common(by_norm)
+    previous = load_previous_providers()
+    ec = load_electoral_calculus(by_norm, previous.get("electoral_calculus"))
+    mic = load_more_in_common(by_norm, previous.get("more_in_common"))
     out = {
         "retrieved_at": retrieved_at,
         "notes": [
             "Seat-level projections from publicly published tables only.",
-            "Never invent numbers. Empty provider slots use link-out.",
+            "Never invent numbers. On fetch failure, keep last good provider block (status=stale) when available; else link-out.",
             "National VI is in polls-national.json and must not alone flip seat endorsements.",
         ],
         "providers": {
@@ -453,10 +509,12 @@ def main() -> int:
     OUT.write_text(json.dumps(out, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(
         f"Wrote {OUT.relative_to(ROOT)} "
-        f"EC={ec['status']}:{ec.get('seat_count', 0)} "
-        f"MIC={mic['status']}:{mic.get('seat_count', 0)} "
+        f"EC={ec['status']}:{ec.get('seat_count', len(ec.get('seats') or {}))} "
+        f"MIC={mic['status']}:{mic.get('seat_count', len(mic.get('seats') or {}))} "
         f"retrieved_at={retrieved_at}"
     )
+    # Exit 0 even when stale — cron may still run, but blanking is avoided.
+    # Orchestrator / workflow skip commit when content is timestamp-only.
     return 0
 
 

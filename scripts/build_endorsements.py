@@ -21,6 +21,11 @@ OVERRIDES = ROOT / "public" / "data" / "overrides.json"
 GEOJSON = ROOT / "public" / "data" / "constituencies-gb-2024.geojson"
 OUT = ROOT / "public" / "data" / "endorsements-gb.json"
 
+TRUSTED_PROVIDER_RE = re.compile(
+    r"electoral[_\s-]?calculus|^ec$|more[_\s-]?in[_\s-]?common|^mic$",
+    re.I,
+)
+
 
 def now_iso() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -29,43 +34,112 @@ def now_iso() -> str:
 def is_lab_con(value: str | None) -> bool:
     # Any word token, so "Scottish Labour" / "The Conservative Party" / "other:Tories" are caught.
     tokens = re.split(r"[^a-z]+", (value or "").strip().lower())
-    return any(t in {"labour", "lab", "conservative", "con", "tory", "conservatives", "tories"} for t in tokens)
+    return any(
+        t in {"labour", "lab", "conservative", "con", "tory", "conservatives", "tories"}
+        for t in tokens
+    )
 
 
-def score_party(poll: dict, party: str) -> float:
-    key = "reform_share" if party == "reform" else "restore_share"
-    share = poll.get(key)
-    if isinstance(share, (int, float)):
-        return float(share)
-    winner = (poll.get("projected_winner") or "").lower()
-    if party == "reform" and "reform" in winner:
-        return 1.0
-    if party == "restore" and "restore" in winner:
-        return 1.0
-    return 0.0
+def is_trusted_provider(provider: str | None) -> bool:
+    return bool(TRUSTED_PROVIDER_RE.search((provider or "").strip()))
 
 
-def prefer_restore(polls: list[dict]) -> bool:
-    if not polls:
+def numeric_share(value) -> float | None:
+    if isinstance(value, (int, float)):
+        return float(value)
+    return None
+
+
+def restore_strictly_ahead(poll: dict) -> bool:
+    restore = numeric_share(poll.get("restore_share"))
+    reform = numeric_share(poll.get("reform_share"))
+    if restore is None or reform is None:
         return False
-    restore_better = reform_better = 0
-    any_competitive = False
-    for poll in polls:
-        s_res = score_party(poll, "restore")
-        s_ref = score_party(poll, "reform")
-        if s_res <= 0 and s_ref <= 0:
-            continue
-        if s_res > s_ref:
-            restore_better += 1
-            lab = poll.get("lab_share") or 0
-            con = poll.get("con_share") or 0
-            lab_con = max(float(lab), float(con))
-            winner = (poll.get("projected_winner") or "").lower()
-            if "restore" in winner or (lab_con > 0 and max(s_res, s_ref) + 5 >= lab_con) or s_res >= s_ref:
-                any_competitive = True
-        elif s_ref > s_res:
-            reform_better += 1
-    return restore_better > 0 and restore_better > reform_better and any_competitive
+    return restore > reform
+
+
+def reform_strictly_ahead(poll: dict) -> bool:
+    restore = numeric_share(poll.get("restore_share"))
+    reform = numeric_share(poll.get("reform_share"))
+    if restore is None or reform is None:
+        return False
+    return reform > restore
+
+
+def provider_label(provider: str) -> str:
+    p = (provider or "").strip()
+    if re.search(r"more[_\s-]?in[_\s-]?common|^mic$", p, re.I):
+        return "More in Common"
+    if re.search(r"electoral[_\s-]?calculus|^ec$", p, re.I):
+        return "Electoral Calculus"
+    return p or "Seat poll"
+
+
+def format_pct(n: float) -> str:
+    if float(n).is_integer():
+        return str(int(n))
+    s = f"{n:.1f}"
+    return s[:-2] if s.endswith(".0") else s
+
+
+def restore_ahead_from_polls(polls: list[dict]) -> dict:
+    trusted = [p for p in polls if is_trusted_provider(p.get("provider"))]
+    lead = None
+    any_restore = False
+    any_reform = False
+    for poll in trusted:
+        if restore_strictly_ahead(poll):
+            any_restore = True
+            if lead is None:
+                lead = {
+                    "provider": provider_label(str(poll.get("provider") or "")),
+                    "restore": numeric_share(poll.get("restore_share")),
+                    "reform": numeric_share(poll.get("reform_share")),
+                }
+        elif reform_strictly_ahead(poll):
+            any_reform = True
+    return {
+        "ahead": any_restore,
+        "disagree": any_restore and any_reform,
+        "lead": lead,
+    }
+
+
+def restore_ahead_reason(detail: dict) -> str:
+    lead = detail.get("lead")
+    if not lead:
+        return (
+            "Trusted seat poll projects Restore ahead of Reform; "
+            "Vote Restore to avoid splitting."
+        )
+    core = (
+        f"{lead['provider']} projects Restore ahead of Reform here "
+        f"({format_pct(lead['restore'])}% vs {format_pct(lead['reform'])}%); "
+        f"Vote Restore to avoid splitting."
+    )
+    if detail.get("disagree"):
+        return (
+            f"{core} Trusted seat-poll sources disagree — "
+            f"Restore still wins on the Restore-ahead rule."
+        )
+    return core
+
+
+def polls_favour_reform(polls: list[dict]) -> bool:
+    trusted = [p for p in polls if is_trusted_provider(p.get("provider"))]
+    if not trusted:
+        return False
+    any_reform = False
+    for poll in trusted:
+        if restore_strictly_ahead(poll):
+            return False
+        if reform_strictly_ahead(poll):
+            any_reform = True
+        restore = numeric_share(poll.get("restore_share"))
+        reform = numeric_share(poll.get("reform_share"))
+        if restore is None and reform is not None and reform > 0:
+            any_reform = True
+    return any_reform
 
 
 def third_party_lead(polls: list[dict]) -> str | None:
@@ -84,7 +158,12 @@ def decide(standing: dict, polls: list[dict], override: dict | None) -> dict:
     third = third_party_lead(polls)
     if override:
         pick = override.get("endorse")
-        if isinstance(pick, str) and (pick.lower() in {"labour", "conservative"} or is_lab_con(pick) or pick.lower().startswith("other:lab") or pick.lower().startswith("other:con")):
+        if isinstance(pick, str) and (
+            pick.lower() in {"labour", "conservative"}
+            or is_lab_con(pick)
+            or pick.lower().startswith("other:lab")
+            or pick.lower().startswith("other:con")
+        ):
             return {
                 "endorse": "none",
                 "reason": "Override rejected — never endorse Labour or Conservatives",
@@ -97,6 +176,17 @@ def decide(standing: dict, polls: list[dict], override: dict | None) -> dict:
             "endorse": pick,
             "reason": f"Daniel override: {note}" if note else "Daniel override",
             "isOverride": True,
+            "presumedReform": False,
+            "thirdPartyLead": third,
+        }
+
+    # Restore-ahead poll rule (no DC standing prerequisite)
+    ahead = restore_ahead_from_polls(polls)
+    if ahead["ahead"]:
+        return {
+            "endorse": "restore",
+            "reason": restore_ahead_reason(ahead),
+            "isOverride": False,
             "presumedReform": False,
             "thirdPartyLead": third,
         }
@@ -115,13 +205,22 @@ def decide(standing: dict, polls: list[dict], override: dict | None) -> dict:
 
     if restore in {"no", "unknown"} and reform in {"yes", "unknown"}:
         presumed = reform == "unknown"
-        return {
-            "endorse": "reform",
-            "reason": (
+        restore_unknown = restore == "unknown"
+        if restore_unknown:
+            reason = (
                 "Restore not confirmed; presumed Reform — confirm nearer nomination"
                 if presumed
+                else "Restore not confirmed; default Reform"
+            )
+        else:
+            reason = (
+                "Restore not standing; presumed Reform — confirm nearer nomination"
+                if presumed
                 else "Restore not standing; default Reform"
-            ),
+            )
+        return {
+            "endorse": "reform",
+            "reason": reason,
             "isOverride": False,
             "presumedReform": presumed,
             "thirdPartyLead": third,
@@ -137,22 +236,17 @@ def decide(standing: dict, polls: list[dict], override: dict | None) -> dict:
         }
 
     if reform == "yes" and restore == "yes":
-        if prefer_restore(polls):
-            return {
-                "endorse": "restore",
-                "reason": "Both standing; seat poll shows Restore the stronger Lab/Con-beater",
-                "isOverride": False,
-                "presumedReform": False,
-                "thirdPartyLead": third,
-            }
         missing = len(polls) == 0
+        favour = polls_favour_reform(polls)
+        if missing:
+            reason = "Both standing; no seat poll loaded — default Reform (anti-split)"
+        elif favour:
+            reason = "Both standing; seat polls favour Reform — default Reform (anti-split)"
+        else:
+            reason = "Both standing; no Restore-ahead seat poll — default Reform (anti-split)"
         return {
             "endorse": "reform",
-            "reason": (
-                "Both standing; no seat poll loaded — default Reform (anti-split)"
-                if missing
-                else "Both standing; polls inconclusive — default Reform (anti-split)"
-            ),
+            "reason": reason,
             "isOverride": False,
             "presumedReform": False,
             "thirdPartyLead": third,
@@ -170,7 +264,8 @@ def decide(standing: dict, polls: list[dict], override: dict | None) -> dict:
 def collect_polls(providers: dict, code: str) -> list[dict]:
     rows = []
     for key, prov in providers.items():
-        if prov.get("status") != "loaded":
+        # Include loaded and stale (kept-last-good) provider blocks
+        if prov.get("status") not in {"loaded", "stale"}:
             continue
         seat = (prov.get("seats") or {}).get(code)
         if not seat:
@@ -253,6 +348,7 @@ def main() -> int:
         "notes": [
             "Editorial endorsement map — not Electoral Commission advice.",
             "Never endorses Labour or Conservatives.",
+            "Restore-ahead rule: any trusted seat poll (EC/MIC) with Restore share > Reform share → Restore.",
             "2024 winner join from Commons Library CBP-10009 deferred (source blocked); follow-up.",
         ],
         "seats": seats_out,
