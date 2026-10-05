@@ -1,0 +1,40 @@
+# INSTALL: copy to .github/workflows/refresh-voting-data.yml on merge (box gh lacks workflow scope).
+name: Refresh voting data
+
+on:
+  schedule:
+    # Daily 06:15 UTC ≈ 23:15 PT previous evening / 07:15 BST
+    - cron: "15 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Python deps
+        run: pip install openpyxl
+      - name: Refresh candidates + polls + endorsements
+        run: python3 scripts/refresh_voting_data.py
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/data/candidates-gb.json \
+                  public/data/polls-national.json \
+                  public/data/polls-seats.json \
+                  public/data/endorsements-gb.json \
+                  public/data/voting-meta.json \
+                  public/data/overrides.json || true
+          if git diff --staged --quiet; then
+            echo "No data changes"
+          else
+            git commit -m "data: daily voting refresh ($(date -u +%Y-%m-%d))"
+            git push
+          fi

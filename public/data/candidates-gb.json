@@ -1,0 +1,6422 @@
+{
+  "retrieved_at": "2026-10-05T11:14:04Z",
+  "source": "Democracy Club Candidates",
+  "license": "CC-BY-SA",
+  "source_url": "https://candidates.democracyclub.org.uk/",
+  "about": "https://candidates.democracyclub.org.uk/help/about",
+  "notes": [
+    "Names only when present in Democracy Club; never invented.",
+    "standing=unknown means no confirmed Westminster candidacy in DC for that party in scope.",
+    "Restore Britain coverage is sparse; most seats default to presumed Reform under locked anti-split rules.",
+    "GB Westminster only (632 PCON24 seats)."
+  ],
+  "counts": {
+    "reform_matched": 6,
+    "restore_matched": 2,
+    "reform_rows": 6,
+    "restore_rows": 2
+  },
+  "unmatched": [],
+  "seats": {
+    "E14001063": {
+      "pcon24cd": "E14001063",
+      "pcon24nm": "Aldershot",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001064": {
+      "pcon24cd": "E14001064",
+      "pcon24nm": "Aldridge-Brownhills",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001065": {
+      "pcon24cd": "E14001065",
+      "pcon24nm": "Altrincham and Sale West",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001066": {
+      "pcon24cd": "E14001066",
+      "pcon24nm": "Amber Valley",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001067": {
+      "pcon24cd": "E14001067",
+      "pcon24nm": "Arundel and South Downs",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001068": {
+      "pcon24cd": "E14001068",
+      "pcon24nm": "Ashfield",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001069": {
+      "pcon24cd": "E14001069",
+      "pcon24nm": "Ashford",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001070": {
+      "pcon24cd": "E14001070",
+      "pcon24nm": "Ashton-under-Lyne",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001071": {
+      "pcon24cd": "E14001071",
+      "pcon24nm": "Aylesbury",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001072": {
+      "pcon24cd": "E14001072",
+      "pcon24nm": "Banbury",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001073": {
+      "pcon24cd": "E14001073",
+      "pcon24nm": "Barking",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001074": {
+      "pcon24cd": "E14001074",
+      "pcon24nm": "Barnsley North",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001075": {
+      "pcon24cd": "E14001075",
+      "pcon24nm": "Barnsley South",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001076": {
+      "pcon24cd": "E14001076",
+      "pcon24nm": "Barrow and Furness",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001077": {
+      "pcon24cd": "E14001077",
+      "pcon24nm": "Basildon and Billericay",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001078": {
+      "pcon24cd": "E14001078",
+      "pcon24nm": "Basingstoke",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001079": {
+      "pcon24cd": "E14001079",
+      "pcon24nm": "Bassetlaw",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001080": {
+      "pcon24cd": "E14001080",
+      "pcon24nm": "Bath",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001081": {
+      "pcon24cd": "E14001081",
+      "pcon24nm": "Battersea",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001082": {
+      "pcon24cd": "E14001082",
+      "pcon24nm": "Beaconsfield",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001083": {
+      "pcon24cd": "E14001083",
+      "pcon24nm": "Beckenham and Penge",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001084": {
+      "pcon24cd": "E14001084",
+      "pcon24nm": "Bedford",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001085": {
+      "pcon24cd": "E14001085",
+      "pcon24nm": "Bermondsey and Old Southwark",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001086": {
+      "pcon24cd": "E14001086",
+      "pcon24nm": "Bethnal Green and Stepney",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001087": {
+      "pcon24cd": "E14001087",
+      "pcon24nm": "Beverley and Holderness",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001088": {
+      "pcon24cd": "E14001088",
+      "pcon24nm": "Bexhill and Battle",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001089": {
+      "pcon24cd": "E14001089",
+      "pcon24nm": "Bexleyheath and Crayford",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001090": {
+      "pcon24cd": "E14001090",
+      "pcon24nm": "Bicester and Woodstock",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001091": {
+      "pcon24cd": "E14001091",
+      "pcon24nm": "Birkenhead",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001092": {
+      "pcon24cd": "E14001092",
+      "pcon24nm": "Birmingham Edgbaston",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001093": {
+      "pcon24cd": "E14001093",
+      "pcon24nm": "Birmingham Erdington",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001094": {
+      "pcon24cd": "E14001094",
+      "pcon24nm": "Birmingham Hall Green and Moseley",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001095": {
+      "pcon24cd": "E14001095",
+      "pcon24nm": "Birmingham Hodge Hill and Solihull North",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001096": {
+      "pcon24cd": "E14001096",
+      "pcon24nm": "Birmingham Ladywood",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001097": {
+      "pcon24cd": "E14001097",
+      "pcon24nm": "Birmingham Northfield",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001098": {
+      "pcon24cd": "E14001098",
+      "pcon24nm": "Birmingham Perry Barr",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001099": {
+      "pcon24cd": "E14001099",
+      "pcon24nm": "Birmingham Selly Oak",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001100": {
+      "pcon24cd": "E14001100",
+      "pcon24nm": "Birmingham Yardley",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001101": {
+      "pcon24cd": "E14001101",
+      "pcon24nm": "Bishop Auckland",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001102": {
+      "pcon24cd": "E14001102",
+      "pcon24nm": "Blackburn",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001103": {
+      "pcon24cd": "E14001103",
+      "pcon24nm": "Blackley and Middleton South",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001104": {
+      "pcon24cd": "E14001104",
+      "pcon24nm": "Blackpool North and Fleetwood",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001105": {
+      "pcon24cd": "E14001105",
+      "pcon24nm": "Blackpool South",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001106": {
+      "pcon24cd": "E14001106",
+      "pcon24nm": "Blaydon and Consett",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001107": {
+      "pcon24cd": "E14001107",
+      "pcon24nm": "Blyth and Ashington",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001108": {
+      "pcon24cd": "E14001108",
+      "pcon24nm": "Bognor Regis and Littlehampton",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001109": {
+      "pcon24cd": "E14001109",
+      "pcon24nm": "Bolsover",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001110": {
+      "pcon24cd": "E14001110",
+      "pcon24nm": "Bolton North East",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001111": {
+      "pcon24cd": "E14001111",
+      "pcon24nm": "Bolton South and Walkden",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001112": {
+      "pcon24cd": "E14001112",
+      "pcon24nm": "Bolton West",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001113": {
+      "pcon24cd": "E14001113",
+      "pcon24nm": "Bootle",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001114": {
+      "pcon24cd": "E14001114",
+      "pcon24nm": "Boston and Skegness",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001115": {
+      "pcon24cd": "E14001115",
+      "pcon24nm": "Bournemouth East",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001116": {
+      "pcon24cd": "E14001116",
+      "pcon24nm": "Bournemouth West",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001117": {
+      "pcon24cd": "E14001117",
+      "pcon24nm": "Bracknell",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001118": {
+      "pcon24cd": "E14001118",
+      "pcon24nm": "Bradford East",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001119": {
+      "pcon24cd": "E14001119",
+      "pcon24nm": "Bradford South",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001120": {
+      "pcon24cd": "E14001120",
+      "pcon24nm": "Bradford West",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001121": {
+      "pcon24cd": "E14001121",
+      "pcon24nm": "Braintree",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001122": {
+      "pcon24cd": "E14001122",
+      "pcon24nm": "Brent East",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001123": {
+      "pcon24cd": "E14001123",
+      "pcon24nm": "Brent West",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001124": {
+      "pcon24cd": "E14001124",
+      "pcon24nm": "Brentford and Isleworth",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001125": {
+      "pcon24cd": "E14001125",
+      "pcon24nm": "Brentwood and Ongar",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001126": {
+      "pcon24cd": "E14001126",
+      "pcon24nm": "Bridgwater",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001127": {
+      "pcon24cd": "E14001127",
+      "pcon24nm": "Bridlington and The Wolds",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001128": {
+      "pcon24cd": "E14001128",
+      "pcon24nm": "Brigg and Immingham",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001129": {
+      "pcon24cd": "E14001129",
+      "pcon24nm": "Brighton Kemptown and Peacehaven",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001130": {
+      "pcon24cd": "E14001130",
+      "pcon24nm": "Brighton Pavilion",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001131": {
+      "pcon24cd": "E14001131",
+      "pcon24nm": "Bristol Central",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001132": {
+      "pcon24cd": "E14001132",
+      "pcon24nm": "Bristol East",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001133": {
+      "pcon24cd": "E14001133",
+      "pcon24nm": "Bristol North East",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001134": {
+      "pcon24cd": "E14001134",
+      "pcon24nm": "Bristol North West",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001135": {
+      "pcon24cd": "E14001135",
+      "pcon24nm": "Bristol South",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001136": {
+      "pcon24cd": "E14001136",
+      "pcon24nm": "Broadland and Fakenham",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001137": {
+      "pcon24cd": "E14001137",
+      "pcon24nm": "Bromley and Biggin Hill",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001138": {
+      "pcon24cd": "E14001138",
+      "pcon24nm": "Bromsgrove",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001139": {
+      "pcon24cd": "E14001139",
+      "pcon24nm": "Broxbourne",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001140": {
+      "pcon24cd": "E14001140",
+      "pcon24nm": "Broxtowe",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001141": {
+      "pcon24cd": "E14001141",
+      "pcon24nm": "Buckingham and Bletchley",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001142": {
+      "pcon24cd": "E14001142",
+      "pcon24nm": "Burnley",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001143": {
+      "pcon24cd": "E14001143",
+      "pcon24nm": "Burton and Uttoxeter",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001144": {
+      "pcon24cd": "E14001144",
+      "pcon24nm": "Bury North",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001145": {
+      "pcon24cd": "E14001145",
+      "pcon24nm": "Bury South",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001146": {
+      "pcon24cd": "E14001146",
+      "pcon24nm": "Bury St Edmunds and Stowmarket",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001147": {
+      "pcon24cd": "E14001147",
+      "pcon24nm": "Calder Valley",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001148": {
+      "pcon24cd": "E14001148",
+      "pcon24nm": "Camborne and Redruth",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001149": {
+      "pcon24cd": "E14001149",
+      "pcon24nm": "Cambridge",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001150": {
+      "pcon24cd": "E14001150",
+      "pcon24nm": "Cannock Chase",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001151": {
+      "pcon24cd": "E14001151",
+      "pcon24nm": "Canterbury",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001152": {
+      "pcon24cd": "E14001152",
+      "pcon24nm": "Carlisle",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001153": {
+      "pcon24cd": "E14001153",
+      "pcon24nm": "Carshalton and Wallington",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001154": {
+      "pcon24cd": "E14001154",
+      "pcon24nm": "Castle Point",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001155": {
+      "pcon24cd": "E14001155",
+      "pcon24nm": "Central Devon",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001156": {
+      "pcon24cd": "E14001156",
+      "pcon24nm": "Central Suffolk and North Ipswich",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001157": {
+      "pcon24cd": "E14001157",
+      "pcon24nm": "Chatham and Aylesford",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001158": {
+      "pcon24cd": "E14001158",
+      "pcon24nm": "Cheadle",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001159": {
+      "pcon24cd": "E14001159",
+      "pcon24nm": "Chelmsford",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001160": {
+      "pcon24cd": "E14001160",
+      "pcon24nm": "Chelsea and Fulham",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001161": {
+      "pcon24cd": "E14001161",
+      "pcon24nm": "Cheltenham",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001162": {
+      "pcon24cd": "E14001162",
+      "pcon24nm": "Chesham and Amersham",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001163": {
+      "pcon24cd": "E14001163",
+      "pcon24nm": "Chester North and Neston",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001164": {
+      "pcon24cd": "E14001164",
+      "pcon24nm": "Chester South and Eddisbury",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001165": {
+      "pcon24cd": "E14001165",
+      "pcon24nm": "Chesterfield",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001166": {
+      "pcon24cd": "E14001166",
+      "pcon24nm": "Chichester",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001167": {
+      "pcon24cd": "E14001167",
+      "pcon24nm": "Chingford and Woodford Green",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001168": {
+      "pcon24cd": "E14001168",
+      "pcon24nm": "Chippenham",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001169": {
+      "pcon24cd": "E14001169",
+      "pcon24nm": "Chipping Barnet",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001170": {
+      "pcon24cd": "E14001170",
+      "pcon24nm": "Chorley",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001171": {
+      "pcon24cd": "E14001171",
+      "pcon24nm": "Christchurch",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001172": {
+      "pcon24cd": "E14001172",
+      "pcon24nm": "Cities of London and Westminster",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001173": {
+      "pcon24cd": "E14001173",
+      "pcon24nm": "City of Durham",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001174": {
+      "pcon24cd": "E14001174",
+      "pcon24nm": "Clacton",
+      "reform": {
+        "standing": "yes",
+        "name": "Nigel Farage",
+        "person_id": "4800",
+        "party_id": "PP7931",
+        "party_name": "Reform UK",
+        "ballot_paper_id": "parl.clacton.by.2026-08-13",
+        "election_id": "parl.2026-08-13",
+        "election_date": "2026-08-13",
+        "election_current": false,
+        "wcivf_url": "https://whocanivotefor.co.uk/elections/parl.clacton.by.2026-08-13/",
+        "dc_person_url": "https://candidates.democracyclub.org.uk/person/4800/"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001175": {
+      "pcon24cd": "E14001175",
+      "pcon24nm": "Clapham and Brixton Hill",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001176": {
+      "pcon24cd": "E14001176",
+      "pcon24nm": "Colchester",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001177": {
+      "pcon24cd": "E14001177",
+      "pcon24nm": "Colne Valley",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001178": {
+      "pcon24cd": "E14001178",
+      "pcon24nm": "Congleton",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001179": {
+      "pcon24cd": "E14001179",
+      "pcon24nm": "Corby and East Northamptonshire",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001180": {
+      "pcon24cd": "E14001180",
+      "pcon24nm": "Coventry East",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001181": {
+      "pcon24cd": "E14001181",
+      "pcon24nm": "Coventry North West",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001182": {
+      "pcon24cd": "E14001182",
+      "pcon24nm": "Coventry South",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001183": {
+      "pcon24cd": "E14001183",
+      "pcon24nm": "Cramlington and Killingworth",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001184": {
+      "pcon24cd": "E14001184",
+      "pcon24nm": "Crawley",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001185": {
+      "pcon24cd": "E14001185",
+      "pcon24nm": "Crewe and Nantwich",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001186": {
+      "pcon24cd": "E14001186",
+      "pcon24nm": "Croydon East",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001187": {
+      "pcon24cd": "E14001187",
+      "pcon24nm": "Croydon South",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001188": {
+      "pcon24cd": "E14001188",
+      "pcon24nm": "Croydon West",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001189": {
+      "pcon24cd": "E14001189",
+      "pcon24nm": "Dagenham and Rainham",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001190": {
+      "pcon24cd": "E14001190",
+      "pcon24nm": "Darlington",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001191": {
+      "pcon24cd": "E14001191",
+      "pcon24nm": "Dartford",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001192": {
+      "pcon24cd": "E14001192",
+      "pcon24nm": "Daventry",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001193": {
+      "pcon24cd": "E14001193",
+      "pcon24nm": "Derby North",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001194": {
+      "pcon24cd": "E14001194",
+      "pcon24nm": "Derby South",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001195": {
+      "pcon24cd": "E14001195",
+      "pcon24nm": "Derbyshire Dales",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001196": {
+      "pcon24cd": "E14001196",
+      "pcon24nm": "Dewsbury and Batley",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001197": {
+      "pcon24cd": "E14001197",
+      "pcon24nm": "Didcot and Wantage",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001198": {
+      "pcon24cd": "E14001198",
+      "pcon24nm": "Doncaster Central",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001199": {
+      "pcon24cd": "E14001199",
+      "pcon24nm": "Doncaster East and the Isle of Axholme",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001200": {
+      "pcon24cd": "E14001200",
+      "pcon24nm": "Doncaster North",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001201": {
+      "pcon24cd": "E14001201",
+      "pcon24nm": "Dorking and Horley",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001202": {
+      "pcon24cd": "E14001202",
+      "pcon24nm": "Dover and Deal",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001203": {
+      "pcon24cd": "E14001203",
+      "pcon24nm": "Droitwich and Evesham",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001204": {
+      "pcon24cd": "E14001204",
+      "pcon24nm": "Dudley",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001205": {
+      "pcon24cd": "E14001205",
+      "pcon24nm": "Dulwich and West Norwood",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001206": {
+      "pcon24cd": "E14001206",
+      "pcon24nm": "Dunstable and Leighton Buzzard",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001207": {
+      "pcon24cd": "E14001207",
+      "pcon24nm": "Ealing Central and Acton",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001208": {
+      "pcon24cd": "E14001208",
+      "pcon24nm": "Ealing North",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001209": {
+      "pcon24cd": "E14001209",
+      "pcon24nm": "Ealing Southall",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001210": {
+      "pcon24cd": "E14001210",
+      "pcon24nm": "Earley and Woodley",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001211": {
+      "pcon24cd": "E14001211",
+      "pcon24nm": "Easington",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001212": {
+      "pcon24cd": "E14001212",
+      "pcon24nm": "East Grinstead and Uckfield",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001213": {
+      "pcon24cd": "E14001213",
+      "pcon24nm": "East Ham",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001214": {
+      "pcon24cd": "E14001214",
+      "pcon24nm": "East Hampshire",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001215": {
+      "pcon24cd": "E14001215",
+      "pcon24nm": "East Surrey",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001216": {
+      "pcon24cd": "E14001216",
+      "pcon24nm": "East Thanet",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001217": {
+      "pcon24cd": "E14001217",
+      "pcon24nm": "East Wiltshire",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001218": {
+      "pcon24cd": "E14001218",
+      "pcon24nm": "East Worthing and Shoreham",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001219": {
+      "pcon24cd": "E14001219",
+      "pcon24nm": "Eastbourne",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001220": {
+      "pcon24cd": "E14001220",
+      "pcon24nm": "Eastleigh",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001221": {
+      "pcon24cd": "E14001221",
+      "pcon24nm": "Edmonton and Winchmore Hill",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001222": {
+      "pcon24cd": "E14001222",
+      "pcon24nm": "Ellesmere Port and Bromborough",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001223": {
+      "pcon24cd": "E14001223",
+      "pcon24nm": "Eltham and Chislehurst",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001224": {
+      "pcon24cd": "E14001224",
+      "pcon24nm": "Ely and East Cambridgeshire",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001225": {
+      "pcon24cd": "E14001225",
+      "pcon24nm": "Enfield North",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001226": {
+      "pcon24cd": "E14001226",
+      "pcon24nm": "Epping Forest",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001227": {
+      "pcon24cd": "E14001227",
+      "pcon24nm": "Epsom and Ewell",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001228": {
+      "pcon24cd": "E14001228",
+      "pcon24nm": "Erewash",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001229": {
+      "pcon24cd": "E14001229",
+      "pcon24nm": "Erith and Thamesmead",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001230": {
+      "pcon24cd": "E14001230",
+      "pcon24nm": "Esher and Walton",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001231": {
+      "pcon24cd": "E14001231",
+      "pcon24nm": "Exeter",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001232": {
+      "pcon24cd": "E14001232",
+      "pcon24nm": "Exmouth and Exeter East",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001233": {
+      "pcon24cd": "E14001233",
+      "pcon24nm": "Fareham and Waterlooville",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001234": {
+      "pcon24cd": "E14001234",
+      "pcon24nm": "Farnham and Bordon",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001235": {
+      "pcon24cd": "E14001235",
+      "pcon24nm": "Faversham and Mid Kent",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001236": {
+      "pcon24cd": "E14001236",
+      "pcon24nm": "Feltham and Heston",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001237": {
+      "pcon24cd": "E14001237",
+      "pcon24nm": "Filton and Bradley Stoke",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001238": {
+      "pcon24cd": "E14001238",
+      "pcon24nm": "Finchley and Golders Green",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001239": {
+      "pcon24cd": "E14001239",
+      "pcon24nm": "Folkestone and Hythe",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001240": {
+      "pcon24cd": "E14001240",
+      "pcon24nm": "Forest of Dean",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001241": {
+      "pcon24cd": "E14001241",
+      "pcon24nm": "Frome and East Somerset",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001242": {
+      "pcon24cd": "E14001242",
+      "pcon24nm": "Fylde",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001243": {
+      "pcon24cd": "E14001243",
+      "pcon24nm": "Gainsborough",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001244": {
+      "pcon24cd": "E14001244",
+      "pcon24nm": "Gateshead Central and Whickham",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001245": {
+      "pcon24cd": "E14001245",
+      "pcon24nm": "Gedling",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001246": {
+      "pcon24cd": "E14001246",
+      "pcon24nm": "Gillingham and Rainham",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001247": {
+      "pcon24cd": "E14001247",
+      "pcon24nm": "Glastonbury and Somerton",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001248": {
+      "pcon24cd": "E14001248",
+      "pcon24nm": "Gloucester",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001249": {
+      "pcon24cd": "E14001249",
+      "pcon24nm": "Godalming and Ash",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001250": {
+      "pcon24cd": "E14001250",
+      "pcon24nm": "Goole and Pocklington",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001251": {
+      "pcon24cd": "E14001251",
+      "pcon24nm": "Gorton and Denton",
+      "reform": {
+        "standing": "yes",
+        "name": "Matt Goodwin",
+        "person_id": "123811",
+        "party_id": "PP7931",
+        "party_name": "Reform UK",
+        "ballot_paper_id": "parl.gorton-and-denton.by.2026-02-26",
+        "election_id": "parl.2026-02-26",
+        "election_date": "2026-02-26",
+        "election_current": false,
+        "wcivf_url": "https://whocanivotefor.co.uk/elections/parl.gorton-and-denton.by.2026-02-26/",
+        "dc_person_url": "https://candidates.democracyclub.org.uk/person/123811/"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001252": {
+      "pcon24cd": "E14001252",
+      "pcon24nm": "Gosport",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001253": {
+      "pcon24cd": "E14001253",
+      "pcon24nm": "Grantham and Bourne",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001254": {
+      "pcon24cd": "E14001254",
+      "pcon24nm": "Gravesham",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001255": {
+      "pcon24cd": "E14001255",
+      "pcon24nm": "Great Grimsby and Cleethorpes",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001256": {
+      "pcon24cd": "E14001256",
+      "pcon24nm": "Great Yarmouth",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001257": {
+      "pcon24cd": "E14001257",
+      "pcon24nm": "Greenwich and Woolwich",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001258": {
+      "pcon24cd": "E14001258",
+      "pcon24nm": "Guildford",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001259": {
+      "pcon24cd": "E14001259",
+      "pcon24nm": "Hackney North and Stoke Newington",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001260": {
+      "pcon24cd": "E14001260",
+      "pcon24nm": "Hackney South and Shoreditch",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001261": {
+      "pcon24cd": "E14001261",
+      "pcon24nm": "Halesowen",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001262": {
+      "pcon24cd": "E14001262",
+      "pcon24nm": "Halifax",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001263": {
+      "pcon24cd": "E14001263",
+      "pcon24nm": "Hamble Valley",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001264": {
+      "pcon24cd": "E14001264",
+      "pcon24nm": "Hammersmith and Chiswick",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001265": {
+      "pcon24cd": "E14001265",
+      "pcon24nm": "Hampstead and Highgate",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001266": {
+      "pcon24cd": "E14001266",
+      "pcon24nm": "Harborough, Oadby and Wigston",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001267": {
+      "pcon24cd": "E14001267",
+      "pcon24nm": "Harlow",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001268": {
+      "pcon24cd": "E14001268",
+      "pcon24nm": "Harpenden and Berkhamsted",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001269": {
+      "pcon24cd": "E14001269",
+      "pcon24nm": "Harrogate and Knaresborough",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001270": {
+      "pcon24cd": "E14001270",
+      "pcon24nm": "Harrow East",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001271": {
+      "pcon24cd": "E14001271",
+      "pcon24nm": "Harrow West",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001272": {
+      "pcon24cd": "E14001272",
+      "pcon24nm": "Hartlepool",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001273": {
+      "pcon24cd": "E14001273",
+      "pcon24nm": "Harwich and North Essex",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001274": {
+      "pcon24cd": "E14001274",
+      "pcon24nm": "Hastings and Rye",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001275": {
+      "pcon24cd": "E14001275",
+      "pcon24nm": "Havant",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001276": {
+      "pcon24cd": "E14001276",
+      "pcon24nm": "Hayes and Harlington",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001277": {
+      "pcon24cd": "E14001277",
+      "pcon24nm": "Hazel Grove",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001278": {
+      "pcon24cd": "E14001278",
+      "pcon24nm": "Hemel Hempstead",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001279": {
+      "pcon24cd": "E14001279",
+      "pcon24nm": "Hendon",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001280": {
+      "pcon24cd": "E14001280",
+      "pcon24nm": "Henley and Thame",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001281": {
+      "pcon24cd": "E14001281",
+      "pcon24nm": "Hereford and South Herefordshire",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001282": {
+      "pcon24cd": "E14001282",
+      "pcon24nm": "Herne Bay and Sandwich",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001283": {
+      "pcon24cd": "E14001283",
+      "pcon24nm": "Hertford and Stortford",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001284": {
+      "pcon24cd": "E14001284",
+      "pcon24nm": "Hertsmere",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001285": {
+      "pcon24cd": "E14001285",
+      "pcon24nm": "Hexham",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001286": {
+      "pcon24cd": "E14001286",
+      "pcon24nm": "Heywood and Middleton North",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001287": {
+      "pcon24cd": "E14001287",
+      "pcon24nm": "High Peak",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001288": {
+      "pcon24cd": "E14001288",
+      "pcon24nm": "Hinckley and Bosworth",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001289": {
+      "pcon24cd": "E14001289",
+      "pcon24nm": "Hitchin",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001290": {
+      "pcon24cd": "E14001290",
+      "pcon24nm": "Holborn and St Pancras",
+      "reform": {
+        "standing": "yes",
+        "name": "Peter Newman",
+        "person_id": "132661",
+        "party_id": "PP7931",
+        "party_name": "Reform UK",
+        "ballot_paper_id": "parl.holborn-and-st-pancras.by.2026-10-08",
+        "election_id": "parl.2026-10-08",
+        "election_date": "2026-10-08",
+        "election_current": true,
+        "wcivf_url": "https://whocanivotefor.co.uk/elections/parl.holborn-and-st-pancras.by.2026-10-08/",
+        "dc_person_url": "https://candidates.democracyclub.org.uk/person/132661/"
+      },
+      "restore": {
+        "standing": "yes",
+        "name": "Tyler Kurtis Johnson",
+        "person_id": "139511",
+        "party_id": "PP18382",
+        "party_name": "Restore Britain",
+        "ballot_paper_id": "parl.holborn-and-st-pancras.by.2026-10-08",
+        "election_id": "parl.2026-10-08",
+        "election_date": "2026-10-08",
+        "election_current": true,
+        "wcivf_url": "https://whocanivotefor.co.uk/elections/parl.holborn-and-st-pancras.by.2026-10-08/",
+        "dc_person_url": "https://candidates.democracyclub.org.uk/person/139511/"
+      }
+    },
+    "E14001291": {
+      "pcon24cd": "E14001291",
+      "pcon24nm": "Honiton and Sidmouth",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001292": {
+      "pcon24cd": "E14001292",
+      "pcon24nm": "Hornchurch and Upminster",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001293": {
+      "pcon24cd": "E14001293",
+      "pcon24nm": "Hornsey and Friern Barnet",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001294": {
+      "pcon24cd": "E14001294",
+      "pcon24nm": "Horsham",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001295": {
+      "pcon24cd": "E14001295",
+      "pcon24nm": "Houghton and Sunderland South",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001296": {
+      "pcon24cd": "E14001296",
+      "pcon24nm": "Hove and Portslade",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001297": {
+      "pcon24cd": "E14001297",
+      "pcon24nm": "Huddersfield",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001298": {
+      "pcon24cd": "E14001298",
+      "pcon24nm": "Huntingdon",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001299": {
+      "pcon24cd": "E14001299",
+      "pcon24nm": "Hyndburn",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001300": {
+      "pcon24cd": "E14001300",
+      "pcon24nm": "Ilford North",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001301": {
+      "pcon24cd": "E14001301",
+      "pcon24nm": "Ilford South",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001302": {
+      "pcon24cd": "E14001302",
+      "pcon24nm": "Ipswich",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001303": {
+      "pcon24cd": "E14001303",
+      "pcon24nm": "Isle of Wight East",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001304": {
+      "pcon24cd": "E14001304",
+      "pcon24nm": "Isle of Wight West",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001305": {
+      "pcon24cd": "E14001305",
+      "pcon24nm": "Islington North",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001306": {
+      "pcon24cd": "E14001306",
+      "pcon24nm": "Islington South and Finsbury",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001307": {
+      "pcon24cd": "E14001307",
+      "pcon24nm": "Jarrow and Gateshead East",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001308": {
+      "pcon24cd": "E14001308",
+      "pcon24nm": "Keighley and Ilkley",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001309": {
+      "pcon24cd": "E14001309",
+      "pcon24nm": "Kenilworth and Southam",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001310": {
+      "pcon24cd": "E14001310",
+      "pcon24nm": "Kensington and Bayswater",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001311": {
+      "pcon24cd": "E14001311",
+      "pcon24nm": "Kettering",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001312": {
+      "pcon24cd": "E14001312",
+      "pcon24nm": "Kingston and Surbiton",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001313": {
+      "pcon24cd": "E14001313",
+      "pcon24nm": "Kingston upon Hull East",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001314": {
+      "pcon24cd": "E14001314",
+      "pcon24nm": "Kingston upon Hull North and Cottingham",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001315": {
+      "pcon24cd": "E14001315",
+      "pcon24nm": "Kingston upon Hull West and Haltemprice",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001316": {
+      "pcon24cd": "E14001316",
+      "pcon24nm": "Kingswinford and South Staffordshire",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001317": {
+      "pcon24cd": "E14001317",
+      "pcon24nm": "Knowsley",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001318": {
+      "pcon24cd": "E14001318",
+      "pcon24nm": "Lancaster and Wyre",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001319": {
+      "pcon24cd": "E14001319",
+      "pcon24nm": "Leeds Central and Headingley",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001320": {
+      "pcon24cd": "E14001320",
+      "pcon24nm": "Leeds East",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001321": {
+      "pcon24cd": "E14001321",
+      "pcon24nm": "Leeds North East",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001322": {
+      "pcon24cd": "E14001322",
+      "pcon24nm": "Leeds North West",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001323": {
+      "pcon24cd": "E14001323",
+      "pcon24nm": "Leeds South",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001324": {
+      "pcon24cd": "E14001324",
+      "pcon24nm": "Leeds South West and Morley",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001325": {
+      "pcon24cd": "E14001325",
+      "pcon24nm": "Leeds West and Pudsey",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001326": {
+      "pcon24cd": "E14001326",
+      "pcon24nm": "Leicester East",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001327": {
+      "pcon24cd": "E14001327",
+      "pcon24nm": "Leicester South",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001328": {
+      "pcon24cd": "E14001328",
+      "pcon24nm": "Leicester West",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001329": {
+      "pcon24cd": "E14001329",
+      "pcon24nm": "Leigh and Atherton",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001330": {
+      "pcon24cd": "E14001330",
+      "pcon24nm": "Lewes",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001331": {
+      "pcon24cd": "E14001331",
+      "pcon24nm": "Lewisham East",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001332": {
+      "pcon24cd": "E14001332",
+      "pcon24nm": "Lewisham North",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001333": {
+      "pcon24cd": "E14001333",
+      "pcon24nm": "Lewisham West and East Dulwich",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001334": {
+      "pcon24cd": "E14001334",
+      "pcon24nm": "Leyton and Wanstead",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001335": {
+      "pcon24cd": "E14001335",
+      "pcon24nm": "Lichfield",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001336": {
+      "pcon24cd": "E14001336",
+      "pcon24nm": "Lincoln",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001337": {
+      "pcon24cd": "E14001337",
+      "pcon24nm": "Liverpool Garston",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001338": {
+      "pcon24cd": "E14001338",
+      "pcon24nm": "Liverpool Riverside",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001339": {
+      "pcon24cd": "E14001339",
+      "pcon24nm": "Liverpool Walton",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001340": {
+      "pcon24cd": "E14001340",
+      "pcon24nm": "Liverpool Wavertree",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001341": {
+      "pcon24cd": "E14001341",
+      "pcon24nm": "Liverpool West Derby",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001342": {
+      "pcon24cd": "E14001342",
+      "pcon24nm": "Loughborough",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001343": {
+      "pcon24cd": "E14001343",
+      "pcon24nm": "Louth and Horncastle",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001344": {
+      "pcon24cd": "E14001344",
+      "pcon24nm": "Lowestoft",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001345": {
+      "pcon24cd": "E14001345",
+      "pcon24nm": "Luton North",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001346": {
+      "pcon24cd": "E14001346",
+      "pcon24nm": "Luton South and South Bedfordshire",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001347": {
+      "pcon24cd": "E14001347",
+      "pcon24nm": "Macclesfield",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001348": {
+      "pcon24cd": "E14001348",
+      "pcon24nm": "Maidenhead",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001349": {
+      "pcon24cd": "E14001349",
+      "pcon24nm": "Maidstone and Malling",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001350": {
+      "pcon24cd": "E14001350",
+      "pcon24nm": "Makerfield",
+      "reform": {
+        "standing": "yes",
+        "name": "Rob Kenyon",
+        "person_id": "98226",
+        "party_id": "PP7931",
+        "party_name": "Reform UK",
+        "ballot_paper_id": "parl.makerfield.by.2026-06-18",
+        "election_id": "parl.2026-06-18",
+        "election_date": "2026-06-18",
+        "election_current": false,
+        "wcivf_url": "https://whocanivotefor.co.uk/elections/parl.makerfield.by.2026-06-18/",
+        "dc_person_url": "https://candidates.democracyclub.org.uk/person/98226/"
+      },
+      "restore": {
+        "standing": "yes",
+        "name": "Rebecca Shepherd",
+        "person_id": "139187",
+        "party_id": "PP18382",
+        "party_name": "Restore Britain",
+        "ballot_paper_id": "parl.makerfield.by.2026-06-18",
+        "election_id": "parl.2026-06-18",
+        "election_date": "2026-06-18",
+        "election_current": false,
+        "wcivf_url": "https://whocanivotefor.co.uk/elections/parl.makerfield.by.2026-06-18/",
+        "dc_person_url": "https://candidates.democracyclub.org.uk/person/139187/"
+      }
+    },
+    "E14001351": {
+      "pcon24cd": "E14001351",
+      "pcon24nm": "Maldon",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001352": {
+      "pcon24cd": "E14001352",
+      "pcon24nm": "Manchester Central",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001353": {
+      "pcon24cd": "E14001353",
+      "pcon24nm": "Manchester Rusholme",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001354": {
+      "pcon24cd": "E14001354",
+      "pcon24nm": "Manchester Withington",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001355": {
+      "pcon24cd": "E14001355",
+      "pcon24nm": "Mansfield",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001356": {
+      "pcon24cd": "E14001356",
+      "pcon24nm": "Melksham and Devizes",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001357": {
+      "pcon24cd": "E14001357",
+      "pcon24nm": "Melton and Syston",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001358": {
+      "pcon24cd": "E14001358",
+      "pcon24nm": "Meriden and Solihull East",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001359": {
+      "pcon24cd": "E14001359",
+      "pcon24nm": "Mid Bedfordshire",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001360": {
+      "pcon24cd": "E14001360",
+      "pcon24nm": "Mid Buckinghamshire",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001361": {
+      "pcon24cd": "E14001361",
+      "pcon24nm": "Mid Cheshire",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001362": {
+      "pcon24cd": "E14001362",
+      "pcon24nm": "Mid Derbyshire",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001363": {
+      "pcon24cd": "E14001363",
+      "pcon24nm": "Mid Dorset and North Poole",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001364": {
+      "pcon24cd": "E14001364",
+      "pcon24nm": "Mid Leicestershire",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001365": {
+      "pcon24cd": "E14001365",
+      "pcon24nm": "Mid Norfolk",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001366": {
+      "pcon24cd": "E14001366",
+      "pcon24nm": "Mid Sussex",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001367": {
+      "pcon24cd": "E14001367",
+      "pcon24nm": "Middlesbrough and Thornaby East",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001368": {
+      "pcon24cd": "E14001368",
+      "pcon24nm": "Middlesbrough South and East Cleveland",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001369": {
+      "pcon24cd": "E14001369",
+      "pcon24nm": "Milton Keynes Central",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001370": {
+      "pcon24cd": "E14001370",
+      "pcon24nm": "Milton Keynes North",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001371": {
+      "pcon24cd": "E14001371",
+      "pcon24nm": "Mitcham and Morden",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001372": {
+      "pcon24cd": "E14001372",
+      "pcon24nm": "Morecambe and Lunesdale",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001373": {
+      "pcon24cd": "E14001373",
+      "pcon24nm": "New Forest East",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001374": {
+      "pcon24cd": "E14001374",
+      "pcon24nm": "New Forest West",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001375": {
+      "pcon24cd": "E14001375",
+      "pcon24nm": "Newark",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001376": {
+      "pcon24cd": "E14001376",
+      "pcon24nm": "Newbury",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001377": {
+      "pcon24cd": "E14001377",
+      "pcon24nm": "Newcastle upon Tyne Central and West",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001378": {
+      "pcon24cd": "E14001378",
+      "pcon24nm": "Newcastle upon Tyne East and Wallsend",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001379": {
+      "pcon24cd": "E14001379",
+      "pcon24nm": "Newcastle upon Tyne North",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001380": {
+      "pcon24cd": "E14001380",
+      "pcon24nm": "Newcastle-under-Lyme",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001381": {
+      "pcon24cd": "E14001381",
+      "pcon24nm": "Newton Abbot",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001382": {
+      "pcon24cd": "E14001382",
+      "pcon24nm": "Newton Aycliffe and Spennymoor",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001383": {
+      "pcon24cd": "E14001383",
+      "pcon24nm": "Normanton and Hemsworth",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001384": {
+      "pcon24cd": "E14001384",
+      "pcon24nm": "North Bedfordshire",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001385": {
+      "pcon24cd": "E14001385",
+      "pcon24nm": "North Cornwall",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001386": {
+      "pcon24cd": "E14001386",
+      "pcon24nm": "North Cotswolds",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001387": {
+      "pcon24cd": "E14001387",
+      "pcon24nm": "North Devon",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001388": {
+      "pcon24cd": "E14001388",
+      "pcon24nm": "North Dorset",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001389": {
+      "pcon24cd": "E14001389",
+      "pcon24nm": "North Durham",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001390": {
+      "pcon24cd": "E14001390",
+      "pcon24nm": "North East Cambridgeshire",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001391": {
+      "pcon24cd": "E14001391",
+      "pcon24nm": "North East Derbyshire",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001392": {
+      "pcon24cd": "E14001392",
+      "pcon24nm": "North East Hampshire",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001393": {
+      "pcon24cd": "E14001393",
+      "pcon24nm": "North East Hertfordshire",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001394": {
+      "pcon24cd": "E14001394",
+      "pcon24nm": "North East Somerset and Hanham",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001395": {
+      "pcon24cd": "E14001395",
+      "pcon24nm": "North Herefordshire",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001396": {
+      "pcon24cd": "E14001396",
+      "pcon24nm": "North Norfolk",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001397": {
+      "pcon24cd": "E14001397",
+      "pcon24nm": "North Northumberland",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001398": {
+      "pcon24cd": "E14001398",
+      "pcon24nm": "North Shropshire",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001399": {
+      "pcon24cd": "E14001399",
+      "pcon24nm": "North Somerset",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001400": {
+      "pcon24cd": "E14001400",
+      "pcon24nm": "North Warwickshire and Bedworth",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001401": {
+      "pcon24cd": "E14001401",
+      "pcon24nm": "North West Cambridgeshire",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001402": {
+      "pcon24cd": "E14001402",
+      "pcon24nm": "North West Essex",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001403": {
+      "pcon24cd": "E14001403",
+      "pcon24nm": "North West Hampshire",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001404": {
+      "pcon24cd": "E14001404",
+      "pcon24nm": "North West Leicestershire",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001405": {
+      "pcon24cd": "E14001405",
+      "pcon24nm": "North West Norfolk",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001406": {
+      "pcon24cd": "E14001406",
+      "pcon24nm": "Northampton North",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001407": {
+      "pcon24cd": "E14001407",
+      "pcon24nm": "Northampton South",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001408": {
+      "pcon24cd": "E14001408",
+      "pcon24nm": "Norwich North",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001409": {
+      "pcon24cd": "E14001409",
+      "pcon24nm": "Norwich South",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001410": {
+      "pcon24cd": "E14001410",
+      "pcon24nm": "Nottingham East",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001411": {
+      "pcon24cd": "E14001411",
+      "pcon24nm": "Nottingham North and Kimberley",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001412": {
+      "pcon24cd": "E14001412",
+      "pcon24nm": "Nottingham South",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001413": {
+      "pcon24cd": "E14001413",
+      "pcon24nm": "Nuneaton",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001414": {
+      "pcon24cd": "E14001414",
+      "pcon24nm": "Old Bexley and Sidcup",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001415": {
+      "pcon24cd": "E14001415",
+      "pcon24nm": "Oldham East and Saddleworth",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001416": {
+      "pcon24cd": "E14001416",
+      "pcon24nm": "Oldham West, Chadderton and Royton",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001417": {
+      "pcon24cd": "E14001417",
+      "pcon24nm": "Orpington",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001418": {
+      "pcon24cd": "E14001418",
+      "pcon24nm": "Ossett and Denby Dale",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001419": {
+      "pcon24cd": "E14001419",
+      "pcon24nm": "Oxford East",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001420": {
+      "pcon24cd": "E14001420",
+      "pcon24nm": "Oxford West and Abingdon",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001421": {
+      "pcon24cd": "E14001421",
+      "pcon24nm": "Peckham",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001422": {
+      "pcon24cd": "E14001422",
+      "pcon24nm": "Pendle and Clitheroe",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001423": {
+      "pcon24cd": "E14001423",
+      "pcon24nm": "Penistone and Stocksbridge",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001424": {
+      "pcon24cd": "E14001424",
+      "pcon24nm": "Penrith and Solway",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001425": {
+      "pcon24cd": "E14001425",
+      "pcon24nm": "Peterborough",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001426": {
+      "pcon24cd": "E14001426",
+      "pcon24nm": "Plymouth Moor View",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001427": {
+      "pcon24cd": "E14001427",
+      "pcon24nm": "Plymouth Sutton and Devonport",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001428": {
+      "pcon24cd": "E14001428",
+      "pcon24nm": "Pontefract, Castleford and Knottingley",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001429": {
+      "pcon24cd": "E14001429",
+      "pcon24nm": "Poole",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001430": {
+      "pcon24cd": "E14001430",
+      "pcon24nm": "Poplar and Limehouse",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001431": {
+      "pcon24cd": "E14001431",
+      "pcon24nm": "Portsmouth North",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001432": {
+      "pcon24cd": "E14001432",
+      "pcon24nm": "Portsmouth South",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001433": {
+      "pcon24cd": "E14001433",
+      "pcon24nm": "Preston",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001434": {
+      "pcon24cd": "E14001434",
+      "pcon24nm": "Putney",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001435": {
+      "pcon24cd": "E14001435",
+      "pcon24nm": "Queen's Park and Maida Vale",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001436": {
+      "pcon24cd": "E14001436",
+      "pcon24nm": "Rawmarsh and Conisbrough",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001437": {
+      "pcon24cd": "E14001437",
+      "pcon24nm": "Rayleigh and Wickford",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001438": {
+      "pcon24cd": "E14001438",
+      "pcon24nm": "Reading Central",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001439": {
+      "pcon24cd": "E14001439",
+      "pcon24nm": "Reading West and Mid Berkshire",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001440": {
+      "pcon24cd": "E14001440",
+      "pcon24nm": "Redcar",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001441": {
+      "pcon24cd": "E14001441",
+      "pcon24nm": "Redditch",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001442": {
+      "pcon24cd": "E14001442",
+      "pcon24nm": "Reigate",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001443": {
+      "pcon24cd": "E14001443",
+      "pcon24nm": "Ribble Valley",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001444": {
+      "pcon24cd": "E14001444",
+      "pcon24nm": "Richmond and Northallerton",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001445": {
+      "pcon24cd": "E14001445",
+      "pcon24nm": "Richmond Park",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001446": {
+      "pcon24cd": "E14001446",
+      "pcon24nm": "Rochdale",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001447": {
+      "pcon24cd": "E14001447",
+      "pcon24nm": "Rochester and Strood",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001448": {
+      "pcon24cd": "E14001448",
+      "pcon24nm": "Romford",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001449": {
+      "pcon24cd": "E14001449",
+      "pcon24nm": "Romsey and Southampton North",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001450": {
+      "pcon24cd": "E14001450",
+      "pcon24nm": "Rossendale and Darwen",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001451": {
+      "pcon24cd": "E14001451",
+      "pcon24nm": "Rother Valley",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001452": {
+      "pcon24cd": "E14001452",
+      "pcon24nm": "Rotherham",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001453": {
+      "pcon24cd": "E14001453",
+      "pcon24nm": "Rugby",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001454": {
+      "pcon24cd": "E14001454",
+      "pcon24nm": "Ruislip, Northwood and Pinner",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001455": {
+      "pcon24cd": "E14001455",
+      "pcon24nm": "Runcorn and Helsby",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001456": {
+      "pcon24cd": "E14001456",
+      "pcon24nm": "Runnymede and Weybridge",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001457": {
+      "pcon24cd": "E14001457",
+      "pcon24nm": "Rushcliffe",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001458": {
+      "pcon24cd": "E14001458",
+      "pcon24nm": "Rutland and Stamford",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001459": {
+      "pcon24cd": "E14001459",
+      "pcon24nm": "Salford",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001460": {
+      "pcon24cd": "E14001460",
+      "pcon24nm": "Salisbury",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001461": {
+      "pcon24cd": "E14001461",
+      "pcon24nm": "Scarborough and Whitby",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001462": {
+      "pcon24cd": "E14001462",
+      "pcon24nm": "Scunthorpe",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001463": {
+      "pcon24cd": "E14001463",
+      "pcon24nm": "Sefton Central",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001464": {
+      "pcon24cd": "E14001464",
+      "pcon24nm": "Selby",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001465": {
+      "pcon24cd": "E14001465",
+      "pcon24nm": "Sevenoaks",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001466": {
+      "pcon24cd": "E14001466",
+      "pcon24nm": "Sheffield Brightside and Hillsborough",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001467": {
+      "pcon24cd": "E14001467",
+      "pcon24nm": "Sheffield Central",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001468": {
+      "pcon24cd": "E14001468",
+      "pcon24nm": "Sheffield Hallam",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001469": {
+      "pcon24cd": "E14001469",
+      "pcon24nm": "Sheffield Heeley",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001470": {
+      "pcon24cd": "E14001470",
+      "pcon24nm": "Sheffield South East",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001471": {
+      "pcon24cd": "E14001471",
+      "pcon24nm": "Sherwood Forest",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001472": {
+      "pcon24cd": "E14001472",
+      "pcon24nm": "Shipley",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001473": {
+      "pcon24cd": "E14001473",
+      "pcon24nm": "Shrewsbury",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001474": {
+      "pcon24cd": "E14001474",
+      "pcon24nm": "Sittingbourne and Sheppey",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001475": {
+      "pcon24cd": "E14001475",
+      "pcon24nm": "Skipton and Ripon",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001476": {
+      "pcon24cd": "E14001476",
+      "pcon24nm": "Sleaford and North Hykeham",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001477": {
+      "pcon24cd": "E14001477",
+      "pcon24nm": "Slough",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001478": {
+      "pcon24cd": "E14001478",
+      "pcon24nm": "Smethwick",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001479": {
+      "pcon24cd": "E14001479",
+      "pcon24nm": "Solihull West and Shirley",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001480": {
+      "pcon24cd": "E14001480",
+      "pcon24nm": "South Basildon and East Thurrock",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001481": {
+      "pcon24cd": "E14001481",
+      "pcon24nm": "South Cambridgeshire",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001482": {
+      "pcon24cd": "E14001482",
+      "pcon24nm": "South Cotswolds",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001483": {
+      "pcon24cd": "E14001483",
+      "pcon24nm": "South Derbyshire",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001484": {
+      "pcon24cd": "E14001484",
+      "pcon24nm": "South Devon",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001485": {
+      "pcon24cd": "E14001485",
+      "pcon24nm": "South Dorset",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001486": {
+      "pcon24cd": "E14001486",
+      "pcon24nm": "South East Cornwall",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001487": {
+      "pcon24cd": "E14001487",
+      "pcon24nm": "South Holland and The Deepings",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001488": {
+      "pcon24cd": "E14001488",
+      "pcon24nm": "South Leicestershire",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001489": {
+      "pcon24cd": "E14001489",
+      "pcon24nm": "South Norfolk",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001490": {
+      "pcon24cd": "E14001490",
+      "pcon24nm": "South Northamptonshire",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001491": {
+      "pcon24cd": "E14001491",
+      "pcon24nm": "South Ribble",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001492": {
+      "pcon24cd": "E14001492",
+      "pcon24nm": "South Shields",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001493": {
+      "pcon24cd": "E14001493",
+      "pcon24nm": "South Shropshire",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001494": {
+      "pcon24cd": "E14001494",
+      "pcon24nm": "South Suffolk",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001495": {
+      "pcon24cd": "E14001495",
+      "pcon24nm": "South West Devon",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001496": {
+      "pcon24cd": "E14001496",
+      "pcon24nm": "South West Hertfordshire",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001497": {
+      "pcon24cd": "E14001497",
+      "pcon24nm": "South West Norfolk",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001498": {
+      "pcon24cd": "E14001498",
+      "pcon24nm": "South West Wiltshire",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001499": {
+      "pcon24cd": "E14001499",
+      "pcon24nm": "Southampton Itchen",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001500": {
+      "pcon24cd": "E14001500",
+      "pcon24nm": "Southampton Test",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001501": {
+      "pcon24cd": "E14001501",
+      "pcon24nm": "Southend East and Rochford",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001502": {
+      "pcon24cd": "E14001502",
+      "pcon24nm": "Southend West and Leigh",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001503": {
+      "pcon24cd": "E14001503",
+      "pcon24nm": "Southgate and Wood Green",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001504": {
+      "pcon24cd": "E14001504",
+      "pcon24nm": "Southport",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001505": {
+      "pcon24cd": "E14001505",
+      "pcon24nm": "Spelthorne",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001506": {
+      "pcon24cd": "E14001506",
+      "pcon24nm": "Spen Valley",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001507": {
+      "pcon24cd": "E14001507",
+      "pcon24nm": "St Albans",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001508": {
+      "pcon24cd": "E14001508",
+      "pcon24nm": "St Austell and Newquay",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001509": {
+      "pcon24cd": "E14001509",
+      "pcon24nm": "St Helens North",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001510": {
+      "pcon24cd": "E14001510",
+      "pcon24nm": "St Helens South and Whiston",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001511": {
+      "pcon24cd": "E14001511",
+      "pcon24nm": "St Ives",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001512": {
+      "pcon24cd": "E14001512",
+      "pcon24nm": "St Neots and Mid Cambridgeshire",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001513": {
+      "pcon24cd": "E14001513",
+      "pcon24nm": "Stafford",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001514": {
+      "pcon24cd": "E14001514",
+      "pcon24nm": "Staffordshire Moorlands",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001515": {
+      "pcon24cd": "E14001515",
+      "pcon24nm": "Stalybridge and Hyde",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001516": {
+      "pcon24cd": "E14001516",
+      "pcon24nm": "Stevenage",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001517": {
+      "pcon24cd": "E14001517",
+      "pcon24nm": "Stockport",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001518": {
+      "pcon24cd": "E14001518",
+      "pcon24nm": "Stockton North",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001519": {
+      "pcon24cd": "E14001519",
+      "pcon24nm": "Stockton West",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001520": {
+      "pcon24cd": "E14001520",
+      "pcon24nm": "Stoke-on-Trent Central",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001521": {
+      "pcon24cd": "E14001521",
+      "pcon24nm": "Stoke-on-Trent North",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001522": {
+      "pcon24cd": "E14001522",
+      "pcon24nm": "Stoke-on-Trent South",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001523": {
+      "pcon24cd": "E14001523",
+      "pcon24nm": "Stone, Great Wyrley and Penkridge",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001524": {
+      "pcon24cd": "E14001524",
+      "pcon24nm": "Stourbridge",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001525": {
+      "pcon24cd": "E14001525",
+      "pcon24nm": "Stratford and Bow",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001526": {
+      "pcon24cd": "E14001526",
+      "pcon24nm": "Stratford-on-Avon",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001527": {
+      "pcon24cd": "E14001527",
+      "pcon24nm": "Streatham and Croydon North",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001528": {
+      "pcon24cd": "E14001528",
+      "pcon24nm": "Stretford and Urmston",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001529": {
+      "pcon24cd": "E14001529",
+      "pcon24nm": "Stroud",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001530": {
+      "pcon24cd": "E14001530",
+      "pcon24nm": "Suffolk Coastal",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001531": {
+      "pcon24cd": "E14001531",
+      "pcon24nm": "Sunderland Central",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001532": {
+      "pcon24cd": "E14001532",
+      "pcon24nm": "Surrey Heath",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001533": {
+      "pcon24cd": "E14001533",
+      "pcon24nm": "Sussex Weald",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001534": {
+      "pcon24cd": "E14001534",
+      "pcon24nm": "Sutton and Cheam",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001535": {
+      "pcon24cd": "E14001535",
+      "pcon24nm": "Sutton Coldfield",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001536": {
+      "pcon24cd": "E14001536",
+      "pcon24nm": "Swindon North",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001537": {
+      "pcon24cd": "E14001537",
+      "pcon24nm": "Swindon South",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001538": {
+      "pcon24cd": "E14001538",
+      "pcon24nm": "Tamworth",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001539": {
+      "pcon24cd": "E14001539",
+      "pcon24nm": "Tatton",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001540": {
+      "pcon24cd": "E14001540",
+      "pcon24nm": "Taunton and Wellington",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001541": {
+      "pcon24cd": "E14001541",
+      "pcon24nm": "Telford",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001542": {
+      "pcon24cd": "E14001542",
+      "pcon24nm": "Tewkesbury",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001543": {
+      "pcon24cd": "E14001543",
+      "pcon24nm": "The Wrekin",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001544": {
+      "pcon24cd": "E14001544",
+      "pcon24nm": "Thirsk and Malton",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001545": {
+      "pcon24cd": "E14001545",
+      "pcon24nm": "Thornbury and Yate",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001546": {
+      "pcon24cd": "E14001546",
+      "pcon24nm": "Thurrock",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001547": {
+      "pcon24cd": "E14001547",
+      "pcon24nm": "Tipton and Wednesbury",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001548": {
+      "pcon24cd": "E14001548",
+      "pcon24nm": "Tiverton and Minehead",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001549": {
+      "pcon24cd": "E14001549",
+      "pcon24nm": "Tonbridge",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001550": {
+      "pcon24cd": "E14001550",
+      "pcon24nm": "Tooting",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001551": {
+      "pcon24cd": "E14001551",
+      "pcon24nm": "Torbay",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001552": {
+      "pcon24cd": "E14001552",
+      "pcon24nm": "Torridge and Tavistock",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001553": {
+      "pcon24cd": "E14001553",
+      "pcon24nm": "Tottenham",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001554": {
+      "pcon24cd": "E14001554",
+      "pcon24nm": "Truro and Falmouth",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001555": {
+      "pcon24cd": "E14001555",
+      "pcon24nm": "Tunbridge Wells",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001556": {
+      "pcon24cd": "E14001556",
+      "pcon24nm": "Twickenham",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001557": {
+      "pcon24cd": "E14001557",
+      "pcon24nm": "Tynemouth",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001558": {
+      "pcon24cd": "E14001558",
+      "pcon24nm": "Uxbridge and South Ruislip",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001559": {
+      "pcon24cd": "E14001559",
+      "pcon24nm": "Vauxhall and Camberwell Green",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001560": {
+      "pcon24cd": "E14001560",
+      "pcon24nm": "Wakefield and Rothwell",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001561": {
+      "pcon24cd": "E14001561",
+      "pcon24nm": "Wallasey",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001562": {
+      "pcon24cd": "E14001562",
+      "pcon24nm": "Walsall and Bloxwich",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001563": {
+      "pcon24cd": "E14001563",
+      "pcon24nm": "Walthamstow",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001564": {
+      "pcon24cd": "E14001564",
+      "pcon24nm": "Warrington North",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001565": {
+      "pcon24cd": "E14001565",
+      "pcon24nm": "Warrington South",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001566": {
+      "pcon24cd": "E14001566",
+      "pcon24nm": "Warwick and Leamington",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001567": {
+      "pcon24cd": "E14001567",
+      "pcon24nm": "Washington and Gateshead South",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001568": {
+      "pcon24cd": "E14001568",
+      "pcon24nm": "Watford",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001569": {
+      "pcon24cd": "E14001569",
+      "pcon24nm": "Waveney Valley",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001570": {
+      "pcon24cd": "E14001570",
+      "pcon24nm": "Weald of Kent",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001571": {
+      "pcon24cd": "E14001571",
+      "pcon24nm": "Wellingborough and Rushden",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001572": {
+      "pcon24cd": "E14001572",
+      "pcon24nm": "Wells and Mendip Hills",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001573": {
+      "pcon24cd": "E14001573",
+      "pcon24nm": "Welwyn Hatfield",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001574": {
+      "pcon24cd": "E14001574",
+      "pcon24nm": "West Bromwich",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001575": {
+      "pcon24cd": "E14001575",
+      "pcon24nm": "West Dorset",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001576": {
+      "pcon24cd": "E14001576",
+      "pcon24nm": "West Ham and Beckton",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001577": {
+      "pcon24cd": "E14001577",
+      "pcon24nm": "West Lancashire",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001578": {
+      "pcon24cd": "E14001578",
+      "pcon24nm": "West Suffolk",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001579": {
+      "pcon24cd": "E14001579",
+      "pcon24nm": "West Worcestershire",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001580": {
+      "pcon24cd": "E14001580",
+      "pcon24nm": "Westmorland and Lonsdale",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001581": {
+      "pcon24cd": "E14001581",
+      "pcon24nm": "Weston-super-Mare",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001582": {
+      "pcon24cd": "E14001582",
+      "pcon24nm": "Wetherby and Easingwold",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001583": {
+      "pcon24cd": "E14001583",
+      "pcon24nm": "Whitehaven and Workington",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001584": {
+      "pcon24cd": "E14001584",
+      "pcon24nm": "Widnes and Halewood",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001585": {
+      "pcon24cd": "E14001585",
+      "pcon24nm": "Wigan",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001586": {
+      "pcon24cd": "E14001586",
+      "pcon24nm": "Wimbledon",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001587": {
+      "pcon24cd": "E14001587",
+      "pcon24nm": "Winchester",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001588": {
+      "pcon24cd": "E14001588",
+      "pcon24nm": "Windsor",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001589": {
+      "pcon24cd": "E14001589",
+      "pcon24nm": "Wirral West",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001590": {
+      "pcon24cd": "E14001590",
+      "pcon24nm": "Witham",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001591": {
+      "pcon24cd": "E14001591",
+      "pcon24nm": "Witney",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001592": {
+      "pcon24cd": "E14001592",
+      "pcon24nm": "Woking",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001593": {
+      "pcon24cd": "E14001593",
+      "pcon24nm": "Wokingham",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001594": {
+      "pcon24cd": "E14001594",
+      "pcon24nm": "Wolverhampton North East",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001595": {
+      "pcon24cd": "E14001595",
+      "pcon24nm": "Wolverhampton South East",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001596": {
+      "pcon24cd": "E14001596",
+      "pcon24nm": "Wolverhampton West",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001597": {
+      "pcon24cd": "E14001597",
+      "pcon24nm": "Worcester",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001598": {
+      "pcon24cd": "E14001598",
+      "pcon24nm": "Worsley and Eccles",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001599": {
+      "pcon24cd": "E14001599",
+      "pcon24nm": "Worthing West",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001600": {
+      "pcon24cd": "E14001600",
+      "pcon24nm": "Wycombe",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001601": {
+      "pcon24cd": "E14001601",
+      "pcon24nm": "Wyre Forest",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001602": {
+      "pcon24cd": "E14001602",
+      "pcon24nm": "Wythenshawe and Sale East",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001603": {
+      "pcon24cd": "E14001603",
+      "pcon24nm": "Yeovil",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001604": {
+      "pcon24cd": "E14001604",
+      "pcon24nm": "York Central",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "E14001605": {
+      "pcon24cd": "E14001605",
+      "pcon24nm": "York Outer",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000021": {
+      "pcon24cd": "S14000021",
+      "pcon24nm": "East Renfrewshire",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000027": {
+      "pcon24cd": "S14000027",
+      "pcon24nm": "Na h-Eileanan an Iar",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000045": {
+      "pcon24cd": "S14000045",
+      "pcon24nm": "Midlothian",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000048": {
+      "pcon24cd": "S14000048",
+      "pcon24nm": "North Ayrshire and Arran",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000051": {
+      "pcon24cd": "S14000051",
+      "pcon24nm": "Orkney and Shetland",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000060": {
+      "pcon24cd": "S14000060",
+      "pcon24nm": "Aberdeen North",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000061": {
+      "pcon24cd": "S14000061",
+      "pcon24nm": "Aberdeen South",
+      "reform": {
+        "standing": "yes",
+        "name": "Jo Hart",
+        "person_id": "117298",
+        "party_id": "PP7931",
+        "party_name": "Reform UK",
+        "ballot_paper_id": "parl.aberdeen-south.by.2026-06-18",
+        "election_id": "parl.2026-06-18",
+        "election_date": "2026-06-18",
+        "election_current": false,
+        "wcivf_url": "https://whocanivotefor.co.uk/elections/parl.aberdeen-south.by.2026-06-18/",
+        "dc_person_url": "https://candidates.democracyclub.org.uk/person/117298/"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000062": {
+      "pcon24cd": "S14000062",
+      "pcon24nm": "Aberdeenshire North and Moray East",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000063": {
+      "pcon24cd": "S14000063",
+      "pcon24nm": "Airdrie and Shotts",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000064": {
+      "pcon24cd": "S14000064",
+      "pcon24nm": "Alloa and Grangemouth",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000065": {
+      "pcon24cd": "S14000065",
+      "pcon24nm": "Angus and Perthshire Glens",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000066": {
+      "pcon24cd": "S14000066",
+      "pcon24nm": "Arbroath and Broughty Ferry",
+      "reform": {
+        "standing": "yes",
+        "name": "Bill Reid",
+        "person_id": "125014",
+        "party_id": "PP7931",
+        "party_name": "Reform UK",
+        "ballot_paper_id": "parl.arbroath-and-broughty-ferry.by.2026-06-18",
+        "election_id": "parl.2026-06-18",
+        "election_date": "2026-06-18",
+        "election_current": false,
+        "wcivf_url": "https://whocanivotefor.co.uk/elections/parl.arbroath-and-broughty-ferry.by.2026-06-18/",
+        "dc_person_url": "https://candidates.democracyclub.org.uk/person/125014/"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000067": {
+      "pcon24cd": "S14000067",
+      "pcon24nm": "Argyll, Bute and South Lochaber",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000068": {
+      "pcon24cd": "S14000068",
+      "pcon24nm": "Bathgate and Linlithgow",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000069": {
+      "pcon24cd": "S14000069",
+      "pcon24nm": "Caithness, Sutherland and Easter Ross",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000070": {
+      "pcon24cd": "S14000070",
+      "pcon24nm": "Coatbridge and Bellshill",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000071": {
+      "pcon24cd": "S14000071",
+      "pcon24nm": "Cowdenbeath and Kirkcaldy",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000072": {
+      "pcon24cd": "S14000072",
+      "pcon24nm": "Cumbernauld and Kirkintilloch",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000073": {
+      "pcon24cd": "S14000073",
+      "pcon24nm": "Dumfries and Galloway",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000074": {
+      "pcon24cd": "S14000074",
+      "pcon24nm": "Dumfriesshire, Clydesdale and Tweeddale",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000075": {
+      "pcon24cd": "S14000075",
+      "pcon24nm": "Dundee Central",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000076": {
+      "pcon24cd": "S14000076",
+      "pcon24nm": "Dunfermline and Dollar",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000077": {
+      "pcon24cd": "S14000077",
+      "pcon24nm": "East Kilbride and Strathaven",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000078": {
+      "pcon24cd": "S14000078",
+      "pcon24nm": "Edinburgh East and Musselburgh",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000079": {
+      "pcon24cd": "S14000079",
+      "pcon24nm": "Edinburgh North and Leith",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000080": {
+      "pcon24cd": "S14000080",
+      "pcon24nm": "Edinburgh South",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000081": {
+      "pcon24cd": "S14000081",
+      "pcon24nm": "Edinburgh South West",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000082": {
+      "pcon24cd": "S14000082",
+      "pcon24nm": "Edinburgh West",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000083": {
+      "pcon24cd": "S14000083",
+      "pcon24nm": "Falkirk",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000084": {
+      "pcon24cd": "S14000084",
+      "pcon24nm": "Glasgow East",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000085": {
+      "pcon24cd": "S14000085",
+      "pcon24nm": "Glasgow North",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000086": {
+      "pcon24cd": "S14000086",
+      "pcon24nm": "Glasgow North East",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000087": {
+      "pcon24cd": "S14000087",
+      "pcon24nm": "Glasgow South",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000088": {
+      "pcon24cd": "S14000088",
+      "pcon24nm": "Glasgow South West",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000089": {
+      "pcon24cd": "S14000089",
+      "pcon24nm": "Glasgow West",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000090": {
+      "pcon24cd": "S14000090",
+      "pcon24nm": "Glenrothes and Mid Fife",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000091": {
+      "pcon24cd": "S14000091",
+      "pcon24nm": "Gordon and Buchan",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000092": {
+      "pcon24cd": "S14000092",
+      "pcon24nm": "Hamilton and Clyde Valley",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000093": {
+      "pcon24cd": "S14000093",
+      "pcon24nm": "Inverclyde and Renfrewshire West",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000094": {
+      "pcon24cd": "S14000094",
+      "pcon24nm": "Inverness, Skye and West Ross-shire",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000095": {
+      "pcon24cd": "S14000095",
+      "pcon24nm": "Livingston",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000096": {
+      "pcon24cd": "S14000096",
+      "pcon24nm": "Lothian East",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000097": {
+      "pcon24cd": "S14000097",
+      "pcon24nm": "Mid Dunbartonshire",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000098": {
+      "pcon24cd": "S14000098",
+      "pcon24nm": "Moray West, Nairn and Strathspey",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000099": {
+      "pcon24cd": "S14000099",
+      "pcon24nm": "Motherwell, Wishaw and Carluke",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000100": {
+      "pcon24cd": "S14000100",
+      "pcon24nm": "North East Fife",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000101": {
+      "pcon24cd": "S14000101",
+      "pcon24nm": "Paisley and Renfrewshire North",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000102": {
+      "pcon24cd": "S14000102",
+      "pcon24nm": "Paisley and Renfrewshire South",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000103": {
+      "pcon24cd": "S14000103",
+      "pcon24nm": "Perth and Kinross-shire",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000104": {
+      "pcon24cd": "S14000104",
+      "pcon24nm": "Rutherglen",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000105": {
+      "pcon24cd": "S14000105",
+      "pcon24nm": "Stirling and Strathallan",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000106": {
+      "pcon24cd": "S14000106",
+      "pcon24nm": "West Dunbartonshire",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000107": {
+      "pcon24cd": "S14000107",
+      "pcon24nm": "Ayr, Carrick and Cumnock",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000108": {
+      "pcon24cd": "S14000108",
+      "pcon24nm": "Berwickshire, Roxburgh and Selkirk",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000109": {
+      "pcon24cd": "S14000109",
+      "pcon24nm": "Central Ayrshire",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000110": {
+      "pcon24cd": "S14000110",
+      "pcon24nm": "Kilmarnock and Loudoun",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "S14000111": {
+      "pcon24cd": "S14000111",
+      "pcon24nm": "West Aberdeenshire and Kincardine",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "W07000081": {
+      "pcon24cd": "W07000081",
+      "pcon24nm": "Aberafan Maesteg",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "W07000082": {
+      "pcon24cd": "W07000082",
+      "pcon24nm": "Alyn and Deeside",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "W07000083": {
+      "pcon24cd": "W07000083",
+      "pcon24nm": "Bangor Aberconwy",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "W07000084": {
+      "pcon24cd": "W07000084",
+      "pcon24nm": "Blaenau Gwent and Rhymney",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "W07000085": {
+      "pcon24cd": "W07000085",
+      "pcon24nm": "Brecon, Radnor and Cwm Tawe",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "W07000086": {
+      "pcon24cd": "W07000086",
+      "pcon24nm": "Bridgend",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "W07000087": {
+      "pcon24cd": "W07000087",
+      "pcon24nm": "Caerfyrddin",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "W07000088": {
+      "pcon24cd": "W07000088",
+      "pcon24nm": "Caerphilly",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "W07000089": {
+      "pcon24cd": "W07000089",
+      "pcon24nm": "Cardiff East",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "W07000090": {
+      "pcon24cd": "W07000090",
+      "pcon24nm": "Cardiff North",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "W07000091": {
+      "pcon24cd": "W07000091",
+      "pcon24nm": "Cardiff South and Penarth",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "W07000092": {
+      "pcon24cd": "W07000092",
+      "pcon24nm": "Cardiff West",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "W07000093": {
+      "pcon24cd": "W07000093",
+      "pcon24nm": "Ceredigion Preseli",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "W07000094": {
+      "pcon24cd": "W07000094",
+      "pcon24nm": "Clwyd East",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "W07000095": {
+      "pcon24cd": "W07000095",
+      "pcon24nm": "Clwyd North",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "W07000096": {
+      "pcon24cd": "W07000096",
+      "pcon24nm": "Dwyfor Meirionnydd",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "W07000097": {
+      "pcon24cd": "W07000097",
+      "pcon24nm": "Gower",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "W07000098": {
+      "pcon24cd": "W07000098",
+      "pcon24nm": "Llanelli",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "W07000099": {
+      "pcon24cd": "W07000099",
+      "pcon24nm": "Merthyr Tydfil and Aberdare",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "W07000100": {
+      "pcon24cd": "W07000100",
+      "pcon24nm": "Mid and South Pembrokeshire",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "W07000101": {
+      "pcon24cd": "W07000101",
+      "pcon24nm": "Monmouthshire",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "W07000102": {
+      "pcon24cd": "W07000102",
+      "pcon24nm": "Montgomeryshire and Glyndwr",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "W07000103": {
+      "pcon24cd": "W07000103",
+      "pcon24nm": "Neath and Swansea East",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "W07000104": {
+      "pcon24cd": "W07000104",
+      "pcon24nm": "Newport East",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "W07000105": {
+      "pcon24cd": "W07000105",
+      "pcon24nm": "Newport West and Islwyn",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "W07000106": {
+      "pcon24cd": "W07000106",
+      "pcon24nm": "Pontypridd",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "W07000107": {
+      "pcon24cd": "W07000107",
+      "pcon24nm": "Rhondda and Ogmore",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "W07000108": {
+      "pcon24cd": "W07000108",
+      "pcon24nm": "Swansea West",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "W07000109": {
+      "pcon24cd": "W07000109",
+      "pcon24nm": "Torfaen",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "W07000110": {
+      "pcon24cd": "W07000110",
+      "pcon24nm": "Vale of Glamorgan",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "W07000111": {
+      "pcon24cd": "W07000111",
+      "pcon24nm": "Wrexham",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    },
+    "W07000112": {
+      "pcon24cd": "W07000112",
+      "pcon24nm": "Ynys Môn",
+      "reform": {
+        "standing": "unknown"
+      },
+      "restore": {
+        "standing": "unknown"
+      }
+    }
+  }
+}

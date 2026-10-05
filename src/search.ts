@@ -40,9 +40,29 @@ async function remoteHits(query: string, signal: AbortSignal): Promise<SearchHit
   if (UK_POSTCODE.test(query.trim())) {
     const response = await fetch(`https://api.postcodes.io/postcodes/${encodeURIComponent(postcode)}`, { signal });
     if (!response.ok) return [];
-    const data = await response.json() as { result?: { latitude: number; longitude: number; postcode: string } };
+    const data = await response.json() as {
+      result?: {
+        latitude: number;
+        longitude: number;
+        postcode: string;
+        parliamentary_constituency_2024?: string | null;
+        codes?: { parliamentary_constituency_2024?: string | null };
+      };
+    };
     const result = data.result;
-    return result ? [{ title: result.postcode, subtitle: "UK postcode", lon: result.longitude, lat: result.latitude, zoom: 14 }] : [];
+    if (!result) return [];
+    const seatName = result.parliamentary_constituency_2024?.trim();
+    const seatCode = result.codes?.parliamentary_constituency_2024?.trim();
+    const subtitle = seatName
+      ? (seatCode ? `${seatName} · ${seatCode}` : seatName)
+      : "UK postcode";
+    return [{
+      title: result.postcode,
+      subtitle: seatName ? `Constituency: ${subtitle}` : subtitle,
+      lon: result.longitude,
+      lat: result.latitude,
+      zoom: 12,
+    }];
   }
   const url = new URL("https://nominatim.openstreetmap.org/search");
   url.searchParams.set("format", "jsonv2");

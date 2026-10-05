@@ -1931,3 +1931,70 @@ Popup shows **name + PCON24CD only** in this PR — no candidates, polls, or end
 
 - Hillshade tiles © Esri, USGS, NOAA
 - Water / boundaries © OpenStreetMap contributors via OpenMapTiles / OpenFreeMap
+
+## Voting P1 — candidates, polls, endorsements
+
+Editorial **Reform / Restore Britain** endorsement map over GB Westminster seats (632).
+Never endorses Labour or Conservatives. Daniel per-seat overrides always win.
+This is an **editorial endorsement map**, not Electoral Commission advice. Seat MRP
+figures are **projections**, not results. Restore Britain candidate coverage in
+Democracy Club is **sparse** — most seats are presumed Reform under locked anti-split rules.
+
+### Candidates (`candidates-gb`)
+
+| Field | Value |
+|---|---|
+| **File** | `public/data/candidates-gb.json` |
+| **Source** | [Democracy Club Candidates](https://candidates.democracyclub.org.uk/) CSV export (`party_id` PP7931 Reform UK, PP18382 Restore Britain; `election_id=^parl.*`) |
+| **License** | **CC-BY-SA** |
+| **Script** | `scripts/fetch_candidates.py` (idempotent; writes `retrieved_at`) |
+| **Join** | DC `post_label` → ONS `PCON24NM` via name normalisation; keyed by `PCON24CD` |
+| **Caveats** | Names only when present in DC — **never invented**. Standing=`unknown` when no confirmed Westminster candidacy in scope. Restore lists are sparse (~2 recent parl candidacies as of refresh). Local / PCC Restore candidacies are out of this GB Westminster file. |
+
+### National polls (`polls-national`)
+
+| Field | Value |
+|---|---|
+| **File** | `public/data/polls-national.json` |
+| **Source** | [Wikipedia — Opinion polling for the next UK general election](https://en.wikipedia.org/wiki/Opinion_polling_for_the_next_United_Kingdom_general_election) |
+| **Secondary** | [Mark Pack VI scorecard](https://www.markpack.org.uk/155623/voting-intention-opinion-poll-scorecard/) (cited, not scraped as primary) |
+| **Script** | `scripts/fetch_polls_national.py` |
+| **Rolling average** | Arithmetic mean of latest 7 GB polls with numeric Lab/Con/Ref. Restore Britain (`rb`) averaged only over polls that break it out (need ≥3 in window; else null). Documented in-file. |
+| **Caveats** | Not affiliated with any pollster. National VI must **not** alone flip seat endorsements. |
+
+### Seat polls (`polls-seats`)
+
+| Field | Value |
+|---|---|
+| **File** | `public/data/polls-seats.json` |
+| **Electoral Calculus** | Public [`electdata_pred.txt`](https://www.electoralcalculus.co.uk/electdata_pred.txt) + [prediction page](https://www.electoralcalculus.co.uk/prediction_main.html). Loaded when fetch succeeds. **Does not break out Restore Britain** (`restore_share=null`). Attribution + retrieval date per [EC FAQ](https://www.electoralcalculus.co.uk/faq.html) Overview republication notes. |
+| **More in Common** | Public [Sep 2026 MRP XLSX](https://www.moreincommon.org.uk/wp-content/uploads/2026/09/Sep26-MRP.xlsx) linked from [research page](https://www.moreincommon.org.uk/research/more-in-commons-september-2026-mrp/). Includes Restore Britain column. |
+| **Script** | `scripts/fetch_polls_seats.py` |
+| **Caveats** | If a provider cannot be fetched, the slot is `link_out` with URL and empty `seats` — **never invent numbers**. Projections ≠ results. |
+
+### Overrides (`overrides`)
+
+| Field | Value |
+|---|---|
+| **File** | `public/data/overrides.json` |
+| **Owner** | Daniel |
+| **Format** | `{ "overrides": [ { "pcon24cd", "endorse", "note?", "by?", "at?" } ] }` |
+| **Rule** | Overrides always win. Lab/Con values are rejected by the engine. |
+
+### Endorse engine
+
+| Field | Value |
+|---|---|
+| **Code** | `src/endorse.ts` (pure functions) + `scripts/build_endorsements.py` (map index) |
+| **Output** | `public/data/endorsements-gb.json` (632 seats coloured for the map) |
+| **Tests** | `src/endorse.test.ts` via `npm test` (vitest) — covers override, neither standing, restore-only, reform-default, both+polls, tie→reform, presumed Reform, never Lab/Con |
+| **Refresh** | `scripts/refresh_voting_data.py` + workflow template `scripts/github-workflows/refresh-voting-data.yml` (copy to `.github/workflows/` on merge — box `gh` token lacks `workflow` scope to push that path directly) |
+
+### 2024 results
+
+Commons Library [CBP-10009](https://commonslibrary.parliament.uk/research-briefings/cbp-10009/) join is **deferred** (source fetch blocked by Cloudflare from this environment). Popup notes follow-up; no invented winners.
+
+### Postcode → seat
+
+Uses [postcodes.io](https://postcodes.io/) `parliamentary_constituency_2024` + ONS code — clean join, no client-side point-in-polygon required.
+

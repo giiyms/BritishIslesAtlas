@@ -426,3 +426,91 @@ button { cursor: pointer; }
 }
 .group > summary { cursor: pointer; }
 .group > .chip-grid { padding-top: 2px; }
+
+
+/* Voting / constituencies endorse UI */
+.voting-strip {
+  margin: 10px 2px 4px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(58, 74, 92, 0.12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+.voting-disclaimer {
+  margin: 0 0 8px;
+  font-size: 11.5px;
+  line-height: 1.35;
+  color: #3a4a5c;
+}
+.voting-vi,
+.voting-updated {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--muted);
+}
+.voting-updated { margin-top: 4px; }
+
+.atlas-popup .vote-popup { min-width: 220px; }
+.atlas-popup .vote-badge {
+  display: inline-block;
+  margin: 8px 0 4px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #fff;
+  background: var(--vote, #c4922a);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.12);
+}
+.atlas-popup .popup-reason {
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+.atlas-popup .popup-override {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  color: #a34870;
+  margin-bottom: 6px;
+}
+.atlas-popup .popup-section {
+  margin-top: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--faint);
+}
+.atlas-popup .popup-cand {
+  font-size: 12px;
+  line-height: 1.35;
+}
+.atlas-popup .popup-cand-party {
+  font-weight: 600;
+  color: #3a4a5c;
+}
+.atlas-popup .popup-poll {
+  font-size: 11.5px;
+  line-height: 1.35;
+  margin-top: 2px;
+}
+.atlas-popup .popup-poll-date {
+  display: block;
+  color: var(--muted);
+  font-size: 10.5px;
+}
+.atlas-popup .popup-links {
+  margin-top: 8px;
+  font-size: 11.5px;
+}
+.atlas-popup .popup-disclaimer {
+  margin-top: 8px;
+  font-size: 10.5px;
+  color: var(--faint);
+  line-height: 1.3;
+}

@@ -1,5 +1,6 @@
 import { ICONS } from "./icons";
 import { LAYERS, isLayerId, type LayerId } from "./layers";
+import { formatPollsUpdated, loadVotingBundle } from "./voting";
 
 export function mountPanel(
   root: HTMLElement,
@@ -44,7 +45,15 @@ export function mountPanel(
   upcomingGrid.setAttribute("aria-describedby", "layer-status");
   const note = document.createElement("p");
   note.className = "panel-note";
-  note.textContent = "Petrol, EV, power, hospitals, fire stations, police, castles, libraries, universities, museums, railway stations, aerodromes, ferry terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme parks, viewpoints, arts centres, aquariums, piers, ruins, golf courses, galleries, marketplaces, nature reserves, camp sites, memorials, sports centres, caravan sites, fitness centres, community centres, playgrounds, beaches, swimming pools, pharmacies, town halls, places of worship, lighthouses, courthouses, nightclubs, windmills, prisons, clinics, dentists, and post offices: © OpenStreetMap contributors (ODbL). Constituencies: ONS July 2024 BGC (OGL v3; contains OS + National Statistics data © Crown copyright). Other layers are preview geometry.";
+  note.textContent = "Petrol, EV, power, hospitals, fire stations, police, castles, libraries, universities, museums, railway stations, aerodromes, ferry terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme parks, viewpoints, arts centres, aquariums, piers, ruins, golf courses, galleries, marketplaces, nature reserves, camp sites, memorials, sports centres, caravan sites, fitness centres, community centres, playgrounds, beaches, swimming pools, pharmacies, town halls, places of worship, lighthouses, courthouses, nightclubs, windmills, prisons, clinics, dentists, and post offices: © OpenStreetMap contributors (ODbL). Constituencies: ONS July 2024 BGC (OGL v3; contains OS + National Statistics data © Crown copyright). Candidates © Democracy Club (CC-BY-SA). Polls: Wikipedia / Electoral Calculus / More in Common (projections). Other layers are preview geometry.";
+
+  const votingBox = document.createElement("div");
+  votingBox.className = "voting-strip";
+  votingBox.innerHTML = `
+    <p class="voting-disclaimer"><strong>Editorial endorsement map</strong> — partisan Reform / Restore Britain guide. Never Labour or Conservatives. Not Electoral Commission advice. Projections are projections.</p>
+    <p class="voting-vi" id="national-vi">National VI loading…</p>
+    <p class="voting-updated" id="polls-updated"></p>
+  `;
 
   for (const layer of LAYERS) {
     const button = document.createElement("button");
@@ -60,7 +69,24 @@ export function mountPanel(
   }
 
   upcoming.append(upcomingLabel, upcomingGrid);
-  body.append(dataGrid, upcoming, note);
+  body.append(dataGrid, upcoming, votingBox, note);
+  void loadVotingBundle().then((bundle) => {
+    const vi = votingBox.querySelector<HTMLElement>("#national-vi");
+    const updated = votingBox.querySelector<HTMLElement>("#polls-updated");
+    const avg = bundle.national?.rolling_average;
+    if (vi && avg) {
+      const rb = avg.rb != null ? ` · RB ${avg.rb}%` : " · RB —";
+      vi.textContent = `National VI (rolling ${avg.n}): Lab ${avg.lab ?? "—"}% · Con ${avg.con ?? "—"}% · Ref ${avg.ref ?? "—"}% · LD ${avg.ld ?? "—"}% · Grn ${avg.grn ?? "—"}%${rb}`;
+    } else if (vi) {
+      vi.textContent = "National VI unavailable";
+    }
+    if (updated) {
+      updated.textContent = formatPollsUpdated(bundle.endorsements.retrieved_at || bundle.national?.retrieved_at);
+    }
+  }).catch(() => {
+    const vi = votingBox.querySelector<HTMLElement>("#national-vi");
+    if (vi) vi.textContent = "National VI unavailable";
+  });
 
   const refreshStatus = () => {
     const anyOn = LAYERS.some((layer) => layer.group === "data" && options.isOn(layer.id));

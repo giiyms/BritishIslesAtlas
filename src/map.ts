@@ -14,6 +14,14 @@ import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 setWorkerUrl(workerUrl);
 import { buildCollection } from "./geo";
 import { LAYERS, type LayerId, type MarkerKind } from "./layers";
+import {
+  enrichConstituencies,
+  fillColorExpression,
+  loadVotingBundle,
+  outlineColorExpression,
+  constituencyPopupHtml,
+  type VotingBundle,
+} from "./voting";
 
 export const HOME_BOUNDS: [[number, number], [number, number]] = [
   [-12.2, 49.35],
@@ -255,6 +263,7 @@ export function createAtlas(container: HTMLElement): Atlas {
   });
 
   let loaded = false;
+  let votingBundle: VotingBundle | null = null;
   const ordered = [...LAYERS].sort((a, b) => a.z - b.z);
   const OSM_STATIC = new Set<LayerId>(["petrol", "ev", "power", "hospitals", "fire-stations", "police", "castles", "libraries", "universities", "museums", "railway-stations", "aerodromes", "ferry-terminals", "marinas", "zoos", "theatres", "battlefields", "cinemas", "stadiums", "theme-parks", "viewpoints", "arts-centres", "aquariums", "piers", "ruins", "golf-courses", "galleries", "marketplaces", "nature-reserves", "camp-sites", "memorials", "sports-centres", "caravan-sites", "fitness-centres", "community-centres", "playgrounds", "post-offices", "beaches", "swimming-pools", "pharmacies", "townhalls", "places-of-worship", "lighthouses", "courthouses", "nightclubs", "windmills", "prisons", "clinics", "dentists"]);
   const clustered = new Set<LayerId>([
@@ -301,14 +310,17 @@ export function createAtlas(container: HTMLElement): Atlas {
     const pointFilter: { filter?: FilterSpecification } =
       clusters ? { filter: ["!", ["has", "point_count"]] } : {};
     if (layer.kind === "fill") {
+      const isConstituencies = id === "constituencies";
       map.addLayer({
         id,
         type: "fill",
         source: id,
         layout,
         paint: {
-          "fill-color": layer.color,
-          "fill-opacity": 0.16,
+          "fill-color": (isConstituencies
+            ? fillColorExpression()
+            : layer.color) as ExpressionSpecification | string,
+          "fill-opacity": isConstituencies ? 0.28 : 0.16,
         },
       }, before);
       map.addLayer({
@@ -317,11 +329,29 @@ export function createAtlas(container: HTMLElement): Atlas {
         source: id,
         layout: { ...layout, "line-cap": "round", "line-join": "round" },
         paint: {
-          "line-color": layer.accent,
+          "line-color": (isConstituencies
+            ? outlineColorExpression()
+            : layer.accent) as ExpressionSpecification | string,
           "line-width": ["interpolate", ["linear"], ["zoom"], 4, 0.4, 8, 0.8, 12, 1.4],
           "line-opacity": 0.85,
         },
       }, before);
+      if (isConstituencies) {
+        void (async () => {
+          try {
+            const [geo, bundle] = await Promise.all([
+              fetch("/data/constituencies-gb-2024.geojson").then((r) => r.json()),
+              loadVotingBundle(),
+            ]);
+            votingBundle = bundle;
+            const enriched = enrichConstituencies(geo, bundle.endorsements.seats);
+            const source = map.getSource("constituencies") as import("maplibre-gl").GeoJSONSource | undefined;
+            source?.setData(enriched as never);
+          } catch (err) {
+            console.warn("Failed to enrich constituencies with endorsements", err);
+          }
+        })();
+      }
     } else if (layer.kind === "line") {
       map.addLayer({ id, type: "line", source: id,
         layout: { ...layout, "line-cap": "round", "line-join": "round" },
@@ -409,10 +439,27 @@ export function createAtlas(container: HTMLElement): Atlas {
     const name = String(properties.name ?? layer?.label ?? "Place");
     if (layerId === "constituencies") {
       const code = String(properties.PCON24CD ?? "");
-      popup.setLngLat(event.lngLat).setHTML(
-        `<strong>${escapeHtml(name)}</strong>` +
-        (code ? `<div class="popup-meta">${escapeHtml(code)}</div>` : ""),
-      ).addTo(map);
+      void (async () => {
+        try {
+          if (!votingBundle) votingBundle = await loadVotingBundle();
+          const seat = votingBundle.endorsements.seats[code];
+          if (!seat) {
+            popup.setLngLat(event.lngLat).setHTML(
+              `<strong>${escapeHtml(name)}</strong>` +
+              (code ? `<div class="popup-meta">${escapeHtml(code)}</div>` : ""),
+            ).addTo(map);
+            return;
+          }
+          popup.setLngLat(event.lngLat).setMaxWidth("320px").setHTML(
+            constituencyPopupHtml(seat, votingBundle.endorsements.retrieved_at),
+          ).addTo(map);
+        } catch {
+          popup.setLngLat(event.lngLat).setHTML(
+            `<strong>${escapeHtml(name)}</strong>` +
+            (code ? `<div class="popup-meta">${escapeHtml(code)}</div>` : ""),
+          ).addTo(map);
+        }
+      })();
       return;
     }
     const brand = properties.brand ? String(properties.brand) : "";

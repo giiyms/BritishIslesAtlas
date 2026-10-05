@@ -783,7 +783,7 @@ export const LAYERS = [
     color: "#3a4a5c",
     kind: "fill",
     defaultOn: false,
-    blurb: "GB Westminster constituencies (2024)",
+    blurb: "GB Westminster seats — editorial Reform/Restore endorse map",
     pointScale: 1,
     icon: ICONS.constituencies,
   },
