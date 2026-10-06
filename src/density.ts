@@ -154,15 +154,14 @@ function heightExpression(band: DensityBand, screenScale: number): ExpressionSpe
     peak,
   ];
 
-  // Target peak metres at a reference zoom (review calibration).
-  // Calibrated against desktop 1440×900 / mobile 390×844 shots so peaks
-  // read ~20–25% of viewport (not a wall). Review km figures overshot on-screen.
+  // Target peak metres at zRef so peaks read ~20–25% vh (not a wall).
+  // Gate #58 cut 38k/22k/1.1k → 15k/7.5k/0.9k after tops clipped the viewport.
   const target =
     band.id === "coarse"
-      ? { zRef: 5.5, peakM: 38_000 }
+      ? { zRef: 5.5, peakM: 15_000 }
       : band.id === "medium"
-        ? { zRef: 8.0, peakM: 22_000 }
-        : { zRef: 11.0, peakM: 1_100 };
+        ? { zRef: 8.0, peakM: 7_500 }
+        : { zRef: 11.0, peakM: 900 };
   const mulRef = (target.peakM / peak) * screenScale;
   const mulAt = (z: number) => mulRef * 2 ** (target.zRef - z);
 
@@ -201,7 +200,7 @@ function opacityExpression(band: DensityBand): ExpressionSpecification {
 function densityScreenScale(): number {
   // Narrow / mobile viewports: shorter columns so peaks don't cover search chrome.
   if (typeof window !== "undefined" && window.matchMedia("(max-width: 520px)").matches) {
-    return 0.55;
+    return 0.42;
   }
   return 1;
 }
