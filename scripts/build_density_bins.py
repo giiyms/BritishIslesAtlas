@@ -6,13 +6,15 @@ Outputs small GeoJSON polygon FeatureCollections under public/data/density/
 plus a manifest for lazy zoom-band loading.
 
 Bands (MapLibre maxzoom exclusive) — thin NYC-style spikes:
-  coarse  — national  (z 0–7),   ~3.5 km hex pitch
-  medium  — regional  (z 7–9.5), ~1.5 km
+  coarse  — national  (z 0–6.5), ~18 km hex pitch
+  medium  — regional  (z 6.5–9.5), ~1.5 km
   fine    — city      (z 9.5–12), ~400 m
 
 Only non-empty cells (count ≥ 1) are written — bins come from real points, so
 nothing is drawn over empty sea. Drawn hexes use ~75% of pitch radius so gaps
-show basemap between columns. Past ~z12 the map fades to individual points.
+show basemap between columns (not a solid wall). Past ~z12 the map fades to
+individual points. Column height is further scaled by zoom in src/density.ts
+so national view reads as tall 3D spikes rather than flat speckles.
 """
 
 from __future__ import annotations
@@ -29,7 +31,7 @@ REPO = Path(__file__).resolve().parents[1]
 # Flat-top hexagon axial coords. `size_deg` is the *pitch* radius (vertex
 # distance) in degrees; drawn polygons use DRAW_SCALE × that so columns are
 # thinner than the cell pitch.
-DRAW_SCALE = 0.68
+DRAW_SCALE = 0.75
 
 # ~1° lat ≈ 111 km; at 54°N 1° lon ≈ 65 km. size_deg is a compromise angular
 # radius so pitch ≈ listed km at mid-BI latitudes.
@@ -38,15 +40,15 @@ BANDS = [
         "id": "coarse",
         "file": "pubs-coarse.geojson",
         "minzoom": 0,
-        "maxzoom": 7.0,
-        "size_deg": 0.020,  # ~3.5 km pitch
+        "maxzoom": 6.5,
+        "size_deg": 0.102,  # ~18 km pitch (chunky national columns)
         "label": "national",
-        "peak_m": 3200,
+        "peak_m": 4800,
     },
     {
         "id": "medium",
         "file": "pubs-medium.geojson",
-        "minzoom": 7.0,
+        "minzoom": 6.5,
         "maxzoom": 9.5,
         "size_deg": 0.009,  # ~1.5 km pitch
         "label": "regional",
