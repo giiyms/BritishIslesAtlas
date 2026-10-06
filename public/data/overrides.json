@@ -1,0 +1,10 @@
+{
+  "description": "Daniel per-seat endorsement overrides. Always win over the automatic anti-split tree.",
+  "how_to_edit": [
+    "Add an object to overrides[] with pcon24cd (ONS PCON24CD), endorse (reform|restore|none|other:<label>), optional note, by, at (ISO date).",
+    "Never set endorse to Labour or Conservatives — the engine rejects those.",
+    "Optional standing_intent: { reform?: yes|no|unknown, restore?: yes|no|unknown } for editor intent before Democracy Club confirmation (future use).",
+    "After editing, run: python3 scripts/build_endorsements.py (or scripts/refresh_voting_data.py)."
+  ],
+  "overrides": []
+}
