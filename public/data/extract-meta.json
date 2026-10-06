@@ -1660,5 +1660,42 @@
       "name_filter": "no name=* filter (unnamed dentists kept). England-alone Overpass count without name=* (bbox ~49.9-55.8N, -6.5-2.0E, not admin-clipped; overpass.openstreetmap.fr, OSM base 2026-10-03T05:09:31Z) was 6270 (nodes 3869 + ways 2396 + relations 5), well inside the ~8-10k soft guideline. A loose British Isles bbox (49.8-61.0N, -10.8-1.9E, not admin-clipped, includes some northern France and excludes Jersey/Guernsey south of 49.8N; OSM base 2026-10-03T05:12:34Z) was 7151 (nodes 4591 + ways 2554 + relations 6), also well under ~8k. The same England bbox with name=* was 5965 (nodes 3698 + ways 2263 + relations 4; OSM base 2026-10-03T05:11:32Z); the loose BI bbox with name=* was 6794 (nodes 4390 + ways 2399 + relations 5; OSM base 2026-10-03T05:13:30Z) before admin clip.",
       "france_bleed_note": "Mainland France bleed checked after extract with the hard bbox heuristic (in_france_bleed). Admin polygons clip coastal France; southernmost retained points should be Channel Islands, not mainland France. Jersey/Guernsey/Sark flags in the hard boxes are disclosed separately when they differ from the admin clip."
     }
+  },
+  "pubs": {
+    "extracted_at": "2026-10-06T12:52:55Z",
+    "method": "Overpass per-nation/territory bbox tiles clipped to OSM admin polygons (Nominatim); endpoint overpass.openstreetmap.fr",
+    "license": "ODbL 1.0",
+    "endpoint": "https://overpass.openstreetmap.fr/api/interpreter",
+    "layer": "pubs",
+    "count": 43184,
+    "coverage": "Admin-area extract (ENG/SCT/WLS/NIR/IE/IM/GG/JE); IoM≈75; GG≈34; JE≈62; northern France bleed≈0",
+    "region_counts": {
+      "england": 33182,
+      "scotland": 2391,
+      "wales": 2407,
+      "northern-ireland": 554,
+      "ireland": 4469,
+      "isle-of-man": 75,
+      "guernsey": 44,
+      "jersey": 62
+    },
+    "limitations": {
+      "isle_of_man": 75,
+      "channel_islands": 96,
+      "guernsey": 34,
+      "jersey": 62,
+      "northern_france_approx": 0,
+      "ways_as_centre_points": 23752,
+      "relations_as_centre_points": 119,
+      "pipeline_generic_names": 536,
+      "pipeline_note_repeats_brand": 6230,
+      "note_semantics": "pipeline field (brand/operator or 'OpenStreetMap'), not OSM note=*",
+      "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
+      "tag_choice": "amenity=pub only (nodes, ways, relations). Does not include amenity=bar, amenity=biergarten, amenity=nightclub, or amenity=restaurant. Replaces the previous preview scatter stub for the pubs chip.",
+      "counting_caveat": "amenity=pub only; amenity=bar / biergarten / nightclub / restaurant are omitted; feature counts are OSM objects not distinct pubs (a site may be several nodes/ways/relations); disused sites still tagged amenity=pub are included; multipolygon / site relations use Overpass centre points (not footprints); no name=* filter (unnamed pubs kept)",
+      "name_filter": "no name=* filter (unnamed pubs kept). Pubs are expected to be tens of thousands across the British Isles; the soft ~8–10k guideline for smaller POI layers does not apply.",
+      "france_bleed_note": "Mainland France bleed checked after extract with the hard bbox heuristic (in_france_bleed). Admin polygons clip coastal France; southernmost retained points should be Channel Islands, not mainland France.",
+      "density_bins": "Precomputed hex density bins for national/regional zoom live under public/data/density/pubs-*.geojson (see scripts/build_density_bins.py)."
+    }
   }
 }

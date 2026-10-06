@@ -11,7 +11,7 @@ const DATA_CREDITS: Array<[string, string]> = [
   ["Constituencies", "ONS July 2024 BGC boundaries. Contains OS data © Crown copyright and database right 2024; contains National Statistics data © Crown copyright and database right 2024 (OGL v3.0)"],
   ["Candidates", "© Democracy Club (CC-BY-SA)"],
   ["Polls", "Wikipedia national polling, Electoral Calculus and More in Common seat projections. Projections are projections."],
-  ["Sample layers", "Roads, pubs, schools, churches, mosques, population, census and the Upcoming layers use sample geometry, not real data."],
+  ["Sample layers", "Roads, schools, churches, mosques, population, census and the Upcoming layers use sample geometry, not real data. Pubs are a real OpenStreetMap layer."],
 ];
 
 function chipButton(layer: LayerDef, on: boolean): HTMLButtonElement {

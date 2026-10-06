@@ -50,7 +50,8 @@ fire stations by `scripts/extract_osm_fire_stations.py`; police by
 `scripts/extract_osm_windmills.py`; prisons by
 `scripts/extract_osm_prisons.py`; clinics by
 `scripts/extract_osm_clinics.py`; dentists by
-`scripts/extract_osm_dentists.py`.
+`scripts/extract_osm_dentists.py`; pubs by
+`scripts/extract_osm_pubs.py`.
 Westminster constituencies (GB) are ingested separately by
 `scripts/ingest_ons_pcon2024.py` from the ONS ArcGIS FeatureServer (not Overpass).
 Shared OSM pipeline:
@@ -63,7 +64,7 @@ Shared OSM pipeline:
 3. **Clip** results to the admin polygon (+ ~200 m buffer) so mainland France
    and cross-border spill are dropped.
 4. Deduplicate by OSM `type/id`. Ways are stored as **centre points**
-   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme-parks, viewpoints, arts-centres, aquariums, piers, ruins, golf-courses, galleries, marketplaces, nature-reserves, camp-sites, memorials, sports-centres, caravan-sites, fitness-centres, community-centres, post-offices, playgrounds, beaches, swimming-pools, pharmacies, townhalls, places-of-worship, lighthouses, courthouses, nightclubs, windmills, prisons, clinics, and dentists extractors
+   (`out center`). The aerodromes, ferry-terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme-parks, viewpoints, arts-centres, aquariums, piers, ruins, golf-courses, galleries, marketplaces, nature-reserves, camp-sites, memorials, sports-centres, caravan-sites, fitness-centres, community-centres, post-offices, playgrounds, beaches, swimming-pools, pharmacies, townhalls, places-of-worship, lighthouses, courthouses, nightclubs, windmills, prisons, clinics, dentists, and pubs extractors
    also query **relations** and store them as centre points the same way;
    other layers remain node+way only unless noted.
 
@@ -1289,6 +1290,33 @@ Same pipeline fields as the other OSM layers (`name`, optional `brand`/`operator
 Pipeline `note` repeats brand or operator on 848 of 7135.
 
 
+
+
+## Pubs (`pubs`)
+
+| | |
+|---|---|
+| **File** | `public/data/pubs.geojson` |
+| **Features** | **43184** points (not a round cap) |
+| **Coverage** | Admin-area extract: England 33182, Scotland 2391, Wales 2407, Northern Ireland 554, Ireland 4469, Isle of Man 75, Guernsey 44, Jersey 62. **Northern France bleed = 0**. |
+| **Sample vs full** | Admin-area extract of OSM `amenity=pub` at extract time (nodes, ways, **and relations**). **Tag choice:** `amenity=pub` only — does **not** include `amenity=bar`, `amenity=biergarten`, `amenity=nightclub`, or `amenity=restaurant`. Replaces the previous preview scatter stub. **No `name=*` filter** (unnamed pubs kept; 536 pipeline-filled `"Pub"`). Soft ~8–10k guideline for smaller POI layers does **not** apply — pubs are tens of thousands and feed the national density view. **Feature counts are OSM objects, not distinct pubs**. Ways/relations use Overpass centre points. Default `--max-span 2.0`. Schools/churches remain preview stubs. Voting mode untouched (`VOTING_MUTED` still mutes pubs). |
+| **Density bins** | Precomputed flat-top hex bins under `public/data/density/pubs-{coarse,medium,fine}.geojson` + `pubs-manifest.json` (`scripts/build_density_bins.py`). Pitch ≈ **3.5 km** (national z≲7), **1.5 km** (regional z 7–9.5), **400 m** (city z 9.5–12); drawn at 75% radius so gaps show basemap. Only non-empty cells (from real pub points — no offshore empties). Height/colour use **sqrt(count)** with a p98 scale and capped `peak_m` so most land is short pale stubs and only hotspots spike deep red. Pitch ~40°. Past ~z12 → individual pub dots. Machinery in `src/density.ts` is generic; only pubs opts in. |
+| **Source** | [OpenStreetMap](https://www.openstreetmap.org/) via Overpass API |
+| **Query** | `amenity=pub` nodes, ways, and relations (`out center tags`) |
+| **Endpoint used** | `https://overpass.openstreetmap.fr/api/interpreter` |
+| **Extract date (UTC)** | 2026-10-06T12:52:55Z |
+| **Method** | Same admin-area pipeline as dentists / clinics (`scripts/extract_osm_pubs.py`), including OSM relations; default tile span 2.0° |
+| **License** | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/) — © OpenStreetMap contributors |
+| **Attribution** | © OpenStreetMap contributors |
+
+### Property semantics (pipeline)
+
+Same pipeline fields as the other OSM layers (`name`, optional `brand`/`operator`, `osm_id`,
+`osm_url`, pipeline `note`, `layer`, `source`). Generic missing names fill as
+`"Pub"`. Ways as centre points: 23752 of 43184; relations as centre points:
+119 of 43184; nodes: 19313 of 43184. Pipeline-filled generic names: 536 (no OSM `name=*`).
+Pipeline `note` repeats brand or operator on 6230 of 43184.
+
 ## Constituencies (`constituencies`)
 
 | | |
@@ -1865,6 +1893,8 @@ Popup shows **name + PCON24CD only** in this PR — no candidates, polls, or end
   (`node/13060661008`, ~1.76°E), not France. No prior clinic preview
   chip existed.
 
+- Pubs layer is `amenity=pub` only (not `amenity=bar` / biergarten / nightclub / restaurant);
+  density bins are precomputed hex counts, not a heatmap of live queries.
 - Dentists layer is `amenity=dentist` only (not `amenity=doctors`,
   `amenity=clinic`, `amenity=hospital`, or `healthcare=dentist` alone
   without `amenity=dentist`). Atlas preferred `amenity=dentist` is not
