@@ -49,6 +49,21 @@ const OUTLINE_PREFIX = "density-outline-";
 
 const manifests = new Map<LayerId, DensityManifest>();
 const loadedBands = new Set<string>();
+const beforeIds = new Map<LayerId, string | undefined>();
+
+/** Mount a band's source only when the camera is within this many zoom levels of it. */
+const BAND_PREFETCH_ZOOM = 0.75;
+
+/** True when `zoom` is inside (or about to enter) a band's zoom range. */
+export function bandNear(band: Pick<DensityBand, "minzoom" | "maxzoom">, zoom: number): boolean {
+  return zoom >= band.minzoom - BAND_PREFETCH_ZOOM && zoom < band.maxzoom + BAND_PREFETCH_ZOOM;
+}
+
+/** Point GeoJSON is only needed once dots are close to showing (dot_minzoom − 1). */
+export function densityPointsNear(id: LayerId, zoom: number): boolean {
+  const dotMin = manifests.get(id)?.dot_minzoom ?? 12;
+  return zoom >= dotMin - 1;
+}
 
 export function densitySourceIds(id: LayerId): string[] {
   const man = manifests.get(id);
@@ -181,7 +196,11 @@ async function ensureBand(
   }
 }
 
-/** Mount (or refresh visibility of) density bands for a layer. Lazy-loads band GeoJSON. */
+/**
+ * Mount (or refresh visibility of) density bands for a layer. Band GeoJSON is
+ * lazy: only bands near the current zoom get a source (and so a fetch); the
+ * rest mount later via syncDensityBands as the camera zooms.
+ */
 export async function applyDensity(
   map: MapLibreMap,
   id: LayerId,
@@ -189,10 +208,29 @@ export async function applyDensity(
   beforeId?: string,
 ): Promise<DensityManifest | null> {
   if (!DENSITY_ENABLED.has(id)) return null;
+  beforeIds.set(id, beforeId);
   const man = await fetchManifest(id);
   if (!man) return null;
-  await Promise.all(man.bands.map((band) => ensureBand(map, id, band, man, on, beforeId)));
+  const zoom = map.getZoom();
+  await Promise.all(man.bands.map((band) => {
+    if (bandNear(band, zoom)) return ensureBand(map, id, band, man, on, beforeId);
+    return undefined;
+  }));
+  setDensityVisibility(map, id, on);
   return man;
+}
+
+/** Zoom hook: mount any not-yet-loaded band the camera is approaching. Cheap when nothing to do. */
+export function syncDensityBands(map: MapLibreMap, id: LayerId, on: boolean): void {
+  if (!on) return;
+  const man = manifests.get(id);
+  if (!man) return;
+  const zoom = map.getZoom();
+  for (const band of man.bands) {
+    if (!loadedBands.has(`${id}:${band.id}`) && bandNear(band, zoom)) {
+      void ensureBand(map, id, band, man, on, beforeIds.get(id));
+    }
+  }
 }
 
 export function setDensityVisibility(map: MapLibreMap, id: LayerId, on: boolean): void {

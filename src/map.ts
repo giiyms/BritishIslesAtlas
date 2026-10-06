@@ -39,6 +39,8 @@ import {
   syncDensityPitch,
   mountDensityLegend,
   densityDotMinZoom,
+  densityPointsNear,
+  syncDensityBands,
   type DensityManifest,
 } from "./density";
 
@@ -456,6 +458,7 @@ export function createAtlas(container: HTMLElement): Atlas {
   const densityHost = container.parentElement ?? document.body;
   let densityLegend: { setVisible: (on: boolean) => void; destroy: () => void } | null = null;
   let densityManifest: DensityManifest | null = null;
+  const densityPointsLoaded = new Set<LayerId>();
   let selected: string | null = null;
   function setSelected(code: string | null) {
     selected = code;
@@ -608,9 +611,13 @@ export function createAtlas(container: HTMLElement): Atlas {
       const sourceData =
         id === "constituencies"
           ? "/data/constituencies-gb-2024.geojson"
-          : OSM_STATIC.has(id)
-            ? `/data/${id}.geojson`
-            : buildCollection(id);
+          : DENSITY_ENABLED.has(id) && !densityPointsNear(id, map.getZoom())
+            // Density layers: the (large) point file waits until dots are near (syncDensityLazy).
+            ? { type: "FeatureCollection" as const, features: [] }
+            : OSM_STATIC.has(id)
+              ? `/data/${id}.geojson`
+              : buildCollection(id);
+      if (DENSITY_ENABLED.has(id) && typeof sourceData === "string") densityPointsLoaded.add(id);
       // Source credits live in the single ATTRIBUTION line (fix 10), not per source.
       map.addSource(id, {
         type: "geojson",
@@ -743,6 +750,8 @@ export function createAtlas(container: HTMLElement): Atlas {
     }
     if (DENSITY_ENABLED.has(id) && state[id] && !paused(id)) {
       void applyDensity(map, id, true, before).then((man) => {
+        // Voting may have muted the layer while the manifest was in flight.
+        setDensityVisibility(map, id, state[id] && !paused(id));
         if (id === "pubs" && man) {
           densityManifest = man;
           if (!densityLegend) densityLegend = mountDensityLegend(densityHost, man);
@@ -764,6 +773,7 @@ export function createAtlas(container: HTMLElement): Atlas {
       setDensityVisibility(map, id, shown);
       if (shown && loaded) {
         void applyDensity(map, id, shown, beforeFor(LAYERS.find((l) => l.id === id)!.z)).then((man) => {
+          setDensityVisibility(map, id, state[id] && !paused(id));
           if (id === "pubs" && man) {
             densityManifest = man;
             if (!densityLegend) densityLegend = mountDensityLegend(densityHost, man);
@@ -872,6 +882,21 @@ export function createAtlas(container: HTMLElement): Atlas {
     reformColor: ENDORSE_COLORS.reform.fill,
     onRestore: flyToRestore,
   });
+  /** Lazy density data: mount bands / point file only as the camera approaches them. */
+  const syncDensityLazy = () => {
+    if (!loaded) return;
+    for (const id of DENSITY_ENABLED) {
+      if (!state[id] || paused(id)) continue;
+      syncDensityBands(map, id, true);
+      if (!densityPointsLoaded.has(id) && densityPointsNear(id, map.getZoom())) {
+        const src = map.getSource(id) as import("maplibre-gl").GeoJSONSource | undefined;
+        if (src) {
+          densityPointsLoaded.add(id);
+          src.setData(`/data/${id}.geojson`);
+        }
+      }
+    }
+  };
   const refreshDensityCamera = () => {
     const pubsOn = state.pubs && !paused("pubs");
     const active = densityActive(map, "pubs", pubsOn) ? "pubs" as LayerId : null;
@@ -961,6 +986,7 @@ export function createAtlas(container: HTMLElement): Atlas {
     }, "population");
     for (const layer of ordered) if (state[layer.id] && !paused(layer.id)) add(layer.id);
     applyVotingMode(false);
+    map.on("zoom", syncDensityLazy);
     map.on("zoomend", refreshDensityCamera);
     map.on("pitchend", () => { /* keep legend in sync with densityActive */ refreshDensityCamera(); });
     map.once("idle", () => { document.body.dataset.mapReady = "true"; refreshDensityCamera(); });
