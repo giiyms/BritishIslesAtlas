@@ -3,6 +3,10 @@
  * Only pubs opts in for now (see DENSITY_ENABLED). Any LayerId can join later
  * by shipping public/data/density/<id>-manifest.json + band GeoJSON and adding
  * the id to DENSITY_ENABLED.
+ *
+ * Columns are thin hex stubs (drawn ~68% of cell pitch). Height + colour use
+ * sqrt(count) with a per-band peak_m cap so most land stays low/pale and only
+ * hotspot cells spike red.
  */
 import type { ExpressionSpecification, Map as MapLibreMap } from "maplibre-gl";
 import type { LayerId } from "./layers";
@@ -14,9 +18,12 @@ export interface DensityBand {
   minzoom: number;
   maxzoom: number;
   size_deg: number;
+  draw_scale?: number;
   cell_count: number;
   max_count: number;
   scale_max: number;
+  intensity_max?: number;
+  peak_m?: number;
   label: string;
 }
 
@@ -29,6 +36,8 @@ export interface DensityManifest {
   ramp: [string, string, string];
   legend: [string, string, string];
   pitch: number;
+  scaling?: string;
+  draw_scale?: number;
 }
 
 /** Layers that use the density extrusion view (generic machinery; pubs only today). */
@@ -39,7 +48,7 @@ const LAYER_PREFIX = "density-fill-";
 const OUTLINE_PREFIX = "density-outline-";
 
 const manifests = new Map<LayerId, DensityManifest>();
-const loadedBands = new Set<string>(); // `${layer}:${bandId}`
+const loadedBands = new Set<string>();
 
 export function densitySourceIds(id: LayerId): string[] {
   const man = manifests.get(id);
@@ -74,15 +83,16 @@ async function fetchManifest(id: LayerId): Promise<DensityManifest | null> {
   }
 }
 
+/** sqrt(count) stops → pale yellow stubs for most cells; red only near scale_max. */
 function colourExpression(band: DensityBand, ramp: [string, string, string]): ExpressionSpecification {
-  const hi = Math.max(band.scale_max, 1);
+  const hi = Math.max(band.intensity_max ?? Math.sqrt(band.scale_max), Math.sqrt(2));
   return [
     "interpolate",
     ["linear"],
-    ["get", "count"],
+    ["sqrt", ["get", "count"]],
     1,
     ramp[0],
-    Math.max(2, hi * 0.35),
+    Math.max(1.2, hi * 0.45),
     ramp[1],
     hi,
     ramp[2],
@@ -90,15 +100,17 @@ function colourExpression(band: DensityBand, ramp: [string, string, string]): Ex
 }
 
 function heightExpression(band: DensityBand): ExpressionSpecification {
-  const hi = Math.max(band.scale_max, 1);
-  // Metres in MapLibre extrusion space; coarse bands taller so national view reads.
-  const peak = band.id === "coarse" ? 120000 : band.id === "medium" ? 60000 : 28000;
+  const hi = Math.max(band.intensity_max ?? Math.sqrt(band.scale_max), Math.sqrt(2));
+  const peak = band.peak_m ?? (band.id === "coarse" ? 3200 : band.id === "medium" ? 1800 : 900);
+  // Most cells: short stubs (~6–12% of peak). Only near hi do they spike.
   return [
     "interpolate",
     ["linear"],
-    ["get", "count"],
+    ["sqrt", ["get", "count"]],
     1,
-    peak * 0.08,
+    peak * 0.04,
+    Math.max(1.2, hi * 0.5),
+    peak * 0.22,
     hi,
     peak,
   ];
@@ -136,7 +148,7 @@ async function ensureBand(
           "fill-extrusion-color": colourExpression(band, man.ramp),
           "fill-extrusion-height": heightExpression(band),
           "fill-extrusion-base": 0,
-          "fill-extrusion-opacity": 0.82,
+          "fill-extrusion-opacity": 0.78,
           "fill-extrusion-vertical-gradient": true,
         },
       },
@@ -146,6 +158,7 @@ async function ensureBand(
     map.setLayoutProperty(fillId, "visibility", vis);
   }
 
+  // Soft hairline only — avoid thickening the thin columns visually.
   if (!map.getLayer(outlineId)) {
     map.addLayer(
       {
@@ -156,9 +169,9 @@ async function ensureBand(
         maxzoom: band.maxzoom,
         layout: { visibility: vis },
         paint: {
-          "line-color": "#7a3e12",
-          "line-width": 0.4,
-          "line-opacity": 0.25,
+          "line-color": "#8a5a2b",
+          "line-width": 0.25,
+          "line-opacity": 0.18,
         },
       },
       beforeId,
@@ -178,7 +191,6 @@ export async function applyDensity(
   if (!DENSITY_ENABLED.has(id)) return null;
   const man = await fetchManifest(id);
   if (!man) return null;
-  // Eagerly register all bands so zoom switches don't stall; GeoJSON fetch is lazy per source.
   await Promise.all(man.bands.map((band) => ensureBand(map, id, band, man, on, beforeId)));
   return man;
 }
@@ -194,14 +206,13 @@ export function densityActive(map: MapLibreMap, id: LayerId, layerOn: boolean): 
   if (!layerOn || !DENSITY_ENABLED.has(id)) return false;
   const man = manifests.get(id);
   if (!man) return false;
-  const z = map.getZoom();
-  return z < man.dot_minzoom;
+  return map.getZoom() < man.dot_minzoom;
 }
 
 const DEFAULT_PITCH = 0;
 let pitchOwner: LayerId | null = null;
 
-export function syncDensityPitch(map: MapLibreMap, activeLayer: LayerId | null, pitch = 45): void {
+export function syncDensityPitch(map: MapLibreMap, activeLayer: LayerId | null, pitch = 40): void {
   if (activeLayer) {
     if (pitchOwner !== activeLayer || Math.abs(map.getPitch() - pitch) > 1) {
       pitchOwner = activeLayer;

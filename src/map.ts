@@ -875,7 +875,7 @@ export function createAtlas(container: HTMLElement): Atlas {
   const refreshDensityCamera = () => {
     const pubsOn = state.pubs && !paused("pubs");
     const active = densityActive(map, "pubs", pubsOn) ? "pubs" as LayerId : null;
-    syncDensityPitch(map, active, densityManifest?.pitch ?? 45);
+    syncDensityPitch(map, active, densityManifest?.pitch ?? 40);
     densityLegend?.setVisible(!!active);
   };
   let hovered: string | null = null;
