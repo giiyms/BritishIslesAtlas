@@ -11,11 +11,18 @@
       "minzoom": 0,
       "maxzoom": 6.5,
       "size_deg": 0.102,
-      "draw_scale": 0.75,
+      "draw_scale": 0.93,
       "cell_count": 1588,
       "max_count": 1634,
       "scale_max": 359,
       "intensity_max": 18.9473,
+      "colour_stops": [
+        1.0,
+        3.4641,
+        6.0,
+        10.0995,
+        16.4317
+      ],
       "peak_m": 7200,
       "label": "national"
     },
@@ -26,11 +33,18 @@
       "minzoom": 6.5,
       "maxzoom": 9.5,
       "size_deg": 0.009,
-      "draw_scale": 0.75,
+      "draw_scale": 0.93,
       "cell_count": 20027,
       "max_count": 96,
       "scale_max": 21,
       "intensity_max": 4.5826,
+      "colour_stops": [
+        1.0,
+        1.05,
+        1.4142,
+        2.4495,
+        3.873
+      ],
       "peak_m": 1800,
       "label": "regional"
     },
@@ -41,26 +55,36 @@
       "minzoom": 9.5,
       "maxzoom": 12.0,
       "size_deg": 0.0024,
-      "draw_scale": 0.75,
+      "draw_scale": 0.93,
       "cell_count": 30876,
       "max_count": 21,
       "scale_max": 8,
       "intensity_max": 2.8284,
+      "colour_stops": [
+        1.0,
+        1.05,
+        1.4142,
+        1.7321,
+        2.4495
+      ],
       "peak_m": 900,
       "label": "city"
     }
   ],
   "ramp": [
-    "#fff3b0",
-    "#f4a261",
-    "#9b2226"
+    "#fbf3cf",
+    "#f9d77e",
+    "#f4a24c",
+    "#e0452b",
+    "#a50f15"
   ],
   "legend": [
     "Low",
     "Medium",
     "High"
   ],
-  "pitch": 40,
+  "pitch": 55,
+  "bearing": -15,
   "scaling": "sqrt",
-  "draw_scale": 0.75
+  "draw_scale": 0.93
 }

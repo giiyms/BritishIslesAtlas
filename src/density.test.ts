@@ -43,9 +43,11 @@ describe("density band lazy loading", () => {
     expect(km).toBeGreaterThanOrEqual(15);
     expect(km).toBeLessThanOrEqual(20);
     expect(coarse.maxzoom).toBeLessThanOrEqual(7);
-    expect(coarse.draw_scale ?? manifest.draw_scale).toBeGreaterThanOrEqual(0.7);
-    expect(coarse.draw_scale ?? manifest.draw_scale).toBeLessThanOrEqual(0.8);
-    // Coarse GeoJSON alone must stay well under the ~3 MB first-/data budget.
-    expect(bandRaw.coarse.length).toBeLessThan(3 * 1024 * 1024);
+    expect(coarse.draw_scale ?? manifest.draw_scale).toBeGreaterThanOrEqual(0.9);
+    expect(coarse.draw_scale ?? manifest.draw_scale).toBeLessThanOrEqual(0.96);
+    // Coarse GeoJSON alone must stay under the ~1 MB first-/data budget.
+    expect(bandRaw.coarse.length).toBeLessThan(1 * 1024 * 1024);
+    expect(manifest.ramp.length).toBeGreaterThanOrEqual(5);
+    expect(coarse.colour_stops?.length).toBe(5);
   });
 });

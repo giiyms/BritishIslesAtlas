@@ -11,10 +11,10 @@ Bands (MapLibre maxzoom exclusive) — thin NYC-style spikes:
   fine    — city      (z 9.5–12), ~400 m
 
 Only non-empty cells (count ≥ 1) are written — bins come from real points, so
-nothing is drawn over empty sea. Drawn hexes use ~75% of pitch radius so gaps
-show basemap between columns (not a solid wall). Past ~z12 the map fades to
-individual points. Column height is further scaled by zoom in src/density.ts
-so national view reads as tall 3D spikes rather than flat speckles.
+nothing is drawn over empty sea. Drawn hexes use ~93% of pitch radius so the
+carpet reads solid with hairline seams. Past ~z12 the map fades to individual
+points. Column height is further scaled by zoom in src/density.ts so national
+view reads as tall screen-constant 3D spikes.
 """
 
 from __future__ import annotations
@@ -30,8 +30,8 @@ REPO = Path(__file__).resolve().parents[1]
 
 # Flat-top hexagon axial coords. `size_deg` is the *pitch* radius (vertex
 # distance) in degrees; drawn polygons use DRAW_SCALE × that so columns are
-# thinner than the cell pitch.
-DRAW_SCALE = 0.75
+# slightly thinner than the cell pitch (hairline seams, not grey gaps).
+DRAW_SCALE = 0.93
 
 # ~1° lat ≈ 111 km; at 54°N 1° lon ≈ 65 km. size_deg is a compromise angular
 # radius so pitch ≈ listed km at mid-BI latitudes.
@@ -64,6 +64,10 @@ BANDS = [
         "peak_m": 900,
     },
 ]
+
+# Hotter 5-stop ramp (cream → yellow → orange → crimson → deep red).
+RAMP = ["#fbf3cf", "#f9d77e", "#f4a24c", "#e0452b", "#a50f15"]
+LEGEND = ["Low", "Medium", "High"]
 
 
 def axial_round(q: float, r: float) -> tuple[int, int]:
@@ -103,6 +107,13 @@ def hex_polygon(q: int, r: int, pitch: float, draw: float) -> list[list[float]]:
     return ring
 
 
+def quantile(sorted_vals: list[float], p: float) -> float:
+    if not sorted_vals:
+        return 1.0
+    i = min(len(sorted_vals) - 1, max(0, int(len(sorted_vals) * p)))
+    return float(sorted_vals[i])
+
+
 def bin_points(
     features: list[dict[str, Any]], pitch: float, draw: float
 ) -> tuple[list[dict[str, Any]], int]:
@@ -123,7 +134,6 @@ def bin_points(
         if count < 1:
             continue
         max_count = max(max_count, count)
-        # sqrt intensity precomputed for clients that want a baked stop
         intensity = math.sqrt(count)
         out.append(
             {
@@ -160,12 +170,24 @@ def build_for_layer(layer: str, points_path: Path, out_dir: Path) -> dict[str, A
         draw = pitch * DRAW_SCALE
         cells, max_count = bin_points(features, pitch, draw)
         counts = sorted(c["properties"]["count"] for c in cells)
+        intensities = sorted(math.sqrt(c) for c in counts)
         # Colour/height scale on p98: most cells stay low/pale; only top ~2% spike.
         p98 = counts[min(len(counts) - 1, int(len(counts) * 0.98))] if counts else 1
-        # Push scale_max up so only true hotspots hit deep red / full height
-        # (p98 alone is too low for dense 3–5 km cells — half of England would read "High").
         scale_max = max(p98, int(max_count * 0.22), 8)
         intensity_max = math.sqrt(scale_max)
+        # Per-band intensity quantiles drive the 5-stop colour ramp so more than
+        # a couple of cells reach full red (city cores), not just the absolute max.
+        colour_stops = [
+            1.0,
+            round(quantile(intensities, 0.50), 4),
+            round(quantile(intensities, 0.80), 4),
+            round(quantile(intensities, 0.95), 4),
+            round(quantile(intensities, 0.99), 4),
+        ]
+        # Ensure strictly increasing stops for MapLibre interpolate.
+        for i in range(1, len(colour_stops)):
+            if colour_stops[i] <= colour_stops[i - 1]:
+                colour_stops[i] = round(colour_stops[i - 1] + 0.05, 4)
         path = out_dir / band["file"].replace("pubs-", f"{layer}-")
         payload = {"type": "FeatureCollection", "features": cells}
         with path.open("w", encoding="utf-8") as f:
@@ -175,7 +197,7 @@ def build_for_layer(layer: str, points_path: Path, out_dir: Path) -> dict[str, A
         print(
             f"  {band['id']}: {len(cells)} cells, max={max_count}, "
             f"scale_max={scale_max} (p98), pitch={pitch}°, draw={draw:.5f}°, "
-            f"{size_kb:.1f} KB → {path.name}",
+            f"colour_stops={colour_stops}, {size_kb:.1f} KB → {path.name}",
             flush=True,
         )
         band_meta.append(
@@ -191,6 +213,7 @@ def build_for_layer(layer: str, points_path: Path, out_dir: Path) -> dict[str, A
                 "max_count": max_count,
                 "scale_max": scale_max,
                 "intensity_max": round(intensity_max, 4),
+                "colour_stops": colour_stops,
                 "peak_m": band["peak_m"],
                 "label": band["label"],
             }
@@ -201,9 +224,10 @@ def build_for_layer(layer: str, points_path: Path, out_dir: Path) -> dict[str, A
         "point_url": f"/data/{layer}.geojson",
         "dot_minzoom": 12.0,
         "bands": band_meta,
-        "ramp": ["#fff3b0", "#f4a261", "#9b2226"],
-        "legend": ["Low", "Medium", "High"],
-        "pitch": 40,
+        "ramp": RAMP,
+        "legend": LEGEND,
+        "pitch": 55,
+        "bearing": -15,
         "scaling": "sqrt",
         "draw_scale": DRAW_SCALE,
     }

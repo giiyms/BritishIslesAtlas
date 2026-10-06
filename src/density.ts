@@ -4,10 +4,10 @@
  * by shipping public/data/density/<id>-manifest.json + band GeoJSON and adding
  * the id to DENSITY_ENABLED.
  *
- * Columns are thin hex stubs (drawn ~75% of cell pitch). Height + colour use
- * sqrt(count) with a per-band peak_m cap so most land stays low/pale and only
- * hotspot cells spike red. National (coarse) height is also scaled by zoom so
- * low-z columns read as tall 3D spikes rather than flat speckles.
+ * Columns use ~93% of cell pitch (hairline seams). Height + colour use
+ * sqrt(count); colour stops are per-band intensity quantiles so city cores
+ * hit deep red. Height is screen-constant via exponential zoom scaling so
+ * peaks stay ~20–25% of the viewport at national and regional zoom.
  */
 import type { ExpressionSpecification, Map as MapLibreMap } from "maplibre-gl";
 import type { LayerId } from "./layers";
@@ -24,6 +24,8 @@ export interface DensityBand {
   max_count: number;
   scale_max: number;
   intensity_max?: number;
+  /** sqrt(count) stops for the 5-colour ramp (quantiles). */
+  colour_stops?: number[];
   peak_m?: number;
   label: string;
 }
@@ -34,9 +36,10 @@ export interface DensityManifest {
   point_url: string;
   dot_minzoom: number;
   bands: DensityBand[];
-  ramp: [string, string, string];
-  legend: [string, string, string];
+  ramp: string[];
+  legend: string[];
   pitch: number;
+  bearing?: number;
   scaling?: string;
   draw_scale?: number;
 }
@@ -99,26 +102,46 @@ async function fetchManifest(id: LayerId): Promise<DensityManifest | null> {
   }
 }
 
-/** sqrt(count) stops → pale yellow stubs for most cells; red only near scale_max. */
-function colourExpression(band: DensityBand, ramp: [string, string, string]): ExpressionSpecification {
+const DEFAULT_RAMP = ["#fbf3cf", "#f9d77e", "#f4a24c", "#e0452b", "#a50f15"];
+
+/** Hotter 5-stop ramp driven by per-band intensity quantiles. */
+function colourExpression(band: DensityBand, ramp: string[]): ExpressionSpecification {
+  const colors = ramp.length >= 5 ? ramp.slice(0, 5) : DEFAULT_RAMP;
   const hi = Math.max(band.intensity_max ?? Math.sqrt(band.scale_max), Math.sqrt(2));
+  const raw = band.colour_stops?.length === 5
+    ? band.colour_stops
+    : [1, hi * 0.35, hi * 0.55, hi * 0.75, hi];
+  // Enforce strictly increasing stops for MapLibre interpolate.
+  const stops: number[] = [Math.max(1, raw[0])];
+  for (let i = 1; i < 5; i++) {
+    stops.push(Math.max(stops[i - 1] + 0.05, raw[i] ?? stops[i - 1] + 0.05));
+  }
   return [
     "interpolate",
     ["linear"],
     ["sqrt", ["get", "count"]],
-    1,
-    ramp[0],
-    Math.max(1.2, hi * 0.45),
-    ramp[1],
-    hi,
-    ramp[2],
+    stops[0],
+    colors[0],
+    stops[1],
+    colors[1],
+    stops[2],
+    colors[2],
+    stops[3],
+    colors[3],
+    stops[4],
+    colors[4],
   ];
 }
 
-function heightExpression(band: DensityBand): ExpressionSpecification {
+/**
+ * Screen-constant column height: metres scale ∝ 2^(−zoom) so peaks stay
+ * ~20–25% of the viewport at national (z5.5) and regional (z8) zoom.
+ * Mobile uses a lower screenScale so tall columns don't cover the chrome.
+ */
+function heightExpression(band: DensityBand, screenScale: number): ExpressionSpecification {
   const hi = Math.max(band.intensity_max ?? Math.sqrt(band.scale_max), Math.sqrt(2));
   const peak = band.peak_m ?? (band.id === "coarse" ? 7200 : band.id === "medium" ? 1800 : 900);
-  // Most cells: short stubs (~4–22% of peak). Only near hi do they spike.
+  // Relative curve: short stubs for most cells; only near hi do they spike.
   const byCount: ExpressionSpecification = [
     "interpolate",
     ["linear"],
@@ -130,36 +153,27 @@ function heightExpression(band: DensityBand): ExpressionSpecification {
     hi,
     peak,
   ];
-  // Screen-space height shrinks as the camera zooms out — boost meters at
-  // low zoom so national columns read as distinct 3D spikes (NYC-style).
-  if (band.id === "coarse") {
-    return [
-      "interpolate",
-      ["linear"],
-      ["zoom"],
-      3.5,
-      ["*", byCount, 4.5],
-      5.0,
-      ["*", byCount, 3.0],
-      6.5,
-      ["*", byCount, 1.0],
-    ];
-  }
-  // Soft handoff into medium: slight boost at the low end of the band.
-  if (band.id === "medium") {
-    return [
-      "interpolate",
-      ["linear"],
-      ["zoom"],
-      6.5,
-      ["*", byCount, 1.25],
-      8.0,
-      ["*", byCount, 1.0],
-      9.5,
-      ["*", byCount, 0.9],
-    ];
-  }
-  return byCount;
+
+  // Target peak metres at zRef so peaks read ~20–25% vh (not a wall).
+  // Gate #58 cut 38k/22k/1.1k → 15k/7.5k/0.9k after tops clipped the viewport.
+  const target =
+    band.id === "coarse"
+      ? { zRef: 5.5, peakM: 15_000 }
+      : band.id === "medium"
+        ? { zRef: 8.0, peakM: 7_500 }
+        : { zRef: 11.0, peakM: 900 };
+  const mulRef = (target.peakM / peak) * screenScale;
+  const mulAt = (z: number) => mulRef * 2 ** (target.zRef - z);
+
+  return [
+    "interpolate",
+    ["exponential", 2],
+    ["zoom"],
+    band.minzoom,
+    ["*", byCount, mulAt(band.minzoom)],
+    band.maxzoom,
+    ["*", byCount, mulAt(band.maxzoom)],
+  ];
 }
 
 /** Soft opacity near abutting band min/max so handoffs don't hard-pop. */
@@ -183,6 +197,14 @@ function opacityExpression(band: DensityBand): ExpressionSpecification {
   ];
 }
 
+function densityScreenScale(): number {
+  // Narrow / mobile viewports: shorter columns so peaks don't cover search chrome.
+  if (typeof window !== "undefined" && window.matchMedia("(max-width: 520px)").matches) {
+    return 0.42;
+  }
+  return 1;
+}
+
 async function ensureBand(
   map: MapLibreMap,
   id: LayerId,
@@ -202,6 +224,7 @@ async function ensureBand(
   }
 
   const vis = visible ? "visible" : "none";
+  const screenScale = densityScreenScale();
   if (!map.getLayer(fillId)) {
     map.addLayer(
       {
@@ -213,7 +236,7 @@ async function ensureBand(
         layout: { visibility: vis },
         paint: {
           "fill-extrusion-color": colourExpression(band, man.ramp),
-          "fill-extrusion-height": heightExpression(band),
+          "fill-extrusion-height": heightExpression(band, screenScale),
           "fill-extrusion-base": 0,
           "fill-extrusion-opacity": opacityExpression(band),
           "fill-extrusion-vertical-gradient": true,
@@ -300,18 +323,43 @@ export function densityActive(map: MapLibreMap, id: LayerId, layerOn: boolean): 
 }
 
 const DEFAULT_PITCH = 0;
+const DEFAULT_BEARING = 0;
 let pitchOwner: LayerId | null = null;
 
-export function syncDensityPitch(map: MapLibreMap, activeLayer: LayerId | null, pitch = 40): void {
+export type DensityCameraOpts = { pitch?: number; bearing?: number };
+
+/** Density-mode camera: steeper pitch + slight bearing; restore flat north-up on exit. */
+export function syncDensityPitch(
+  map: MapLibreMap,
+  activeLayer: LayerId | null,
+  opts: DensityCameraOpts | number = {},
+): void {
+  const pitch = typeof opts === "number" ? opts : (opts.pitch ?? 55);
+  const bearing = typeof opts === "number" ? -15 : (opts.bearing ?? -15);
   if (activeLayer) {
-    if (pitchOwner !== activeLayer || Math.abs(map.getPitch() - pitch) > 1) {
+    const pitchDrift = Math.abs(map.getPitch() - pitch) > 1;
+    const bearingDrift = Math.abs(map.getBearing() - bearing) > 1;
+    if (pitchOwner !== activeLayer || pitchDrift || bearingDrift) {
       pitchOwner = activeLayer;
-      map.easeTo({ pitch, duration: 450, essential: true });
+      map.easeTo({ pitch, bearing, duration: 450, essential: true });
     }
   } else if (pitchOwner) {
     pitchOwner = null;
-    if (map.getPitch() > 1) map.easeTo({ pitch: DEFAULT_PITCH, duration: 450, essential: true });
+    const needsReset = map.getPitch() > 1 || Math.abs(map.getBearing()) > 1;
+    if (needsReset) {
+      map.easeTo({ pitch: DEFAULT_PITCH, bearing: DEFAULT_BEARING, duration: 450, essential: true });
+    }
   }
+}
+
+/** Prefer desktop/mobile pitch+bearing from the manifest (or sensible defaults). */
+export function densityCameraForViewport(man: DensityManifest | null | undefined): DensityCameraOpts {
+  const narrow =
+    typeof window !== "undefined" && window.matchMedia("(max-width: 520px)").matches;
+  if (narrow) {
+    return { pitch: 50, bearing: man?.bearing ?? -15 };
+  }
+  return { pitch: man?.pitch ?? 55, bearing: man?.bearing ?? -15 };
 }
 
 /** Small Low / Medium / High legend for the density ramp. */
@@ -323,12 +371,13 @@ export function mountDensityLegend(
   el.className = "density-legend";
   el.setAttribute("aria-label", "Pub density");
   el.hidden = true;
-  const [low, mid, high] = man.legend;
-  const [c0, c1, c2] = man.ramp;
+  const labels = man.legend.length >= 3 ? man.legend : ["Low", "Medium", "High"];
+  const ramp = man.ramp.length ? man.ramp : DEFAULT_RAMP;
+  const gradient = ramp.join(",");
   el.innerHTML =
     `<div class="density-legend-title">Pub density</div>` +
-    `<div class="density-legend-ramp" style="background:linear-gradient(90deg,${c0},${c1},${c2})"></div>` +
-    `<div class="density-legend-labels"><span>${low}</span><span>${mid}</span><span>${high}</span></div>`;
+    `<div class="density-legend-ramp" style="background:linear-gradient(90deg,${gradient})"></div>` +
+    `<div class="density-legend-labels"><span>${labels[0]}</span><span>${labels[1]}</span><span>${labels[2]}</span></div>`;
   host.appendChild(el);
   return {
     setVisible: (on) => {
