@@ -35,4 +35,17 @@ describe("density band lazy loading", () => {
       expect(fc.features.reduce((a, f) => a + f.properties.count, 0)).toBe(manifest.point_count);
     }
   });
+
+  it("national coarse band is chunky (~15–20 km) and first-load sized", () => {
+    const coarse = manifest.bands.find((b) => b.id === "coarse")!;
+    // size_deg 0.020 ≈ 3.5 km in the builder; 0.102 ≈ 18 km.
+    const km = 3.5 * (coarse.size_deg / 0.02);
+    expect(km).toBeGreaterThanOrEqual(15);
+    expect(km).toBeLessThanOrEqual(20);
+    expect(coarse.maxzoom).toBeLessThanOrEqual(7);
+    expect(coarse.draw_scale ?? manifest.draw_scale).toBeGreaterThanOrEqual(0.7);
+    expect(coarse.draw_scale ?? manifest.draw_scale).toBeLessThanOrEqual(0.8);
+    // Coarse GeoJSON alone must stay well under the ~3 MB first-/data budget.
+    expect(bandRaw.coarse.length).toBeLessThan(3 * 1024 * 1024);
+  });
 });

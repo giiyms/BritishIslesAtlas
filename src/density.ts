@@ -4,9 +4,10 @@
  * by shipping public/data/density/<id>-manifest.json + band GeoJSON and adding
  * the id to DENSITY_ENABLED.
  *
- * Columns are thin hex stubs (drawn ~68% of cell pitch). Height + colour use
+ * Columns are thin hex stubs (drawn ~75% of cell pitch). Height + colour use
  * sqrt(count) with a per-band peak_m cap so most land stays low/pale and only
- * hotspot cells spike red.
+ * hotspot cells spike red. National (coarse) height is also scaled by zoom so
+ * low-z columns read as tall 3D spikes rather than flat speckles.
  */
 import type { ExpressionSpecification, Map as MapLibreMap } from "maplibre-gl";
 import type { LayerId } from "./layers";
@@ -116,9 +117,9 @@ function colourExpression(band: DensityBand, ramp: [string, string, string]): Ex
 
 function heightExpression(band: DensityBand): ExpressionSpecification {
   const hi = Math.max(band.intensity_max ?? Math.sqrt(band.scale_max), Math.sqrt(2));
-  const peak = band.peak_m ?? (band.id === "coarse" ? 3200 : band.id === "medium" ? 1800 : 900);
-  // Most cells: short stubs (~6–12% of peak). Only near hi do they spike.
-  return [
+  const peak = band.peak_m ?? (band.id === "coarse" ? 7200 : band.id === "medium" ? 1800 : 900);
+  // Most cells: short stubs (~4–22% of peak). Only near hi do they spike.
+  const byCount: ExpressionSpecification = [
     "interpolate",
     ["linear"],
     ["sqrt", ["get", "count"]],
@@ -128,6 +129,57 @@ function heightExpression(band: DensityBand): ExpressionSpecification {
     peak * 0.22,
     hi,
     peak,
+  ];
+  // Screen-space height shrinks as the camera zooms out — boost meters at
+  // low zoom so national columns read as distinct 3D spikes (NYC-style).
+  if (band.id === "coarse") {
+    return [
+      "interpolate",
+      ["linear"],
+      ["zoom"],
+      3.5,
+      ["*", byCount, 4.5],
+      5.0,
+      ["*", byCount, 3.0],
+      6.5,
+      ["*", byCount, 1.0],
+    ];
+  }
+  // Soft handoff into medium: slight boost at the low end of the band.
+  if (band.id === "medium") {
+    return [
+      "interpolate",
+      ["linear"],
+      ["zoom"],
+      6.5,
+      ["*", byCount, 1.25],
+      8.0,
+      ["*", byCount, 1.0],
+      9.5,
+      ["*", byCount, 0.9],
+    ];
+  }
+  return byCount;
+}
+
+/** Soft opacity near abutting band min/max so handoffs don't hard-pop. */
+function opacityExpression(band: DensityBand): ExpressionSpecification {
+  const start = band.minzoom <= 0 ? 0.82 : 0.35;
+  const end = band.maxzoom >= 12 ? 0.82 : 0.35;
+  const midLo = band.minzoom + 0.2;
+  const midHi = Math.max(midLo + 0.05, band.maxzoom - 0.25);
+  return [
+    "interpolate",
+    ["linear"],
+    ["zoom"],
+    band.minzoom,
+    start,
+    midLo,
+    0.82,
+    midHi,
+    0.82,
+    band.maxzoom,
+    end,
   ];
 }
 
@@ -163,7 +215,7 @@ async function ensureBand(
           "fill-extrusion-color": colourExpression(band, man.ramp),
           "fill-extrusion-height": heightExpression(band),
           "fill-extrusion-base": 0,
-          "fill-extrusion-opacity": 0.78,
+          "fill-extrusion-opacity": opacityExpression(band),
           "fill-extrusion-vertical-gradient": true,
         },
       },
