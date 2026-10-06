@@ -37,6 +37,7 @@ import {
   densityLayerIds,
   densityActive,
   syncDensityPitch,
+  densityCameraForViewport,
   mountDensityLegend,
   densityDotMinZoom,
   densityPointsNear,
@@ -98,6 +99,19 @@ const NON_GB_LABEL = {
 /** Hillshade opacity: gray altitude (fix 4) vs capped texture in voting mode (fix 2). */
 const HILLSHADE_OPACITY: ExpressionSpecification = ["interpolate", ["linear"], ["zoom"], 4, 0.9, 7, 0.9, 10, 0.62, 14, 0.4];
 const HILLSHADE_OPACITY_VOTING = 0.35;
+
+/** Pubs-density basemap override (cream land / saturated water / quiet relief). */
+const DENSITY_LAND = "#f7efd2";
+const DEFAULT_LAND = "#eef0f1";
+const DENSITY_WATER = "#6f9fcf";
+const DEFAULT_WATER = "#d6dee6";
+const DENSITY_COAST = "#3f6f9f";
+const DEFAULT_COAST = "#9aa5b1";
+const DENSITY_COAST_OPACITY = 0.9;
+const DEFAULT_COAST_OPACITY = 0.7;
+const DENSITY_HILLSHADE = 0.2;
+const DENSITY_LIGHT = { anchor: "map" as const, position: [1.5, 300, 35] as [number, number, number], color: "#ffffff", intensity: 0.65 };
+const DEFAULT_LIGHT = { anchor: "viewport" as const, position: [1.15, 210, 30] as [number, number, number], color: "#ffffff", intensity: 0.5 };
 
 const STYLE: StyleSpecification = {
   version: 8,
@@ -458,6 +472,7 @@ export function createAtlas(container: HTMLElement): Atlas {
   const densityHost = container.parentElement ?? document.body;
   let densityLegend: { setVisible: (on: boolean) => void; destroy: () => void } | null = null;
   let densityManifest: DensityManifest | null = null;
+  let densityBasemapOn = false;
   const densityPointsLoaded = new Set<LayerId>();
   let selected: string | null = null;
   function setSelected(code: string | null) {
@@ -793,7 +808,7 @@ export function createAtlas(container: HTMLElement): Atlas {
     if (map.getLayer("density-glow")) {
       map.setLayoutProperty("density-glow", "visibility", muteOthers ? "none" : "visible");
     }
-    if (map.getLayer("hillshade")) {
+    if (map.getLayer("hillshade") && !densityBasemapOn) {
       map.setPaintProperty("hillshade", "raster-opacity", on ? HILLSHADE_OPACITY_VOTING : HILLSHADE_OPACITY);
     }
     for (const layerId of ["non-gb-land", "non-gb-label"]) {
@@ -897,10 +912,37 @@ export function createAtlas(container: HTMLElement): Atlas {
       }
     }
   };
+  const applyDensityBasemap = (on: boolean) => {
+    if (on === densityBasemapOn) return;
+    densityBasemapOn = on;
+    if (map.getLayer("land")) {
+      map.setPaintProperty("land", "background-color", on ? DENSITY_LAND : DEFAULT_LAND);
+    }
+    if (map.getLayer("water")) {
+      map.setPaintProperty("water", "fill-color", on ? DENSITY_WATER : DEFAULT_WATER);
+    }
+    if (map.getLayer("water-coast")) {
+      map.setPaintProperty("water-coast", "line-color", on ? DENSITY_COAST : DEFAULT_COAST);
+      map.setPaintProperty("water-coast", "line-opacity", on ? DENSITY_COAST_OPACITY : DEFAULT_COAST_OPACITY);
+    }
+    if (map.getLayer("hillshade")) {
+      if (on) {
+        map.setPaintProperty("hillshade", "raster-opacity", DENSITY_HILLSHADE);
+      } else {
+        map.setPaintProperty(
+          "hillshade",
+          "raster-opacity",
+          votingOn() ? HILLSHADE_OPACITY_VOTING : HILLSHADE_OPACITY,
+        );
+      }
+    }
+    map.setLight(on ? DENSITY_LIGHT : DEFAULT_LIGHT);
+  };
   const refreshDensityCamera = () => {
     const pubsOn = state.pubs && !paused("pubs");
     const active = densityActive(map, "pubs", pubsOn) ? "pubs" as LayerId : null;
-    syncDensityPitch(map, active, densityManifest?.pitch ?? 40);
+    syncDensityPitch(map, active, densityCameraForViewport(densityManifest));
+    applyDensityBasemap(!!active);
     densityLegend?.setVisible(!!active);
   };
   let hovered: string | null = null;
