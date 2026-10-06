@@ -1,4 +1,5 @@
 import {
+  AttributionControl,
   Map,
   Popup,
   setWorkerUrl,
@@ -26,6 +27,8 @@ import {
   type VotingBundle,
 } from "./voting";
 import { ENDORSE_COLORS } from "./endorse";
+import { singularLabel } from "./layer-groups";
+import { PLACES } from "./geo";
 import { mountVotingLegend, showVotingToast, hideVotingToast } from "./voting-ui";
 
 export const HOME_BOUNDS: [[number, number], [number, number]] = [
@@ -92,11 +95,12 @@ const STYLE: StyleSpecification = {
       tiles: [HILLSHADE_TILES],
       tileSize: 256,
       maxzoom: 16,
-      attribution: "Hillshade © Esri, USGS, NOAA",
     },
     openmaptiles: {
       type: "vector",
       url: "https://tiles.openfreemap.org/planet",
+      // Explicit source options beat the TileJSON credit; ATTRIBUTION carries it once (fix 10).
+      attribution: "",
     },
     "non-gb": { type: "geojson", data: NON_GB_LAND as never },
     "non-gb-label": { type: "geojson", data: NON_GB_LABEL as never },
@@ -172,8 +176,54 @@ const STYLE: StyleSpecification = {
   ],
 };
 
-/** Preview road corridors are fake straight lines: hide them past regional zoom (fix 2). */
-const ROADS_MAXZOOM = 7.5;
+/** Preview road corridors are fake straight lines: never draw them past z7 (roast fix 7). */
+const ROADS_MAXZOOM = 7;
+
+/** One-line, deduped credit (roast fix 10); the panel's "About the data" has the full list. */
+const ATTRIBUTION =
+  '© Esri · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap</a>' +
+  ' · <a href="https://openmaptiles.org/" target="_blank" rel="noopener noreferrer">OpenMapTiles</a>' +
+  " · Contains OS & ONS data © Crown 2024 (OGL)";
+
+/** Cluster radius scales with sqrt(count) so 250 and 862 no longer render the same (fix 8). */
+const CLUSTER_STOPS = [1.7, 9, 5, 13, 15, 19, 30, 26] as const;
+const clusterRadius = (extra = 0): ExpressionSpecification => [
+  "interpolate", ["linear"], ["sqrt", ["get", "point_count"]],
+  CLUSTER_STOPS[0], CLUSTER_STOPS[1] + extra, CLUSTER_STOPS[2], CLUSTER_STOPS[3] + extra,
+  CLUSTER_STOPS[4], CLUSTER_STOPS[5] + extra, CLUSTER_STOPS[6], CLUSTER_STOPS[7] + extra,
+];
+
+/** Chip icons replace the generic marker shapes from this zoom (fix 8). */
+const ICON_MINZOOM = 11;
+
+/** Inner markup of a chip icon <svg>. */
+function iconBody(svg: string): string {
+  const start = svg.indexOf(">");
+  const end = svg.lastIndexOf("</svg>");
+  return start >= 0 && end > start ? svg.slice(start + 1, end) : "";
+}
+
+/** 22px white disc, 1.5px accent stroke, chip icon inside; rendered @2x. */
+function discIconSvg(iconSvg: string, accent: string): string {
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 22 22">` +
+    `<circle cx="11" cy="11" r="10" fill="#ffffff" stroke="${accent}" stroke-width="1.5"/>` +
+    `<g transform="translate(5 5) scale(0.5)" fill="none" stroke="${accent}" stroke-width="2.3" ` +
+    `stroke-linecap="round" stroke-linejoin="round">${iconBody(iconSvg).replaceAll("currentColor", accent)}</g></svg>`;
+}
+
+function nearestPlace(lon: number, lat: number): string {
+  let best = "";
+  let bestD = Infinity;
+  const k = Math.cos((lat * Math.PI) / 180);
+  for (const place of PLACES) {
+    const dx = (place.lon - lon) * k;
+    const dy = place.lat - lat;
+    const d = dx * dx + dy * dy;
+    if (d < bestD) { bestD = d; best = place.name; }
+  }
+  // ~0.3° ≈ 33 km: beyond that the "context" would be misleading.
+  return bestD < 0.09 ? best : "";
+}
 
 /** Layers paused while the voting view is on (fix 2). */
 const VOTING_MUTED: ReadonlySet<LayerId> = new Set<LayerId>(["roads", "pubs", "schools", "churches"]);
@@ -363,7 +413,7 @@ export function createAtlas(container: HTMLElement): Atlas {
     ],
     minZoom: 3.6,
     maxZoom: 16,
-    attributionControl: { compact: false },
+    attributionControl: false,
     renderWorldCopies: false,
     dragRotate: false,
     pitchWithRotate: false,
@@ -375,6 +425,17 @@ export function createAtlas(container: HTMLElement): Atlas {
       failIfMajorPerformanceCaveat: false,
     },
   });
+
+  const compactAttribution = window.matchMedia("(max-width: 860px)").matches;
+  map.addControl(new AttributionControl({ compact: compactAttribution, customAttribution: ATTRIBUTION }), "bottom-right");
+  if (compactAttribution) {
+    // MapLibre opens the compact ⓘ on load; start collapsed so it never covers the scale bar.
+    map.once("load", () => {
+      const attrib = container.querySelector<HTMLDetailsElement>(".maplibregl-ctrl-attrib.maplibregl-compact");
+      attrib?.classList.remove("maplibregl-compact-show");
+      attrib?.removeAttribute("open");
+    });
+  }
 
   let loaded = false;
   let votingBundle: VotingBundle | null = null;
@@ -478,12 +539,48 @@ export function createAtlas(container: HTMLElement): Atlas {
   ]);
   const minZoom = (id: LayerId) => id === "post-offices" ? 7 :
     ["pubs", "schools", "churches", "other-religious", "mosques", "petrol", "ev", "libraries", "universities", "museums", "railway-stations", "aerodromes", "ferry-terminals", "marinas", "zoos", "theatres", "battlefields", "cinemas", "stadiums", "theme-parks", "viewpoints", "arts-centres", "aquariums", "piers", "ruins", "golf-courses", "galleries", "marketplaces", "nature-reserves", "camp-sites", "memorials", "sports-centres", "caravan-sites", "fitness-centres", "community-centres", "playgrounds", "beaches", "swimming-pools", "pharmacies", "townhalls", "places-of-worship", "lighthouses", "courthouses", "nightclubs", "windmills", "prisons", "clinics", "dentists"].includes(id) ? 6 : 0;
-  const layerIds = (id: LayerId) => id === "roads" ? [id, "roads-hit"] :
-    id === "constituencies" ? [...CONSTITUENCY_LAYERS] :
-    clustered.has(id) ? [id, `${id}-cluster`, `${id}-cluster-count`] : [id];
+  const hasIcon = (layer: { kind: MarkerKind }) =>
+    layer.kind === "dot" || layer.kind === "ring" || SYMBOL_KINDS.has(layer.kind);
+  const layerIds = (id: LayerId): string[] => {
+    if (id === "roads") return [id, "roads-hit"];
+    if (id === "constituencies") return [...CONSTITUENCY_LAYERS];
+    const layer = LAYERS.find((item) => item.id === id)!;
+    const ids: string[] = [id];
+    if (id === "hospitals") ids.push("hospitals-hi");
+    if (hasIcon(layer)) ids.push(`${id}-icon`);
+    if (clustered.has(id)) ids.push(`${id}-cluster-halo`, `${id}-cluster`, `${id}-cluster-count`);
+    return ids;
+  };
   const beforeFor = (z: number): string | undefined => {
     const next = ordered.find((layer) => layer.z > z && map.getLayer(layer.id));
     return next?.id;
+  };
+  /** z≥11: chip SVG icon in a white disc instead of the generic shapes (fix 8). */
+  const addIconLayer = (id: LayerId, filter: FilterSpecification | undefined) => {
+    const layer = LAYERS.find((item) => item.id === id)!;
+    const imageId = `${id}-icon`;
+    const place = () => {
+      if (map.getLayer(imageId) || !map.getSource(id)) return;
+      const shown = state[id] && !paused(id);
+      map.addLayer({
+        id: imageId, type: "symbol", source: id, minzoom: ICON_MINZOOM,
+        ...(filter ? { filter } : {}),
+        layout: {
+          visibility: shown ? "visible" : "none",
+          "icon-image": imageId,
+          "icon-size": ["interpolate", ["linear"], ["zoom"], ICON_MINZOOM, 0.85, 14, 1],
+          "icon-allow-overlap": id === "hospitals",
+          "icon-padding": 1,
+        },
+      }, beforeFor(layer.z));
+    };
+    if (map.hasImage(imageId)) { place(); return; }
+    const image = new Image(44, 44);
+    image.onload = () => {
+      if (!map.hasImage(imageId)) map.addImage(imageId, image, { pixelRatio: 2 });
+      place();
+    };
+    image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(discIconSvg(layer.icon, layer.accent))}`;
   };
   const add = (id: LayerId) => {
     if (map.getLayer(id)) return;
@@ -496,19 +593,14 @@ export function createAtlas(container: HTMLElement): Atlas {
           : OSM_STATIC.has(id)
             ? `/data/${id}.geojson`
             : buildCollection(id);
-      const attribution =
-        id === "constituencies"
-          ? "Contains OS data © Crown copyright and database right 2024; Contains National Statistics data © Crown copyright and database right 2024 (OGL v3.0)"
-          : OSM_STATIC.has(id)
-            ? "© OpenStreetMap contributors (ODbL 1.0)"
-            : undefined;
+      // Source credits live in the single ATTRIBUTION line (fix 10), not per source.
       map.addSource(id, {
         type: "geojson",
         data: sourceData,
         ...(id === "constituencies" ? { promoteId: "PCON24CD" } : {}),
-        ...(clusters ? { cluster: true, clusterRadius: 44, clusterMaxZoom: 11, clusterMinPoints: 3,
-          maxzoom: 12, buffer: 64, tolerance: 0.5 } : {}),
-        ...(attribution ? { attribution } : {}),
+        // maxzoom stays one above clusterMaxZoom so the last zoom is unclustered.
+        ...(clusters ? { cluster: true, clusterRadius: 64, clusterMaxZoom: 12, clusterMinPoints: 4,
+          maxzoom: 13, buffer: 64, tolerance: 0.5 } : {}),
       });
     }
     const before = beforeFor(layer.z);
@@ -567,9 +659,10 @@ export function createAtlas(container: HTMLElement): Atlas {
       // Preview corridors are straight-line stubs: never let them outlive regional zoom (fix 2).
       map.addLayer({ id, type: "line", source: id, maxzoom: ROADS_MAXZOOM,
         layout: { ...layout, "line-cap": "round", "line-join": "round" },
+        // Context gray, not brand teal (fix 2); only drawn to z7.
         paint: { "line-color": layer.color,
-          "line-width": ["interpolate", ["exponential", 1.35], ["zoom"], 4, 0.9, 8, 2.1, 12, 3.8],
-          "line-opacity": 0.85 },
+          "line-width": ["interpolate", ["linear"], ["zoom"], 5, 0.5, 8, 1.2, 12, 2.4],
+          "line-opacity": 0.7 },
       }, before);
       map.addLayer({ id: "roads-hit", type: "line", source: id, maxzoom: ROADS_MAXZOOM,
         layout: { ...layout, "line-cap": "round", "line-join": "round" },
@@ -591,27 +684,42 @@ export function createAtlas(container: HTMLElement): Atlas {
         "circle-stroke-color": "rgba(255,255,255,0.92)",
       };
       map.addLayer({ id, type: "circle", source: id, layout, ...pointFilter,
-        minzoom: minZoom(id), paint }, before);
+        minzoom: minZoom(id), ...(hasIcon(layer) ? { maxzoom: ICON_MINZOOM } : {}), paint }, before);
     } else if (SYMBOL_KINDS.has(layer.kind)) {
       if (!map.hasImage(`${id}-mark`)) {
         map.addImage(`${id}-mark`, markerImage(layer.kind, layer.color), { pixelRatio: 2 });
       }
+      // Hospitals no longer blanket the Midlands: no forced overlap below z10 (fix 8).
+      const isHospitals = id === "hospitals";
       map.addLayer({ id, type: "symbol", source: id, layout: {
         ...layout, "icon-image": `${id}-mark`, "icon-size": iconSize(layer.pointScale),
-        "icon-allow-overlap": id === "hospitals",
-        ...(id === "hospitals" ? { "icon-ignore-placement": true } : {}),
-      }, ...pointFilter, minzoom: minZoom(id) }, before);
+        "icon-allow-overlap": false,
+      }, ...pointFilter, minzoom: minZoom(id), maxzoom: isHospitals ? 10 : ICON_MINZOOM }, before);
+      if (isHospitals) {
+        map.addLayer({ id: "hospitals-hi", type: "symbol", source: id, layout: {
+          ...layout, "icon-image": `${id}-mark`, "icon-size": iconSize(layer.pointScale),
+          "icon-allow-overlap": true, "icon-ignore-placement": true,
+        }, ...pointFilter, minzoom: 10, maxzoom: ICON_MINZOOM }, before);
+      }
     }
+    if (hasIcon(layer)) addIconLayer(id, pointFilter.filter);
     if (clusters) {
+      // White separator ring 1.5px wider, so overlapping clusters from different layers stay apart.
+      map.addLayer({ id: `${id}-cluster-halo`, type: "circle", source: id,
+        filter: ["has", "point_count"], minzoom: minZoom(id), layout,
+        paint: { "circle-radius": clusterRadius(1.5), "circle-color": "#ffffff", "circle-opacity": 0.95 },
+      }, before);
       map.addLayer({ id: `${id}-cluster`, type: "circle", source: id,
         filter: ["has", "point_count"], minzoom: minZoom(id), layout,
-        paint: { "circle-radius": ["step", ["get", "point_count"], 11, 10, 14, 50, 18, 250, 24],
-          "circle-color": layer.tint, "circle-stroke-width": 1.5, "circle-stroke-color": layer.accent },
+        paint: { "circle-radius": clusterRadius(), "circle-color": layer.tint, "circle-opacity": 0.92,
+          "circle-stroke-width": 1.5, "circle-stroke-color": layer.accent },
       }, before);
+      // Counts only from 10 up; smaller clusters read as plain dots.
       map.addLayer({ id: `${id}-cluster-count`, type: "symbol", source: id,
-        filter: ["has", "point_count"], minzoom: minZoom(id),
+        filter: ["all", ["has", "point_count"], [">=", ["get", "point_count"], 10]], minzoom: minZoom(id),
         layout: { ...layout, "text-field": ["get", "point_count_abbreviated"],
-          "text-font": ["Noto Sans Bold"], "text-size": 11 },
+          "text-font": ["Noto Sans Regular"],
+          "text-size": ["step", ["get", "point_count"], 11, 100, 12] },
         paint: { "text-color": layer.accent },
       }, before);
     }
@@ -654,11 +762,20 @@ export function createAtlas(container: HTMLElement): Atlas {
     if (!on) setSelected(null);
   };
   const popup = new Popup({ closeButton: true, maxWidth: "260px", className: "atlas-popup", offset: 10 });
-  popup.on("close", () => setSelected(null));
+  popup.on("close", () => {
+    setSelected(null);
+    document.body.classList.remove("seat-sheet-open");
+  });
+  let popupIsSeat = false;
+  popup.on("open", () => {
+    popup.getElement()?.classList.toggle("is-seat", popupIsSeat);
+    document.body.classList.toggle("seat-sheet-open", popupIsSeat);
+  });
   const NON_INTERACTIVE = new Set<string>(CONSTITUENCY_LAYERS.filter((id) =>
     id !== "constituencies" && id !== "restore-callout-dot"));
   const interactiveIds = () => ordered.flatMap((layer) => layerIds(layer.id))
-    .filter((id) => id !== "roads" && !id.endsWith("-cluster-count") && !NON_INTERACTIVE.has(id) && !!map.getLayer(id));
+    .filter((id) => id !== "roads" && !id.endsWith("-cluster-count") && !id.endsWith("-cluster-halo")
+      && !NON_INTERACTIVE.has(id) && !!map.getLayer(id));
   const seatFallbackHtml = (name: string, code: string) =>
     `<strong class="popup-title">${escapeHtml(name)}</strong>` +
     (code ? `<div class="popup-meta">${escapeHtml(code)}</div>` : "");
@@ -668,6 +785,8 @@ export function createAtlas(container: HTMLElement): Atlas {
   };
   const openSeat = async (code: string, lngLat?: [number, number], fallbackName = "") => {
     setSelected(code);
+    // ≤520px: seat popups render as a bottom sheet (fix 7); nav/scale hide while it is open.
+    popupIsSeat = true;
     try {
       if (!votingBundle) votingBundle = await loadVotingBundle();
       const at = lngLat ?? seatLngLat(code);
@@ -754,21 +873,20 @@ export function createAtlas(container: HTMLElement): Atlas {
       void openSeat(code, [event.lngLat.lng, event.lngLat.lat], name);
       return;
     }
+    // Generic POI popup (fix 10): name, singular type + context, one source link.
     const brand = properties.brand ? String(properties.brand) : "";
-    const religion = properties.religion ? String(properties.religion) : "";
-    const note = properties.note != null && String(properties.note).length
-      ? String(properties.note)
-      : OSM_STATIC.has(layerId as LayerId)
-        ? "OpenStreetMap"
-        : "Preview stub";
+    const isSample = !OSM_STATIC.has(layerId as LayerId);
     const osmUrl = properties.osm_url ? String(properties.osm_url) : "";
-    const metaBits = [layer?.label ?? "Layer", brand && brand !== name ? brand : "", religion].filter(Boolean);
-    popup.setLngLat(event.lngLat).setHTML(
-      `<strong class="popup-title">${escapeHtml(name)}</strong>` +
-      `<div class="popup-meta">${escapeHtml(metaBits.join(" · "))}</div>` +
-      `<div class="popup-note">${escapeHtml(note)}</div>` +
+    const point = feature.geometry.type === "Point" ? feature.geometry.coordinates as [number, number] : null;
+    const context = brand && brand !== name ? brand : point ? nearestPlace(point[0], point[1]) : "";
+    const typeBits = [layer ? singularLabel(layer.label) : "Place", context].filter(Boolean);
+    popupIsSeat = false;
+    popup.setLngLat(event.lngLat).setMaxWidth("260px").setHTML(
+      `<strong class="popup-title popup-title-poi">${escapeHtml(name)}</strong>` +
+      `<div class="popup-meta">${escapeHtml(typeBits.join(" · "))}</div>` +
+      (isSample ? `<div class="popup-sample">Sample data</div>` : "") +
       (osmUrl
-        ? `<div class="popup-note"><a href="${escapeHtml(osmUrl)}" target="_blank" rel="noopener noreferrer">OpenStreetMap</a></div>`
+        ? `<a class="popup-link" href="${escapeHtml(osmUrl)}" target="_blank" rel="noopener noreferrer">View on OpenStreetMap<span class="ext" aria-hidden="true">↗</span></a>`
         : ""),
     ).addTo(map);
   });
