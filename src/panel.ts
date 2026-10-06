@@ -105,6 +105,21 @@ export function mountPanel(
     refreshStatus();
   });
 
+  // Voting view pauses context layers on the map; dim their chips so state stays honest.
+  window.addEventListener("atlas:voting-mode", (event) => {
+    const paused = new Set((event as CustomEvent<{ paused: string[] }>).detail?.paused ?? []);
+    for (const chip of body.querySelectorAll<HTMLButtonElement>(".chip")) {
+      if (paused.has(chip.dataset.layer ?? "")) {
+        chip.dataset.paused = "true";
+        chip.title = "Paused in voting view";
+      } else {
+        delete chip.dataset.paused;
+        const layer = LAYERS.find((item) => item.id === chip.dataset.layer);
+        if (layer) chip.title = layer.blurb;
+      }
+    }
+  });
+
   toggle.addEventListener("click", () => {
     const collapsed = root.classList.toggle("collapsed");
     toggle.setAttribute("aria-expanded", collapsed ? "false" : "true");

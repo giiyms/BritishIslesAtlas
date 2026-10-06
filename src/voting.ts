@@ -98,7 +98,19 @@ export function outlineColorExpression(): unknown {
   ];
 }
 
-type FeatureCollection = {
+export function fillOpacityExpression(): unknown {
+  return [
+    "match",
+    ["get", "endorseColor"],
+    "reform", ENDORSE_COLORS.reform.fillOpacity,
+    "restore", ENDORSE_COLORS.restore.fillOpacity,
+    "none", ENDORSE_COLORS.none.fillOpacity,
+    "override", ENDORSE_COLORS.override.fillOpacity,
+    ENDORSE_COLORS.reform.fillOpacity,
+  ];
+}
+
+export type FeatureCollection = {
   type: "FeatureCollection";
   features: Array<{ type: string; properties?: Record<string, unknown> | null; geometry?: unknown }>;
 };
@@ -146,39 +158,96 @@ function escapeHtml(value: string): string {
   });
 }
 
-function candidateLine(label: string, row?: VotingSeat["reform"]): string {
-  const standing = row?.standing ?? "unknown";
-  const name = row?.name?.trim();
-  if (standing === "yes" && name) {
-    const link = row?.wcivf_url || row?.dc_person_url;
-    const nameHtml = link
-      ? `<a href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">${escapeHtml(name)}</a>`
-      : escapeHtml(name);
-    return `<div class="popup-cand"><span class="popup-cand-party">${escapeHtml(label)}</span> ${nameHtml}</div>`;
+/**
+ * Canonical party labels for display only (style roast fix 5). The seat-poll data
+ * mixes "Reform UK"/"Reform", "Scottish National Party (SNP)"/"Nationalist",
+ * "The Green Party"/"Green" and "Minor"/"Other". Never feeds the pick logic.
+ */
+export function canonicalParty(label: string | null | undefined, pcon24cd = ""): string {
+  const raw = (label ?? "").trim();
+  if (!raw) return "";
+  const n = raw.toLowerCase();
+  if (/^reform( uk)?$/.test(n)) return "Reform UK";
+  if (/scottish national party|^snp$/.test(n)) return "SNP";
+  if (/^plaid( cymru)?$/.test(n)) return "Plaid Cymru";
+  if (n === "nationalist") {
+    if (pcon24cd.startsWith("S")) return "SNP";
+    if (pcon24cd.startsWith("W")) return "Plaid Cymru";
+    return "Other";
   }
-  if (standing === "no") {
-    return `<div class="popup-cand"><span class="popup-cand-party">${escapeHtml(label)}</span> not standing</div>`;
-  }
-  return `<div class="popup-cand"><span class="popup-cand-party">${escapeHtml(label)}</span> not confirmed</div>`;
+  if (/\bgreen\b/.test(n)) return "Green";
+  if (n === "minor" || n === "other" || n === "others") return "Other";
+  return raw;
 }
 
-function pollRowsHtml(seat: VotingSeat): string {
-  const polls = seat.polls ?? [];
-  if (polls.length === 0) {
-    return `<div class="popup-note">No seat poll loaded</div>`;
+/** "2026-10-05T08:23:00Z" → "5 Oct" (UTC date, matches the baked retrieval day). */
+export function formatShortDate(iso: string | undefined | null): string {
+  const d = (iso ?? "").slice(0, 10);
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(d);
+  if (!m) return "";
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const month = months[Number(m[2]) - 1];
+  return month ? `${Number(m[3])} ${month}` : "";
+}
+
+const EXT = ` target="_blank" rel="noopener noreferrer"`;
+
+function extLink(href: string, text: string): string {
+  return `<a href="${escapeHtml(href)}"${EXT}>${escapeHtml(text)}<span class="ext" aria-hidden="true">↗</span></a>`;
+}
+
+function candidateCell(label: string, row?: VotingSeat["reform"]): string {
+  const standing = row?.standing ?? "unknown";
+  const name = row?.name?.trim();
+  let value: string;
+  if (standing === "yes" && name) {
+    const link = row?.wcivf_url || row?.dc_person_url;
+    value = link ? extLink(link, name) : escapeHtml(name);
+  } else if (standing === "no") {
+    value = `<span class="vp-muted">not standing</span>`;
+  } else {
+    value = `<span class="vp-muted" title="Not yet confirmed">–</span>`;
   }
-  return polls.slice(0, 3).map((poll) => {
+  return `<div class="vp-cand"><span class="vp-cand-party">${escapeHtml(label)}</span> ${value}</div>`;
+}
+
+function shareCell(value: number | null | undefined, lead: boolean): string {
+  if (typeof value !== "number" || !Number.isFinite(value)) return `<span class="vp-num vp-muted">–</span>`;
+  return `<span class="vp-num${lead ? " vp-lead" : ""}">${escapeHtml(String(value))}%</span>`;
+}
+
+function pollGridHtml(seat: VotingSeat): string {
+  const polls = (seat.polls ?? []).slice(0, 3);
+  if (polls.length === 0) {
+    return `<p class="vp-note">No seat poll loaded</p>`;
+  }
+  const rows = polls.map((poll) => {
     const label = poll.provider_label ?? poll.provider;
-    const winner = poll.projected_winner ?? "—";
-    const date = poll.fieldwork ?? "";
-    const ref = poll.reform_share != null ? `Ref ${poll.reform_share}%` : "";
-    const res = poll.restore_share != null ? `RB ${poll.restore_share}%` : "RB —";
-    const bits = [ref, res].filter(Boolean).join(" · ");
-    const link = poll.url
-      ? `<a href="${escapeHtml(poll.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(label)}</a>`
-      : escapeHtml(label);
-    return `<div class="popup-poll">${link}: <strong>${escapeHtml(String(winner))}</strong>${bits ? ` · ${escapeHtml(bits)}` : ""}${date ? `<span class="popup-poll-date">${escapeHtml(date)}</span>` : ""}</div>`;
+    const winner = canonicalParty(poll.projected_winner, seat.pcon24cd) || "–";
+    const ref = poll.reform_share;
+    const rb = poll.restore_share;
+    const refNum = typeof ref === "number" && Number.isFinite(ref) ? ref : null;
+    const rbNum = typeof rb === "number" && Number.isFinite(rb) ? rb : null;
+    const refLead = refNum !== null && (rbNum === null || refNum > rbNum);
+    const rbLead = rbNum !== null && (refNum === null || rbNum > refNum);
+    const title = poll.fieldwork ? ` title="Fieldwork ${escapeHtml(poll.fieldwork)}"` : "";
+    const name = poll.url ? extLink(poll.url, label) : escapeHtml(label);
+    return (
+      `<div class="vp-row" role="row"${title}>` +
+      `<span role="cell" class="vp-pollster">${name}</span>` +
+      `<span role="cell" class="vp-winner">${escapeHtml(winner)}</span>` +
+      `<span role="cell">${shareCell(refNum, refLead)}</span>` +
+      `<span role="cell">${shareCell(rbNum, rbLead)}</span>` +
+      `</div>`
+    );
   }).join("");
+  return (
+    `<div class="vp-polls" role="table" aria-label="Seat polls">` +
+    `<div class="vp-row vp-row-head" role="row">` +
+    `<span role="columnheader">Pollster</span><span role="columnheader">Projected</span>` +
+    `<span role="columnheader" class="vp-num">Ref</span><span role="columnheader" class="vp-num">RB</span>` +
+    `</div>${rows}</div>`
+  );
 }
 
 export function constituencyPopupHtml(seat: VotingSeat, retrievedAt: string): string {
@@ -214,15 +283,22 @@ export function constituencyPopupHtml(seat: VotingSeat, retrievedAt: string): st
         ? ENDORSE_COLORS.none.label
         : ENDORSE_COLORS.reform.label;
 
-  const third = result.thirdPartyLead
-    ? `<div class="popup-note">Polls currently project ${escapeHtml(result.thirdPartyLead)} ahead; endorsement is anti-split among Reform/Restore, not a win-probability maximiser across all parties.</div>`
+  // Third-party note (display only): name the provider and the canonical party.
+  let third = "";
+  if (result.thirdPartyLead) {
+    const source = (seat.polls ?? []).find((p) => (p.projected_winner ?? "").trim() === result.thirdPartyLead);
+    const provider = source ? (source.provider_label ?? source.provider) : "A seat poll";
+    const party = canonicalParty(result.thirdPartyLead, seat.pcon24cd);
+    const article = /^[aeiou]/i.test(party) ? "an" : "a";
+    third = `<p class="vp-note">${escapeHtml(provider)} projects ${article} <em>${escapeHtml(party)}</em> win here.</p>`;
+  }
+
+  // 2024 winner row stays hidden until the Commons Library join lands.
+  const winner2024 = seat.winner2024
+    ? `<p class="vp-note">2024 winner: ${escapeHtml(canonicalParty(seat.winner2024, seat.pcon24cd))}</p>`
     : "";
 
-  const winner2024 = seat.winner2024
-    ? `<div class="popup-meta">2024 winner: ${escapeHtml(seat.winner2024)}</div>`
-    : `<div class="popup-meta">2024 winner: follow-up (Commons Library CBP-10009 join pending)</div>`;
-
-  const date = retrievedAt ? retrievedAt.slice(0, 10) : "";
+  const updated = formatShortDate(retrievedAt);
   const ballot =
     seat.reform?.wcivf_url ||
     seat.restore?.wcivf_url ||
@@ -230,26 +306,71 @@ export function constituencyPopupHtml(seat: VotingSeat, retrievedAt: string): st
 
   return (
     `<div class="vote-popup">` +
-    `<strong>${escapeHtml(seat.pcon24nm)}</strong>` +
-    `<div class="popup-meta">${escapeHtml(seat.pcon24cd)}</div>` +
-    `<div class="vote-badge" style="--vote:${colors.fill}">${escapeHtml(voteLabel)}</div>` +
-    `<div class="popup-reason">${escapeHtml(result.reason)}</div>` +
+    `<div class="vp-head"><strong class="popup-title">${escapeHtml(seat.pcon24nm)}</strong>` +
+    `<span class="vp-code">${escapeHtml(seat.pcon24cd)}</span></div>` +
+    `<div class="vote-badge" style="--vote:${colors.badge}">${escapeHtml(voteLabel)}</div>` +
+    `<p class="vp-reason" title="${escapeHtml(result.reason)}">${escapeHtml(result.reason)}</p>` +
     (result.isOverride ? `<div class="popup-override">Daniel override</div>` : "") +
-    `<div class="popup-section">Candidates</div>` +
-    candidateLine("Reform", seat.reform) +
-    candidateLine("Restore", seat.restore) +
-    winner2024 +
-    `<div class="popup-section">Seat polls</div>` +
-    pollRowsHtml(seat) +
+    pollGridHtml(seat) +
     third +
-    (date ? `<div class="popup-note">Polls updated ${escapeHtml(date)}</div>` : "") +
-    `<div class="popup-links">` +
-    `<a href="${escapeHtml(ballot)}" target="_blank" rel="noopener noreferrer">WhoCanIVoteFor</a>` +
-    ` · <a href="https://candidates.democracyclub.org.uk/" target="_blank" rel="noopener noreferrer">Democracy Club</a>` +
+    `<div class="vp-cands">` +
+    candidateCell("Reform", seat.reform) +
+    candidateCell("Restore", seat.restore) +
     `</div>` +
-    `<div class="popup-disclaimer">Editorial endorsement map — not Electoral Commission advice.</div>` +
+    winner2024 +
+    `<div class="vp-foot">` +
+    `<div>${extLink(ballot, "WhoCanIVoteFor")} · ${extLink("https://candidates.democracyclub.org.uk/", "Democracy Club")}` +
+    (updated ? ` · <span class="vp-nowrap">Updated ${escapeHtml(updated)}</span>` : "") +
+    `</div>` +
+    `<div>Editorial endorsement, not Electoral Commission advice.</div>` +
+    `</div>` +
     `</div>`
   );
+}
+
+/** Centroid-ish label point for a (Multi)Polygon: area-weighted centroid of its largest ring. */
+export function labelPoint(geometry: unknown): [number, number] | null {
+  const g = geometry as { type?: string; coordinates?: unknown } | null;
+  if (!g?.coordinates) return null;
+  const polys = (g.type === "Polygon" ? [g.coordinates] : g.type === "MultiPolygon" ? g.coordinates : []) as number[][][][];
+  let best: { area: number; c: [number, number] } | null = null;
+  for (const poly of polys) {
+    const ring = poly[0];
+    if (!ring || ring.length < 4) continue;
+    let a = 0, cx = 0, cy = 0;
+    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+      const [x0, y0] = ring[j];
+      const [x1, y1] = ring[i];
+      const f = x0 * y1 - x1 * y0;
+      a += f; cx += (x0 + x1) * f; cy += (y0 + y1) * f;
+    }
+    if (a === 0) continue;
+    const area = Math.abs(a / 2);
+    const c: [number, number] = [cx / (3 * a), cy / (3 * a)];
+    if (!best || area > best.area) best = { area, c };
+  }
+  return best?.c ?? null;
+}
+
+/** Point features (one per Restore seat) for the GB-scale callout. */
+export function restoreCallouts(enriched: FeatureCollection): FeatureCollection {
+  const features = enriched.features
+    .filter((f) => f.properties?.endorseColor === "restore")
+    .map((f) => {
+      const c = labelPoint(f.geometry);
+      return c
+        ? {
+          type: "Feature",
+          properties: {
+            pcon24cd: String(f.properties?.PCON24CD ?? ""),
+            pcon24nm: String(f.properties?.PCON24NM ?? f.properties?.name ?? ""),
+          },
+          geometry: { type: "Point", coordinates: c },
+        }
+        : null;
+    })
+    .filter((f): f is NonNullable<typeof f> => f !== null);
+  return { type: "FeatureCollection", features };
 }
 
 export function formatPollsUpdated(iso: string | undefined): string {

@@ -7,6 +7,8 @@ export interface SearchHit {
   lat: number;
   zoom?: number;
   bounds?: [[number, number], [number, number]];
+  /** 2024 Westminster seat (GSS code) for postcode hits; the map opens its popup. */
+  seatCode?: string;
 }
 
 interface NominatimItem {
@@ -62,6 +64,7 @@ async function remoteHits(query: string, signal: AbortSignal): Promise<SearchHit
       lon: result.longitude,
       lat: result.latitude,
       zoom: 12,
+      ...(seatCode ? { seatCode } : {}),
     }];
   }
   const url = new URL("https://nominatim.openstreetmap.org/search");

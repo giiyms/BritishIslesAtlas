@@ -350,12 +350,17 @@ export function assertNeverLabCon(result: EndorseResult): void {
   }
 }
 
-/** Map colour tokens — distinct, non Lab-red / Con-blue. */
+/**
+ * Map colour tokens (style roast 2026-10-05 §2 fix 1). Reform = party turquoise as
+ * the light 631-seat default; Restore = party navy as the dark headline exception.
+ * `badge` is the WCAG-AA background for white CTA text (never white on #12B6CF).
+ * Lab red / Con blue hexes are still forbidden (see endorse.test.ts).
+ */
 export const ENDORSE_COLORS = {
-  reform: { fill: "#c4922a", accent: "#a6791c", label: "VOTE REFORM" },
-  restore: { fill: "#6b4c9a", accent: "#563c7c", label: "VOTE RESTORE" },
-  none: { fill: "#8b939e", accent: "#6f7884", label: "NO ENDORSE" },
-  override: { fill: "#c45c8a", accent: "#a34870", label: "OVERRIDE" },
+  reform: { fill: "#12B6CF", accent: "#0B6E7D", badge: "#0B6E7D", fillOpacity: 0.34, label: "VOTE REFORM" },
+  restore: { fill: "#051D3F", accent: "#051D3F", badge: "#051D3F", fillOpacity: 0.88, label: "VOTE RESTORE" },
+  none: { fill: "#8b939e", accent: "#6f7884", badge: "#5d6572", fillOpacity: 0.45, label: "NO ENDORSE" },
+  override: { fill: "#c45c8a", accent: "#a34870", badge: "#a34870", fillOpacity: 0.34, label: "OVERRIDE" },
 } as const;
 
 export function colorForEndorse(

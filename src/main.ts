@@ -24,9 +24,20 @@ const atlas = createAtlas(mapNode);
 mountPanel(panel, { isOn: atlas.isOn, setOn: atlas.setLayer });
 mountScale(scale, atlas.map);
 mountSearch(search, (hit) => {
+  // "What do I vote here?": a postcode hit opens its seat popup once the camera lands.
+  // Registered before show() so a zero-duration (reduced-motion) jump still triggers it.
+  if (hit.seatCode) {
+    const code = hit.seatCode;
+    atlas.map.once("moveend", () => atlas.openSeat(code, [hit.lon, hit.lat]));
+  }
   atlas.show(hit);
 });
 
 zoomIn.addEventListener("click", () => atlas.zoomIn());
 zoomOut.addEventListener("click", () => atlas.zoomOut());
 home.addEventListener("click", () => atlas.home());
+
+// Screenshot harness hook (?capture=1 only).
+if (new URLSearchParams(location.search).has("capture")) {
+  (window as unknown as { __atlas: unknown }).__atlas = atlas;
+}

@@ -17,11 +17,16 @@ import { LAYERS, type LayerId, type MarkerKind } from "./layers";
 import {
   enrichConstituencies,
   fillColorExpression,
+  fillOpacityExpression,
   loadVotingBundle,
-  outlineColorExpression,
   constituencyPopupHtml,
+  restoreCallouts,
+  labelPoint as labelPointOf,
+  type FeatureCollection as VotingFeatureCollection,
   type VotingBundle,
 } from "./voting";
+import { ENDORSE_COLORS } from "./endorse";
+import { mountVotingLegend, showVotingToast, hideVotingToast } from "./voting-ui";
 
 export const HOME_BOUNDS: [[number, number], [number, number]] = [
   [-12.2, 49.35],
@@ -32,6 +37,51 @@ export const HOME_PADDING = { top: 28, bottom: 48, left: 36, right: 28 };
 
 const HILLSHADE_TILES =
   "https://server.arcgisonline.com/ArcGIS/rest/services/Elevation/World_Hillshade/MapServer/tile/{z}/{y}/{x}";
+
+/**
+ * Non-GB land masked in voting mode (style roast fix 2). Coarse hulls for the
+ * island of Ireland and the Isle of Man; drawn under the water layer so the sea
+ * clips them to the coastline.
+ */
+const NON_GB_LAND = {
+  type: "FeatureCollection",
+  features: [
+    {
+      type: "Feature",
+      properties: { name: "Ireland" },
+      geometry: {
+        type: "Polygon",
+        coordinates: [[
+          [-7.4, 55.5], [-6.6, 55.32], [-6.05, 55.25], [-5.9, 55.05], [-5.62, 54.85], [-5.35, 54.55],
+          [-5.42, 54.2], [-5.95, 53.95], [-6.0, 53.5], [-5.95, 53.0], [-6.1, 52.4], [-6.3, 52.1],
+          [-7.0, 52.05], [-8.0, 51.7], [-9.0, 51.4], [-10.3, 51.6], [-10.6, 52.1], [-10.0, 52.7],
+          [-10.3, 53.4], [-10.3, 54.1], [-8.9, 54.4], [-8.7, 54.8], [-8.5, 55.25], [-7.4, 55.5],
+        ]],
+      },
+    },
+    {
+      type: "Feature",
+      properties: { name: "Isle of Man" },
+      geometry: {
+        type: "Polygon",
+        coordinates: [[[-4.85, 54.03], [-4.28, 54.03], [-4.24, 54.45], [-4.66, 54.45], [-4.85, 54.03]]],
+      },
+    },
+  ],
+} as const;
+
+const NON_GB_LABEL = {
+  type: "FeatureCollection",
+  features: [{
+    type: "Feature",
+    properties: { label: "Northern Ireland, not covered" },
+    geometry: { type: "Point", coordinates: [-6.75, 54.62] },
+  }],
+} as const;
+
+/** Hillshade opacity: gray altitude (fix 4) vs capped texture in voting mode (fix 2). */
+const HILLSHADE_OPACITY: ExpressionSpecification = ["interpolate", ["linear"], ["zoom"], 4, 0.9, 7, 0.9, 10, 0.62, 14, 0.4];
+const HILLSHADE_OPACITY_VOTING = 0.35;
 
 const STYLE: StyleSpecification = {
   version: 8,
@@ -48,24 +98,36 @@ const STYLE: StyleSpecification = {
       type: "vector",
       url: "https://tiles.openfreemap.org/planet",
     },
+    "non-gb": { type: "geojson", data: NON_GB_LAND as never },
+    "non-gb-label": { type: "geojson", data: NON_GB_LABEL as never },
   },
   layers: [
     {
       id: "land",
       type: "background",
-      paint: { "background-color": "#f4f6f8" },
+      paint: { "background-color": "#eef0f1" },
     },
     {
       id: "hillshade",
       type: "raster",
       source: "hillshade",
       paint: {
-        "raster-opacity": ["interpolate", ["linear"], ["zoom"], 4, 0.78, 7, 0.66, 11, 0.5, 14, 0.38],
+        "raster-opacity": HILLSHADE_OPACITY,
         "raster-saturation": -1,
-        "raster-contrast": 0.08,
-        "raster-brightness-min": 0.16,
-        "raster-brightness-max": 1,
+        "raster-contrast": ["interpolate", ["linear"], ["zoom"], 7, 0.28, 11, 0.12],
+        "raster-brightness-min": 0.12,
+        // Roast fix 4 asks for brightness-max 0.9 so flats land ≈ #e6e6e6. MapLibre applies
+        // raster-contrast *before* brightness, so 0.9 with contrast 0.28 clips flats to #ffffff.
+        // 0.78 (z≤7) → 0.85 (z≥11) renders the spec's intended #e6e6e6 flats (measured).
+        "raster-brightness-max": ["interpolate", ["linear"], ["zoom"], 7, 0.78, 11, 0.85],
       },
+    },
+    {
+      id: "non-gb-land",
+      type: "fill",
+      source: "non-gb",
+      layout: { visibility: "none" },
+      paint: { "fill-color": "#e9ebee", "fill-opacity": 0.6 },
     },
     {
       id: "water",
@@ -73,15 +135,63 @@ const STYLE: StyleSpecification = {
       source: "openmaptiles",
       "source-layer": "water",
       filter: ["!=", ["get", "class"], "swimming_pool"],
-      paint: { "fill-color": "#e3e8ee" },
+      paint: { "fill-color": "#d6dee6" },
+    },
+    {
+      id: "water-coast",
+      type: "line",
+      source: "openmaptiles",
+      "source-layer": "water",
+      filter: ["match", ["get", "class"], ["ocean", "lake"], true, false],
+      layout: { "line-join": "round" },
+      paint: {
+        "line-color": "#9aa5b1",
+        "line-width": ["interpolate", ["linear"], ["zoom"], 4, 0.4, 10, 0.9],
+        "line-opacity": 0.7,
+      },
     },
     {
       id: "boundary-country", type: "line", source: "openmaptiles", "source-layer": "boundary",
       filter: ["all", ["==", ["get", "admin_level"], 2], ["==", ["get", "maritime"], 0]],
       paint: { "line-color": "#8e959f", "line-width": 1, "line-dasharray": [3, 2], "line-opacity": 0.75 },
     },
+    {
+      id: "non-gb-label",
+      type: "symbol",
+      source: "non-gb-label",
+      maxzoom: 9,
+      layout: {
+        visibility: "none",
+        "text-field": ["get", "label"],
+        "text-font": ["Noto Sans Regular"],
+        "text-size": 11,
+        "text-max-width": 9,
+      },
+      paint: { "text-color": "#6b7280", "text-halo-color": "rgba(255,255,255,0.85)", "text-halo-width": 1.2 },
+    },
   ],
 };
+
+/** Preview road corridors are fake straight lines: hide them past regional zoom (fix 2). */
+const ROADS_MAXZOOM = 7.5;
+
+/** Layers paused while the voting view is on (fix 2). */
+const VOTING_MUTED: ReadonlySet<LayerId> = new Set<LayerId>(["roads", "pubs", "schools", "churches"]);
+
+/** Extra constituency layers drawn above the choropleth fill. */
+const CONSTITUENCY_LAYERS = [
+  "constituencies",
+  "constituencies-outline",
+  "constituencies-override",
+  "constituencies-restore-casing",
+  "constituencies-restore-inner",
+  "constituencies-hover",
+  "constituencies-selected-glow",
+  "constituencies-selected",
+  "restore-callout-ring",
+  "restore-callout-dot",
+  "restore-callout-label",
+] as const;
 
 const SYMBOL_KINDS = new Set<MarkerKind>(["cross", "diamond", "square", "triangle"]);
 
@@ -216,6 +326,10 @@ export interface Atlas {
     zoom?: number;
     bounds?: [[number, number], [number, number]];
   }) => void;
+  /** Open (and select) a seat's voting popup, e.g. after a postcode search. */
+  openSeat: (code: string, lngLat?: [number, number]) => void;
+  /** Fit the view to every Restore seat and open the first one. */
+  flyToRestore: () => void;
 }
 
 function searchPadding(container: HTMLElement) {
@@ -264,6 +378,98 @@ export function createAtlas(container: HTMLElement): Atlas {
 
   let loaded = false;
   let votingBundle: VotingBundle | null = null;
+  let enrichedSeats: VotingFeatureCollection | null = null;
+  /** User chose "Show" on the voting toast: keep context layers visible. */
+  let showOthers = false;
+  let selected: string | null = null;
+  function setSelected(code: string | null) {
+    selected = code;
+    const filter: FilterSpecification = ["==", ["get", "PCON24CD"], selected ?? "__none__"];
+    for (const id of ["constituencies-selected-glow", "constituencies-selected"]) {
+      if (map.getLayer(id)) map.setFilter(id, filter);
+    }
+  }
+  /** Restore casing, override dashes, hover/selected states and the GB-scale Restore callout. */
+  function addConstituencyOverlays(visibility: "visible" | "none", before: string | undefined) {
+    const vis = { visibility } as const;
+    const lineLayout = { ...vis, "line-cap": "round", "line-join": "round" } as const;
+    map.addLayer({
+      id: "constituencies-outline", type: "line", source: "constituencies", layout: lineLayout,
+      paint: {
+        "line-color": "#ffffff",
+        "line-width": ["interpolate", ["linear"], ["zoom"], 4, 0.25, 7, 0.5, 10, 1.0, 13, 1.6],
+        "line-opacity": 0.9,
+      },
+    }, before);
+    map.addLayer({
+      id: "constituencies-override", type: "line", source: "constituencies", layout: lineLayout,
+      filter: ["==", ["get", "endorseColor"], "override"],
+      paint: { "line-color": ENDORSE_COLORS.override.accent, "line-width": 1.5, "line-dasharray": [2, 1] },
+    }, before);
+    map.addLayer({
+      id: "constituencies-restore-casing", type: "line", source: "constituencies", layout: lineLayout,
+      filter: ["==", ["get", "endorseColor"], "restore"],
+      paint: {
+        "line-color": "#ffffff",
+        "line-width": ["interpolate", ["linear"], ["zoom"], 4, 1.5, 10, 2.5],
+      },
+    }, before);
+    map.addLayer({
+      id: "constituencies-restore-inner", type: "line", source: "constituencies", layout: lineLayout,
+      filter: ["==", ["get", "endorseColor"], "restore"],
+      paint: { "line-color": ENDORSE_COLORS.restore.fill, "line-width": 1 },
+    }, before);
+    map.addLayer({
+      id: "constituencies-hover", type: "line", source: "constituencies", layout: lineLayout,
+      paint: {
+        "line-color": "#1d232c",
+        "line-width": 1.5,
+        "line-opacity": ["case", ["boolean", ["feature-state", "hover"], false], 1, 0],
+      },
+    }, before);
+    const none: FilterSpecification = ["==", ["get", "PCON24CD"], selected ?? "__none__"];
+    map.addLayer({
+      id: "constituencies-selected-glow", type: "line", source: "constituencies", layout: lineLayout,
+      filter: none,
+      paint: { "line-color": "#ffffff", "line-width": 6, "line-opacity": 0.6, "line-blur": 1 },
+    }, before);
+    map.addLayer({
+      id: "constituencies-selected", type: "line", source: "constituencies", layout: lineLayout,
+      filter: none,
+      paint: { "line-color": "#1d232c", "line-width": 2.5 },
+    }, before);
+    if (!map.getSource("restore-callouts")) {
+      map.addSource("restore-callouts", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+    }
+    // Callouts sit above every point layer: at GB scale this is the headline.
+    map.addLayer({
+      id: "restore-callout-ring", type: "circle", source: "restore-callouts", maxzoom: 8, layout: vis,
+      paint: {
+        "circle-radius": 16, "circle-color": "rgba(0,0,0,0)",
+        "circle-stroke-width": 2, "circle-stroke-color": ENDORSE_COLORS.restore.fill, "circle-stroke-opacity": 0.45,
+      },
+    });
+    map.addLayer({
+      id: "restore-callout-dot", type: "circle", source: "restore-callouts", maxzoom: 8, layout: vis,
+      paint: {
+        "circle-radius": 7, "circle-color": ENDORSE_COLORS.restore.fill,
+        "circle-stroke-width": 2.5, "circle-stroke-color": "#ffffff",
+      },
+    });
+    map.addLayer({
+      id: "restore-callout-label", type: "symbol", source: "restore-callouts", maxzoom: 8,
+      layout: {
+        ...vis,
+        "text-field": ["get", "pcon24nm"],
+        "text-font": ["Noto Sans Bold"],
+        "text-size": 12,
+        "text-offset": [1.4, 0],
+        "text-anchor": "left",
+        "text-allow-overlap": true,
+      },
+      paint: { "text-color": ENDORSE_COLORS.restore.fill, "text-halo-color": "#ffffff", "text-halo-width": 1.5 },
+    });
+  }
   const ordered = [...LAYERS].sort((a, b) => a.z - b.z);
   const OSM_STATIC = new Set<LayerId>(["petrol", "ev", "power", "hospitals", "fire-stations", "police", "castles", "libraries", "universities", "museums", "railway-stations", "aerodromes", "ferry-terminals", "marinas", "zoos", "theatres", "battlefields", "cinemas", "stadiums", "theme-parks", "viewpoints", "arts-centres", "aquariums", "piers", "ruins", "golf-courses", "galleries", "marketplaces", "nature-reserves", "camp-sites", "memorials", "sports-centres", "caravan-sites", "fitness-centres", "community-centres", "playgrounds", "post-offices", "beaches", "swimming-pools", "pharmacies", "townhalls", "places-of-worship", "lighthouses", "courthouses", "nightclubs", "windmills", "prisons", "clinics", "dentists"]);
   const clustered = new Set<LayerId>([
@@ -273,7 +479,7 @@ export function createAtlas(container: HTMLElement): Atlas {
   const minZoom = (id: LayerId) => id === "post-offices" ? 7 :
     ["pubs", "schools", "churches", "other-religious", "mosques", "petrol", "ev", "libraries", "universities", "museums", "railway-stations", "aerodromes", "ferry-terminals", "marinas", "zoos", "theatres", "battlefields", "cinemas", "stadiums", "theme-parks", "viewpoints", "arts-centres", "aquariums", "piers", "ruins", "golf-courses", "galleries", "marketplaces", "nature-reserves", "camp-sites", "memorials", "sports-centres", "caravan-sites", "fitness-centres", "community-centres", "playgrounds", "beaches", "swimming-pools", "pharmacies", "townhalls", "places-of-worship", "lighthouses", "courthouses", "nightclubs", "windmills", "prisons", "clinics", "dentists"].includes(id) ? 6 : 0;
   const layerIds = (id: LayerId) => id === "roads" ? [id, "roads-hit"] :
-    id === "constituencies" ? [id, `${id}-outline`] :
+    id === "constituencies" ? [...CONSTITUENCY_LAYERS] :
     clustered.has(id) ? [id, `${id}-cluster`, `${id}-cluster-count`] : [id];
   const beforeFor = (z: number): string | undefined => {
     const next = ordered.find((layer) => layer.z > z && map.getLayer(layer.id));
@@ -299,6 +505,7 @@ export function createAtlas(container: HTMLElement): Atlas {
       map.addSource(id, {
         type: "geojson",
         data: sourceData,
+        ...(id === "constituencies" ? { promoteId: "PCON24CD" } : {}),
         ...(clusters ? { cluster: true, clusterRadius: 44, clusterMaxZoom: 11, clusterMinPoints: 3,
           maxzoom: 12, buffer: 64, tolerance: 0.5 } : {}),
         ...(attribution ? { attribution } : {}),
@@ -320,23 +527,23 @@ export function createAtlas(container: HTMLElement): Atlas {
           "fill-color": (isConstituencies
             ? fillColorExpression()
             : layer.color) as ExpressionSpecification | string,
-          "fill-opacity": isConstituencies ? 0.28 : 0.16,
+          "fill-opacity": (isConstituencies ? fillOpacityExpression() : 0.16) as ExpressionSpecification | number,
         },
       }, before);
-      map.addLayer({
-        id: `${id}-outline`,
-        type: "line",
-        source: id,
-        layout: { ...layout, "line-cap": "round", "line-join": "round" },
-        paint: {
-          "line-color": (isConstituencies
-            ? outlineColorExpression()
-            : layer.accent) as ExpressionSpecification | string,
-          "line-width": ["interpolate", ["linear"], ["zoom"], 4, 0.4, 8, 0.8, 12, 1.4],
-          "line-opacity": 0.85,
-        },
-      }, before);
-      if (isConstituencies) {
+      if (!isConstituencies) {
+        map.addLayer({
+          id: `${id}-outline`,
+          type: "line",
+          source: id,
+          layout: { ...layout, "line-cap": "round", "line-join": "round" },
+          paint: {
+            "line-color": layer.accent,
+            "line-width": ["interpolate", ["linear"], ["zoom"], 4, 0.4, 8, 0.8, 12, 1.4],
+            "line-opacity": 0.85,
+          },
+        }, before);
+      } else {
+        addConstituencyOverlays(layout.visibility, before);
         void (async () => {
           try {
             const [geo, bundle] = await Promise.all([
@@ -345,21 +552,26 @@ export function createAtlas(container: HTMLElement): Atlas {
             ]);
             votingBundle = bundle;
             const enriched = enrichConstituencies(geo, bundle.endorsements.seats);
+            enrichedSeats = enriched;
             const source = map.getSource("constituencies") as import("maplibre-gl").GeoJSONSource | undefined;
             source?.setData(enriched as never);
+            const callouts = map.getSource("restore-callouts") as import("maplibre-gl").GeoJSONSource | undefined;
+            callouts?.setData(restoreCallouts(enriched) as never);
+            legend.setCounts(bundle.endorsements.counts);
           } catch (err) {
             console.warn("Failed to enrich constituencies with endorsements", err);
           }
         })();
       }
     } else if (layer.kind === "line") {
-      map.addLayer({ id, type: "line", source: id,
+      // Preview corridors are straight-line stubs: never let them outlive regional zoom (fix 2).
+      map.addLayer({ id, type: "line", source: id, maxzoom: ROADS_MAXZOOM,
         layout: { ...layout, "line-cap": "round", "line-join": "round" },
         paint: { "line-color": layer.color,
           "line-width": ["interpolate", ["exponential", 1.35], ["zoom"], 4, 0.9, 8, 2.1, 12, 3.8],
           "line-opacity": 0.85 },
       }, before);
-      map.addLayer({ id: "roads-hit", type: "line", source: id,
+      map.addLayer({ id: "roads-hit", type: "line", source: id, maxzoom: ROADS_MAXZOOM,
         layout: { ...layout, "line-cap": "round", "line-join": "round" },
         paint: { "line-color": "#000", "line-width": 14, "line-opacity": 0.01 },
       }, before);
@@ -404,16 +616,108 @@ export function createAtlas(container: HTMLElement): Atlas {
       }, before);
     }
   };
+  const votingOn = () => state.constituencies;
+  const paused = (id: LayerId) => votingOn() && !showOthers && VOTING_MUTED.has(id);
   const apply = (id: LayerId) => {
-    if (state[id] && loaded) add(id);
-    const visibility = state[id] ? "visible" : "none";
+    const shown = state[id] && !paused(id);
+    if (shown && loaded) add(id);
+    const visibility = shown ? "visible" : "none";
     for (const layerId of layerIds(id)) {
       if (map.getLayer(layerId)) map.setLayoutProperty(layerId, "visibility", visibility);
     }
   };
+  /** Voting view: pause context layers, cap relief, mask non-GB land, show legend (fix 2). */
+  const applyVotingMode = (announce: boolean) => {
+    const on = votingOn();
+    const muteOthers = on && !showOthers;
+    for (const id of VOTING_MUTED) apply(id);
+    if (map.getLayer("density-glow")) {
+      map.setLayoutProperty("density-glow", "visibility", muteOthers ? "none" : "visible");
+    }
+    if (map.getLayer("hillshade")) {
+      map.setPaintProperty("hillshade", "raster-opacity", on ? HILLSHADE_OPACITY_VOTING : HILLSHADE_OPACITY);
+    }
+    for (const layerId of ["non-gb-land", "non-gb-label"]) {
+      if (map.getLayer(layerId)) map.setLayoutProperty(layerId, "visibility", on ? "visible" : "none");
+    }
+    legend.setVisible(on);
+    const pausedIds = [...VOTING_MUTED].filter((id) => state[id] && muteOthers);
+    window.dispatchEvent(new CustomEvent("atlas:voting-mode", { detail: { on, paused: pausedIds } }));
+    if (muteOthers && announce && pausedIds.length) {
+      showVotingToast("Voting view: other layers paused", "Show", () => {
+        showOthers = true;
+        applyVotingMode(false);
+      });
+    } else if (!muteOthers) {
+      hideVotingToast();
+    }
+    if (!on) setSelected(null);
+  };
   const popup = new Popup({ closeButton: true, maxWidth: "260px", className: "atlas-popup", offset: 10 });
+  popup.on("close", () => setSelected(null));
+  const NON_INTERACTIVE = new Set<string>(CONSTITUENCY_LAYERS.filter((id) =>
+    id !== "constituencies" && id !== "restore-callout-dot"));
   const interactiveIds = () => ordered.flatMap((layer) => layerIds(layer.id))
-    .filter((id) => id !== "roads" && !id.endsWith("-cluster-count") && !!map.getLayer(id));
+    .filter((id) => id !== "roads" && !id.endsWith("-cluster-count") && !NON_INTERACTIVE.has(id) && !!map.getLayer(id));
+  const seatFallbackHtml = (name: string, code: string) =>
+    `<strong class="popup-title">${escapeHtml(name)}</strong>` +
+    (code ? `<div class="popup-meta">${escapeHtml(code)}</div>` : "");
+  const seatLngLat = (code: string): [number, number] | null => {
+    const feature = enrichedSeats?.features.find((f) => f.properties?.PCON24CD === code);
+    return feature ? labelPointOf(feature.geometry) : null;
+  };
+  const openSeat = async (code: string, lngLat?: [number, number], fallbackName = "") => {
+    setSelected(code);
+    try {
+      if (!votingBundle) votingBundle = await loadVotingBundle();
+      const at = lngLat ?? seatLngLat(code);
+      if (!at) return;
+      const seat = votingBundle.endorsements.seats[code];
+      if (!seat) {
+        popup.setLngLat(at).setHTML(seatFallbackHtml(fallbackName || code, code)).addTo(map);
+        setSelected(code);
+        return;
+      }
+      popup.setLngLat(at).setMaxWidth("320px").setHTML(
+        constituencyPopupHtml(seat, votingBundle.endorsements.retrieved_at),
+      ).addTo(map);
+      setSelected(code);
+    } catch {
+      if (lngLat) popup.setLngLat(lngLat).setHTML(seatFallbackHtml(fallbackName || code, code)).addTo(map);
+    }
+  };
+  const restoreBounds = (): [[number, number], [number, number]] | null => {
+    const feats = enrichedSeats?.features.filter((f) => f.properties?.endorseColor === "restore") ?? [];
+    let w = Infinity, so = Infinity, e = -Infinity, n = -Infinity;
+    const visit = (c: unknown): void => {
+      if (Array.isArray(c) && typeof c[0] === "number") {
+        const [x, y] = c as [number, number];
+        w = Math.min(w, x); e = Math.max(e, x); so = Math.min(so, y); n = Math.max(n, y);
+      } else if (Array.isArray(c)) c.forEach(visit);
+    };
+    for (const f of feats) visit((f.geometry as { coordinates?: unknown } | undefined)?.coordinates);
+    return Number.isFinite(w) ? [[w, so], [e, n]] : null;
+  };
+  const flyToRestore = () => {
+    const bounds = restoreBounds();
+    if (!bounds) return;
+    const first = enrichedSeats?.features.find((f) => f.properties?.endorseColor === "restore");
+    const code = String(first?.properties?.PCON24CD ?? "");
+    map.fitBounds(bounds, { padding: searchPadding(container), duration: motionDuration(800), maxZoom: 11 });
+    map.once("moveend", () => { if (code) void openSeat(code); });
+  };
+  const legend = mountVotingLegend(container.parentElement ?? document.body, {
+    restoreColor: ENDORSE_COLORS.restore.fill,
+    reformColor: ENDORSE_COLORS.reform.fill,
+    onRestore: flyToRestore,
+  });
+  let hovered: string | null = null;
+  const setHovered = (code: string | null) => {
+    if (hovered === code || !map.getSource("constituencies")) return;
+    if (hovered) map.setFeatureState({ source: "constituencies", id: hovered }, { hover: false });
+    hovered = code;
+    if (code) map.setFeatureState({ source: "constituencies", id: code }, { hover: true });
+  };
   const topFeature = (point: { x: number; y: number }): MapGeoJSONFeature | undefined => {
     const bounds: [[number, number], [number, number]] = [
       [point.x - 5, point.y - 5], [point.x + 5, point.y + 5],
@@ -437,29 +741,17 @@ export function createAtlas(container: HTMLElement): Atlas {
     const layerId = String(properties.layer ?? feature.source ?? "");
     const layer = LAYERS.find((item) => item.id === layerId);
     const name = String(properties.name ?? layer?.label ?? "Place");
+    if (feature.layer.id === "restore-callout-dot") {
+      const code = String(properties.pcon24cd ?? "");
+      if (code) {
+        map.easeTo({ center: event.lngLat, zoom: Math.max(map.getZoom(), 9.5), duration: motionDuration(600) });
+        map.once("moveend", () => void openSeat(code));
+      }
+      return;
+    }
     if (layerId === "constituencies") {
       const code = String(properties.PCON24CD ?? "");
-      void (async () => {
-        try {
-          if (!votingBundle) votingBundle = await loadVotingBundle();
-          const seat = votingBundle.endorsements.seats[code];
-          if (!seat) {
-            popup.setLngLat(event.lngLat).setHTML(
-              `<strong>${escapeHtml(name)}</strong>` +
-              (code ? `<div class="popup-meta">${escapeHtml(code)}</div>` : ""),
-            ).addTo(map);
-            return;
-          }
-          popup.setLngLat(event.lngLat).setMaxWidth("320px").setHTML(
-            constituencyPopupHtml(seat, votingBundle.endorsements.retrieved_at),
-          ).addTo(map);
-        } catch {
-          popup.setLngLat(event.lngLat).setHTML(
-            `<strong>${escapeHtml(name)}</strong>` +
-            (code ? `<div class="popup-meta">${escapeHtml(code)}</div>` : ""),
-          ).addTo(map);
-        }
-      })();
+      void openSeat(code, [event.lngLat.lng, event.lngLat.lat], name);
       return;
     }
     const brand = properties.brand ? String(properties.brand) : "";
@@ -472,7 +764,7 @@ export function createAtlas(container: HTMLElement): Atlas {
     const osmUrl = properties.osm_url ? String(properties.osm_url) : "";
     const metaBits = [layer?.label ?? "Layer", brand && brand !== name ? brand : "", religion].filter(Boolean);
     popup.setLngLat(event.lngLat).setHTML(
-      `<strong>${escapeHtml(name)}</strong>` +
+      `<strong class="popup-title">${escapeHtml(name)}</strong>` +
       `<div class="popup-meta">${escapeHtml(metaBits.join(" · "))}</div>` +
       `<div class="popup-note">${escapeHtml(note)}</div>` +
       (osmUrl
@@ -481,8 +773,11 @@ export function createAtlas(container: HTMLElement): Atlas {
     ).addTo(map);
   });
   map.on("mousemove", (event) => {
-    map.getCanvas().style.cursor = topFeature(event.point) ? "pointer" : "";
+    const feature = topFeature(event.point);
+    map.getCanvas().style.cursor = feature ? "pointer" : "";
+    setHovered(feature?.layer.id === "constituencies" ? String(feature.properties?.PCON24CD ?? "") || null : null);
   });
+  map.getCanvas().addEventListener("mouseleave", () => setHovered(null));
   map.on("load", () => {
     loaded = true;
     add("population");
@@ -491,13 +786,15 @@ export function createAtlas(container: HTMLElement): Atlas {
         "heatmap-weight": ["interpolate", ["linear"], ["get", "pop"], 0, 0, 100000, 0.3, 1000000, 0.8, 9000000, 1],
         "heatmap-intensity": ["interpolate", ["linear"], ["zoom"], 4, 0.7, 9, 1.3],
         "heatmap-radius": ["interpolate", ["linear"], ["zoom"], 4, 18, 9, 36],
+        // Cool slate, max alpha 0.16: no warm blobs bleeding into the pick fills (fix 4).
         "heatmap-color": ["interpolate", ["linear"], ["heatmap-density"],
-          0, "rgba(255,184,77,0)", 0.25, "rgba(255,190,94,0.18)",
-          0.65, "rgba(236,142,42,0.4)", 1, "rgba(220,113,31,0.52)"],
+          0, "rgba(93,107,122,0)", 0.25, "rgba(93,107,122,0.06)",
+          0.65, "rgba(93,107,122,0.12)", 1, "rgba(93,107,122,0.16)"],
         "heatmap-opacity": ["interpolate", ["linear"], ["zoom"], 7, 0.65, 10, 0],
       },
     }, "population");
-    for (const layer of ordered) if (state[layer.id]) add(layer.id);
+    for (const layer of ordered) if (state[layer.id] && !paused(layer.id)) add(layer.id);
+    applyVotingMode(false);
     map.once("idle", () => { document.body.dataset.mapReady = "true"; });
   });
 
@@ -505,7 +802,20 @@ export function createAtlas(container: HTMLElement): Atlas {
     map,
     isOn: (id) => state[id],
     setLayer: (id, on) => {
+      const was = state[id];
       state[id] = on;
+      if (id === "constituencies" && was !== on) {
+        showOthers = false;
+        apply(id);
+        applyVotingMode(on);
+        return;
+      }
+      if (VOTING_MUTED.has(id) && on && votingOn() && !showOthers) {
+        // Explicitly re-enabling a context layer in voting view un-pauses context.
+        showOthers = true;
+        applyVotingMode(false);
+        return;
+      }
       apply(id);
     },
     zoomIn: () => {
@@ -528,5 +838,9 @@ export function createAtlas(container: HTMLElement): Atlas {
       }
       map.flyTo({ center: [lon, lat], zoom: Math.max(map.getZoom(), zoom), duration: motionDuration(800) });
     },
+    openSeat: (code, lngLat) => {
+      void openSeat(code, lngLat);
+    },
+    flyToRestore,
   };
 }

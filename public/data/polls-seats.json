@@ -2,7 +2,7 @@
   "retrieved_at": "2026-10-05T11:25:20Z",
   "notes": [
     "Seat-level projections from publicly published tables only.",
-    "Never invent numbers. Empty provider slots use link-out.",
+    "Never invent numbers. On fetch failure, keep last good provider block (status=stale) when available; else link-out.",
     "National VI is in polls-national.json and must not alone flip seat endorsements."
   ],
   "providers": {
