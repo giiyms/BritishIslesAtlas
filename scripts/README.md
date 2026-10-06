@@ -779,3 +779,29 @@ south of 49.8°N; OSM base 2026-10-03T05:12:34Z) was 7151 (nodes 4591 + ways
 + ways 2399 + relations 5; OSM base 2026-10-03T05:13:30Z). Unnamed dentists
 are kept. Disused sites that remain tagged `amenity=dentist` are included.
 Jersey/Guernsey/Sark points inside the admin polygons are not mainland France.
+
+## `extract_osm_pubs.py`
+
+Rebuilds `public/data/pubs.geojson` (and merges into `extract-meta.json`)
+using the same admin-area Overpass + polygon-clip pipeline, querying
+`amenity=pub` (nodes, ways, and relations; `out center`). Does **not**
+include `amenity=bar`, `amenity=biergarten`, `amenity=nightclub`, or
+`amenity=restaurant`. Replaces the preview scatter stub for the pubs chip.
+Schools/churches remain stubs. Voting mode is untouched.
+
+```bash
+python3 scripts/extract_osm_pubs.py
+python3 scripts/build_density_bins.py   # hex density bands for map extrusion
+```
+
+Default `--max-span 2.0`. **No `name=*` filter**. Admin-clipped result at
+2026-10-06T12:52:55Z: **43184** (England 33182, Scotland 2391,
+Wales 2407, NI 554, Ireland 4469,
+IoM 75, GG 44, JE 62; France bleed 0).
+
+## `build_density_bins.py`
+
+Builds precomputed flat-top hex density GeoJSON for a point layer (pubs in
+this PR) under `public/data/density/`, plus a zoom-band manifest for lazy
+load. Generic — pass `--layer` once that layer has a point GeoJSON.
+

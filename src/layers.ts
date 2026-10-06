@@ -55,7 +55,7 @@ export const LAYERS = [
     color: "#d9822b",
     kind: "dot",
     defaultOn: true,
-    blurb: "Preview pub locations",
+    blurb: "OpenStreetMap pubs (amenity=pub) with density extrusion",
     pointScale: 1.15,
     icon: ICONS.pubs,
   },

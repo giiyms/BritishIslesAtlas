@@ -1,0 +1,55 @@
+{
+  "layer": "pubs",
+  "point_count": 43184,
+  "point_url": "/data/pubs.geojson",
+  "dot_minzoom": 12.0,
+  "bands": [
+    {
+      "id": "coarse",
+      "file": "pubs-coarse.geojson",
+      "url": "/data/density/pubs-coarse.geojson",
+      "minzoom": 0,
+      "maxzoom": 6.5,
+      "size_deg": 0.42,
+      "cell_count": 155,
+      "max_count": 3582,
+      "scale_max": 1056,
+      "label": "national"
+    },
+    {
+      "id": "medium",
+      "file": "pubs-medium.geojson",
+      "url": "/data/density/pubs-medium.geojson",
+      "minzoom": 6.5,
+      "maxzoom": 9.0,
+      "size_deg": 0.16,
+      "cell_count": 770,
+      "max_count": 1654,
+      "scale_max": 211,
+      "label": "regional"
+    },
+    {
+      "id": "fine",
+      "file": "pubs-fine.geojson",
+      "url": "/data/density/pubs-fine.geojson",
+      "minzoom": 9.0,
+      "maxzoom": 12.0,
+      "size_deg": 0.055,
+      "cell_count": 4128,
+      "max_count": 686,
+      "scale_max": 37,
+      "label": "city"
+    }
+  ],
+  "ramp": [
+    "#fff3b0",
+    "#f4a261",
+    "#9b2226"
+  ],
+  "legend": [
+    "Low",
+    "Medium",
+    "High"
+  ],
+  "pitch": 45
+}

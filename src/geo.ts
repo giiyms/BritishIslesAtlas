@@ -518,12 +518,6 @@ interface ScatterRule {
 }
 
 const SCATTER: Record<string, ScatterRule> = {
-  pubs: {
-    perMillion: 6,
-    minPop: 10000,
-    max: 5,
-    nouns: ["Red Lion", "Crown", "Royal Oak", "Anchor", "Swan", "George", "White Hart", "Railway"],
-  },
   schools: {
     perMillion: 4,
     minPop: 14000,
@@ -667,7 +661,7 @@ function roadLayer(): Feature[] {
 
 const builders: Record<LayerId, () => Feature[]> = {
   roads: roadLayer,
-  pubs: () => scatterLayer("pubs"),
+  pubs: () => [],
   schools: () => scatterLayer("schools"),
   libraries: () => [],
   universities: () => [],

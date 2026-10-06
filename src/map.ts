@@ -30,6 +30,17 @@ import { ENDORSE_COLORS } from "./endorse";
 import { singularLabel } from "./layer-groups";
 import { PLACES } from "./geo";
 import { mountVotingLegend, showVotingToast, hideVotingToast } from "./voting-ui";
+import {
+  DENSITY_ENABLED,
+  applyDensity,
+  setDensityVisibility,
+  densityLayerIds,
+  densityActive,
+  syncDensityPitch,
+  mountDensityLegend,
+  densityDotMinZoom,
+  type DensityManifest,
+} from "./density";
 
 export const HOME_BOUNDS: [[number, number], [number, number]] = [
   [-12.2, 49.35],
@@ -442,6 +453,9 @@ export function createAtlas(container: HTMLElement): Atlas {
   let enrichedSeats: VotingFeatureCollection | null = null;
   /** User chose "Show" on the voting toast: keep context layers visible. */
   let showOthers = false;
+  const densityHost = container.parentElement ?? document.body;
+  let densityLegend: { setVisible: (on: boolean) => void; destroy: () => void } | null = null;
+  let densityManifest: DensityManifest | null = null;
   let selected: string | null = null;
   function setSelected(code: string | null) {
     selected = code;
@@ -532,13 +546,16 @@ export function createAtlas(container: HTMLElement): Atlas {
     });
   }
   const ordered = [...LAYERS].sort((a, b) => a.z - b.z);
-  const OSM_STATIC = new Set<LayerId>(["petrol", "ev", "power", "hospitals", "fire-stations", "police", "castles", "libraries", "universities", "museums", "railway-stations", "aerodromes", "ferry-terminals", "marinas", "zoos", "theatres", "battlefields", "cinemas", "stadiums", "theme-parks", "viewpoints", "arts-centres", "aquariums", "piers", "ruins", "golf-courses", "galleries", "marketplaces", "nature-reserves", "camp-sites", "memorials", "sports-centres", "caravan-sites", "fitness-centres", "community-centres", "playgrounds", "post-offices", "beaches", "swimming-pools", "pharmacies", "townhalls", "places-of-worship", "lighthouses", "courthouses", "nightclubs", "windmills", "prisons", "clinics", "dentists"]);
+  const OSM_STATIC = new Set<LayerId>(["petrol", "ev", "power", "hospitals", "fire-stations", "police", "castles", "libraries", "universities", "museums", "railway-stations", "aerodromes", "ferry-terminals", "marinas", "zoos", "theatres", "battlefields", "cinemas", "stadiums", "theme-parks", "viewpoints", "arts-centres", "aquariums", "piers", "ruins", "golf-courses", "galleries", "marketplaces", "nature-reserves", "camp-sites", "memorials", "sports-centres", "caravan-sites", "fitness-centres", "community-centres", "playgrounds", "post-offices", "beaches", "swimming-pools", "pharmacies", "townhalls", "places-of-worship", "lighthouses", "courthouses", "nightclubs", "windmills", "prisons", "clinics", "dentists", "pubs"]);
   const clustered = new Set<LayerId>([
     "pubs", "schools", "churches", "post-offices", "mosques", "other-religious", "petrol", "ev", "power", "hospitals", "fire-stations", "police", "castles", "libraries", "universities", "museums", "railway-stations", "aerodromes", "ferry-terminals", "marinas", "zoos", "theatres", "battlefields", "cinemas", "stadiums", "theme-parks", "viewpoints", "arts-centres", "aquariums", "piers", "ruins", "golf-courses", "galleries", "marketplaces", "nature-reserves", "camp-sites", "memorials", "sports-centres", "caravan-sites", "fitness-centres", "community-centres", "playgrounds", "beaches", "swimming-pools", "pharmacies", "townhalls", "places-of-worship", "lighthouses", "courthouses", "nightclubs", "windmills", "prisons", "clinics", "dentists",
     "census", "weather", "crime", "legends",
   ]);
-  const minZoom = (id: LayerId) => id === "post-offices" ? 7 :
-    ["pubs", "schools", "churches", "other-religious", "mosques", "petrol", "ev", "libraries", "universities", "museums", "railway-stations", "aerodromes", "ferry-terminals", "marinas", "zoos", "theatres", "battlefields", "cinemas", "stadiums", "theme-parks", "viewpoints", "arts-centres", "aquariums", "piers", "ruins", "golf-courses", "galleries", "marketplaces", "nature-reserves", "camp-sites", "memorials", "sports-centres", "caravan-sites", "fitness-centres", "community-centres", "playgrounds", "beaches", "swimming-pools", "pharmacies", "townhalls", "places-of-worship", "lighthouses", "courthouses", "nightclubs", "windmills", "prisons", "clinics", "dentists"].includes(id) ? 6 : 0;
+  const minZoom = (id: LayerId) => {
+    if (DENSITY_ENABLED.has(id)) return densityDotMinZoom(id) ?? 12;
+    if (id === "post-offices") return 7;
+    return ["schools", "churches", "other-religious", "mosques", "petrol", "ev", "libraries", "universities", "museums", "railway-stations", "aerodromes", "ferry-terminals", "marinas", "zoos", "theatres", "battlefields", "cinemas", "stadiums", "theme-parks", "viewpoints", "arts-centres", "aquariums", "piers", "ruins", "golf-courses", "galleries", "marketplaces", "nature-reserves", "camp-sites", "memorials", "sports-centres", "caravan-sites", "fitness-centres", "community-centres", "playgrounds", "beaches", "swimming-pools", "pharmacies", "townhalls", "places-of-worship", "lighthouses", "courthouses", "nightclubs", "windmills", "prisons", "clinics", "dentists"].includes(id) ? 6 : 0;
+  };
   const hasIcon = (layer: { kind: MarkerKind }) =>
     layer.kind === "dot" || layer.kind === "ring" || SYMBOL_KINDS.has(layer.kind);
   const layerIds = (id: LayerId): string[] => {
@@ -549,6 +566,7 @@ export function createAtlas(container: HTMLElement): Atlas {
     if (id === "hospitals") ids.push("hospitals-hi");
     if (hasIcon(layer)) ids.push(`${id}-icon`);
     if (clustered.has(id)) ids.push(`${id}-cluster-halo`, `${id}-cluster`, `${id}-cluster-count`);
+    if (DENSITY_ENABLED.has(id)) ids.push(...densityLayerIds(id));
     return ids;
   };
   const beforeFor = (z: number): string | undefined => {
@@ -723,6 +741,15 @@ export function createAtlas(container: HTMLElement): Atlas {
         paint: { "text-color": layer.accent },
       }, before);
     }
+    if (DENSITY_ENABLED.has(id) && state[id] && !paused(id)) {
+      void applyDensity(map, id, true, before).then((man) => {
+        if (id === "pubs" && man) {
+          densityManifest = man;
+          if (!densityLegend) densityLegend = mountDensityLegend(densityHost, man);
+          refreshDensityCamera();
+        }
+      });
+    }
   };
   const votingOn = () => state.constituencies;
   const paused = (id: LayerId) => votingOn() && !showOthers && VOTING_MUTED.has(id);
@@ -732,6 +759,20 @@ export function createAtlas(container: HTMLElement): Atlas {
     const visibility = shown ? "visible" : "none";
     for (const layerId of layerIds(id)) {
       if (map.getLayer(layerId)) map.setLayoutProperty(layerId, "visibility", visibility);
+    }
+    if (DENSITY_ENABLED.has(id)) {
+      setDensityVisibility(map, id, shown);
+      if (shown && loaded) {
+        void applyDensity(map, id, shown, beforeFor(LAYERS.find((l) => l.id === id)!.z)).then((man) => {
+          if (id === "pubs" && man) {
+            densityManifest = man;
+            if (!densityLegend) densityLegend = mountDensityLegend(densityHost, man);
+            refreshDensityCamera();
+          }
+        });
+      } else {
+        refreshDensityCamera();
+      }
     }
   };
   /** Voting view: pause context layers, cap relief, mask non-GB land, show legend (fix 2). */
@@ -775,6 +816,7 @@ export function createAtlas(container: HTMLElement): Atlas {
     id !== "constituencies" && id !== "restore-callout-dot"));
   const interactiveIds = () => ordered.flatMap((layer) => layerIds(layer.id))
     .filter((id) => id !== "roads" && !id.endsWith("-cluster-count") && !id.endsWith("-cluster-halo")
+      && !id.startsWith("density-")
       && !NON_INTERACTIVE.has(id) && !!map.getLayer(id));
   const seatFallbackHtml = (name: string, code: string) =>
     `<strong class="popup-title">${escapeHtml(name)}</strong>` +
@@ -830,6 +872,12 @@ export function createAtlas(container: HTMLElement): Atlas {
     reformColor: ENDORSE_COLORS.reform.fill,
     onRestore: flyToRestore,
   });
+  const refreshDensityCamera = () => {
+    const pubsOn = state.pubs && !paused("pubs");
+    const active = densityActive(map, "pubs", pubsOn) ? "pubs" as LayerId : null;
+    syncDensityPitch(map, active, densityManifest?.pitch ?? 45);
+    densityLegend?.setVisible(!!active);
+  };
   let hovered: string | null = null;
   const setHovered = (code: string | null) => {
     if (hovered === code || !map.getSource("constituencies")) return;
@@ -913,7 +961,9 @@ export function createAtlas(container: HTMLElement): Atlas {
     }, "population");
     for (const layer of ordered) if (state[layer.id] && !paused(layer.id)) add(layer.id);
     applyVotingMode(false);
-    map.once("idle", () => { document.body.dataset.mapReady = "true"; });
+    map.on("zoomend", refreshDensityCamera);
+    map.on("pitchend", () => { /* keep legend in sync with densityActive */ refreshDensityCamera(); });
+    map.once("idle", () => { document.body.dataset.mapReady = "true"; refreshDensityCamera(); });
   });
 
   return {
