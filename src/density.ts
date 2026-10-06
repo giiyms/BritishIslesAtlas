@@ -117,7 +117,7 @@ function colourExpression(band: DensityBand, ramp: [string, string, string]): Ex
 
 function heightExpression(band: DensityBand): ExpressionSpecification {
   const hi = Math.max(band.intensity_max ?? Math.sqrt(band.scale_max), Math.sqrt(2));
-  const peak = band.peak_m ?? (band.id === "coarse" ? 4800 : band.id === "medium" ? 1800 : 900);
+  const peak = band.peak_m ?? (band.id === "coarse" ? 7200 : band.id === "medium" ? 1800 : 900);
   // Most cells: short stubs (~4–22% of peak). Only near hi do they spike.
   const byCount: ExpressionSpecification = [
     "interpolate",
@@ -138,9 +138,9 @@ function heightExpression(band: DensityBand): ExpressionSpecification {
       ["linear"],
       ["zoom"],
       3.5,
-      ["*", byCount, 3.4],
+      ["*", byCount, 4.5],
       5.0,
-      ["*", byCount, 2.1],
+      ["*", byCount, 3.0],
       6.5,
       ["*", byCount, 1.0],
     ];

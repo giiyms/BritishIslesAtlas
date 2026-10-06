@@ -43,7 +43,7 @@ BANDS = [
         "maxzoom": 6.5,
         "size_deg": 0.102,  # ~18 km pitch (chunky national columns)
         "label": "national",
-        "peak_m": 4800,
+        "peak_m": 7200,
     },
     {
         "id": "medium",
