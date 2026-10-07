@@ -3,9 +3,10 @@ import { LAYERS, isLayerId, type LayerDef, type LayerId } from "./layers";
 import { LAYER_SECTIONS } from "./layer-groups";
 import { DISTANCE_LAYERS, SURFACE_KINDS, type SurfaceKind } from "./surfaces";
 import { ELECTION_VIEWS, type ElectionView } from "./election";
-import { BASEMAP_IDS, MAX_POINTS, type AtlasState, type BasemapId } from "./state";
+import { BASEMAP_IDS, MAX_POINTS, type AtlasState, type BasemapId, type PointTreatment, type SurfaceTreatment } from "./state";
 import { formatPollsUpdated, loadVotingBundle } from "./voting";
 import type { Atlas, AtlasChange, AtlasCounts } from "./map";
+import { STYLE_PRESETS, type StylePresetId } from "./style-presets";
 
 const DATA_CREDITS: Array<[string, string]> = [
   ["Basemap", "OpenFreeMap · © OpenMapTiles · data © OpenStreetMap contributors (ODbL)"],
@@ -18,7 +19,7 @@ const DATA_CREDITS: Array<[string, string]> = [
   ["Candidates", "© Democracy Club (CC-BY-SA)"],
 ];
 
-const BASEMAP_LABELS: Record<BasemapId, string> = { relief: "Relief", light: "Light", dark: "Dark", mono: "Mono" };
+const BASEMAP_LABELS: Record<BasemapId, string> = { auto: "Auto", relief: "Relief", light: "Light", dark: "Dark", mono: "Mono" };
 
 const layerOf = (id: string): LayerDef | undefined => LAYERS.find((layer) => layer.id === id);
 
@@ -95,12 +96,23 @@ export function mountPanel(root: HTMLElement, atlas: Atlas): void {
     <div class="panel-body" id="layer-body">
       <div class="mode-atlas">
         <section class="sec">
+          <h3>Map style <span class="sec-note">best fit</span></h3>
+          <div class="style-presets" role="radiogroup" aria-label="Map style">
+            ${STYLE_PRESETS.map((p) => `<button type="button" role="radio" class="style-preset" data-preset="${p.id}"><b>${p.label}</b><small>${escapeHtml(p.hint)}</small></button>`).join("")}
+          </div>
+        </section>
+        <section class="sec">
           <h3>Surface <span class="sec-note">pick one</span></h3>
           <div class="opts" role="radiogroup" aria-label="Surface">
             ${SURFACE_KINDS.map((s) => `<label class="opt"><input type="radio" name="surface" value="${s.kind}">` +
               `<span><b>${s.label}</b><small>${escapeHtml(s.hint)}</small></span></label>`).join("")}
           </div>
           <label class="dataset" hidden><span>of</span><select aria-label="Surface dataset"></select></label>
+          <div class="surface-treatments" hidden role="radiogroup" aria-label="Surface treatment">
+            <span class="surface-treatment-label">Representation</span>
+            <button type="button" role="radio" data-surface-treatment="classes">Classes</button>
+            <button type="button" role="radio" data-surface-treatment="continuous">Continuous</button>
+          </div>
         </section>
         <section class="sec">
           <h3>Points <span class="sec-note point-count"></span><button type="button" class="link-btn points-clear">Clear</button></h3>
@@ -173,8 +185,11 @@ export function mountPanel(root: HTMLElement, atlas: Atlas): void {
       row.style.setProperty("--accent", layer.accent);
       const n = counts[id];
       row.innerHTML = `<span class="ap-dot"></span><span class="ap-name">${escapeHtml(layer.label)}</span>` +
+        `<select class="ap-treatment" data-treatment="${id}" aria-label="${escapeHtml(layer.label)} map treatment">` +
+        `<option value="clustered">Clusters</option><option value="dots">Dots</option><option value="symbols">Symbols</option></select>` +
         `<span class="ap-count" title="In view">${n == null ? "" : n.toLocaleString("en-GB")}</span>` +
         `<button type="button" class="ap-remove" data-layer="${id}" aria-label="Remove ${escapeHtml(layer.label)}">×</button>`;
+      (row.querySelector(".ap-treatment") as HTMLSelectElement).value = state.pointTreatments[id] ?? "clustered";
       return row;
     }));
     if (!state.points.length) {
@@ -201,6 +216,11 @@ export function mountPanel(root: HTMLElement, atlas: Atlas): void {
     const kindKey = state.surface.kind === "distance" ? "distance" : "all";
     if (select.dataset.kind !== kindKey) { select.innerHTML = datasetOptions(state.surface.kind); select.dataset.kind = kindKey; }
     select.value = state.surface.dataset;
+    const treatmentOptions = root.querySelector<HTMLElement>(".surface-treatments")!;
+    treatmentOptions.hidden = state.surface.kind !== "seat" && state.surface.kind !== "hex";
+    for (const b of root.querySelectorAll<HTMLButtonElement>("[data-surface-treatment]")) {
+      b.setAttribute("aria-checked", String(b.dataset.surfaceTreatment === (state.surfaceTreatments[state.surface.dataset] ?? "classes")));
+    }
     // Points.
     pointCount.textContent = `${state.points.length} of ${MAX_POINTS}`;
     $<HTMLElement>(".points-clear").hidden = !state.points.length;
@@ -213,6 +233,7 @@ export function mountPanel(root: HTMLElement, atlas: Atlas): void {
     renderActive();
     // Basemap.
     for (const b of root.querySelectorAll<HTMLButtonElement>("[data-basemap]")) b.setAttribute("aria-checked", String(b.dataset.basemap === state.basemap));
+    for (const b of root.querySelectorAll<HTMLButtonElement>("[data-preset]")) b.setAttribute("aria-checked", String(b.dataset.preset === state.preset));
     $<HTMLInputElement>('[data-toggle="roads"]').checked = state.roads;
     $<HTMLInputElement>('[data-toggle="labels"]').checked = state.labels;
     // Election.
@@ -245,9 +266,17 @@ export function mountPanel(root: HTMLElement, atlas: Atlas): void {
     }
     const remove = t.closest<HTMLButtonElement>(".ap-remove");
     if (remove && isLayerId(remove.dataset.layer)) { atlas.setPoint(remove.dataset.layer, false); return; }
+    if (t.closest(".ap-treatment")) return;
     if (t.closest(".points-clear")) { atlas.clearPoints(); return; }
-    const base = t.closest<HTMLElement>("[data-basemap]")?.dataset.basemap;
+    const surfaceTreatment = t.closest<HTMLElement>("[data-surface-treatment]")?.dataset.surfaceTreatment;
+    if (surfaceTreatment === "classes" || surfaceTreatment === "continuous") {
+      atlas.setSurfaceTreatment(state.surface.dataset, surfaceTreatment as SurfaceTreatment);
+      return;
+    }
+    const base = t.closest<HTMLButtonElement>("button[data-basemap]")?.dataset.basemap;
     if (base) { atlas.setBasemap(base as BasemapId); return; }
+    const preset = t.closest<HTMLElement>("[data-preset]")?.dataset.preset;
+    if (preset) { atlas.setPreset(preset as StylePresetId); atlas.setBasemap("auto"); return; }
     const layout = t.closest<HTMLElement>("[data-layout]")?.dataset.layout;
     if (layout === "map" || layout === "hex") { atlas.setElectionLayout(layout); return; }
     if (t.closest(".restore-fly")) atlas.flyToRestore();
@@ -255,6 +284,7 @@ export function mountPanel(root: HTMLElement, atlas: Atlas): void {
   root.addEventListener("change", (event) => {
     const t = event.target as HTMLInputElement | HTMLSelectElement;
     if (t.name === "surface") atlas.setSurface({ kind: t.value as SurfaceKind, dataset: state.surface.dataset });
+    else if (t instanceof HTMLSelectElement && t.dataset.treatment && isLayerId(t.dataset.treatment)) atlas.setPointTreatment(t.dataset.treatment, t.value as PointTreatment);
     else if (t === select && isLayerId(select.value)) atlas.setSurface({ ...state.surface, dataset: select.value });
     else if (t.name === "eview") atlas.setElectionView(t.value as ElectionView);
     else if (t instanceof HTMLInputElement && t.dataset.toggle === "roads") atlas.setRoads(t.checked);

@@ -17,7 +17,7 @@ import { Protocol } from "pmtiles";
 import { LAYERS, type LayerDef, type LayerId, type MarkerKind } from "./layers";
 import { PLACES } from "./geo";
 import { singularLabel } from "./layer-groups";
-import { legendHtml, stepExpression, type Classes } from "./classify";
+import { interpolateExpression, legendHtml, stepExpression, type Classes } from "./classify";
 import {
   DISTANCE_RASTER,
   loadSeatStats,
@@ -42,7 +42,8 @@ import {
 import { constituencyPopupHtml, loadVotingBundle, type VotingBundle } from "./voting";
 import { ENDORSE_COLORS } from "./endorse";
 import { mountHexMap } from "./hexmap";
-import { MAX_POINTS, type AtlasState, type BasemapId, type Mode } from "./state";
+import { MAX_POINTS, type AtlasState, type BasemapId, type Mode, type PointTreatment, type SurfaceTreatment } from "./state";
+import { presetBasemap, type StylePresetId } from "./style-presets";
 import { showToast } from "./toast";
 
 setWorkerUrl(workerUrl);
@@ -62,7 +63,7 @@ const HILLSHADE_TILES =
 const HILLSHADE_OPACITY: ExpressionSpecification = ["interpolate", ["linear"], ["zoom"], 4, 0.9, 7, 0.9, 10, 0.62, 14, 0.4];
 
 /** Basemap tokens. Surfaces draw under `water`, so the sea clips every surface to the coast. */
-const BASEMAPS: Record<BasemapId, {
+const BASEMAPS: Record<Exclude<BasemapId, "auto">, {
   land: string; water: string; coast: string; coastWidth: number; border: string; hillshade: boolean;
   road: string; roadCasing: string; label: string; halo: string; seatLine: string;
 }> = {
@@ -282,10 +283,13 @@ export interface Atlas {
   getState: () => AtlasState;
   setMode: (mode: Mode) => void;
   setSurface: (surface: Surface) => void;
+  setSurfaceTreatment: (id: LayerId, treatment: SurfaceTreatment) => void;
   /** Returns false when the point cap is reached. */
   setPoint: (id: LayerId, on: boolean) => boolean;
+  setPointTreatment: (id: LayerId, treatment: PointTreatment) => void;
   clearPoints: () => void;
   setBasemap: (id: BasemapId) => void;
+  setPreset: (preset: StylePresetId) => void;
   setRoads: (on: boolean) => void;
   setLabels: (on: boolean) => void;
   setElectionView: (view: ElectionView) => void;
@@ -358,35 +362,36 @@ export function createAtlas(container: HTMLElement, initial: AtlasState): Atlas 
       return electionLegendHtml(state.electionView, tally, voting?.endorsements.counts);
     }
     const c = surfaceClasses(state.surface, stats);
-    return c ? legendHtml(c) : "";
+    return c ? legendHtml(c, state.surfaceTreatments[state.surface.dataset] === "continuous") : "";
   };
   const emit = () => {
     window.dispatchEvent(new CustomEvent<AtlasChange>("atlas:change", {
-      detail: { state: { ...state, surface: { ...state.surface }, points: [...state.points] }, legend: legendFor() },
+      detail: { state: { ...state, surface: { ...state.surface }, points: [...state.points], pointTreatments: { ...state.pointTreatments }, surfaceTreatments: { ...state.surfaceTreatments } }, legend: legendFor() },
     }));
   };
 
   // ------------------------------------------------------------------ basemap
 
   const applyBasemap = () => {
-    const b = BASEMAPS[state.basemap];
+    const basemap = state.basemap === "auto" ? presetBasemap(state.preset, state.mode, state.surface) : state.basemap;
+    const b = BASEMAPS[basemap];
     const set = (id: string, prop: string, value: unknown) => { if (map.getLayer(id)) map.setPaintProperty(id, prop as never, value as never); };
     set("land", "background-color", b.land);
     set("water", "fill-color", b.water);
     set("water-coast", "line-color", b.coast);
-    set("water-coast", "line-opacity", state.basemap === "mono" ? 1 : 0.7);
+    set("water-coast", "line-opacity", basemap === "mono" ? 1 : 0.7);
     set("boundary-country", "line-color", b.border);
     set("roads", "line-color", b.road);
     set("roads-casing", "line-color", b.roadCasing);
     set("place-labels", "text-color", b.label);
     set("place-labels", "text-halo-color", b.halo);
     set("surface-seat-line", "line-color", b.seatLine);
-    set("election-line", "line-color", state.basemap === "dark" ? "#22262c" : "#ffffff");
+    set("election-line", "line-color", basemap === "dark" ? "#22262c" : "#ffffff");
     map.setLayoutProperty("hillshade", "visibility", b.hillshade ? "visible" : "none");
     set("hillshade", "raster-opacity", state.mode === "election" ? 0.35 : HILLSHADE_OPACITY);
     for (const id of ["roads", "roads-casing"]) map.setLayoutProperty(id, "visibility", state.roads ? "visible" : "none");
     map.setLayoutProperty("place-labels", "visibility", state.labels ? "visible" : "none");
-    document.documentElement.dataset.basemap = state.basemap;
+    document.documentElement.dataset.basemap = basemap;
   };
 
   // ------------------------------------------------------------------ seat feature-state
@@ -425,7 +430,7 @@ export function createAtlas(container: HTMLElement, initial: AtlasState): Atlas 
     map.addLayer({ id: "surface-seat", type: "fill", ...seatSrc(), layout: { visibility: "none" },
       paint: { "fill-color": "#ccc", "fill-opacity": 0.85 } }, surfaceBefore);
     map.addLayer({ id: "surface-seat-line", type: "line", ...seatSrc(), layout: { visibility: "none", "line-join": "round" },
-      paint: { "line-color": BASEMAPS[state.basemap].seatLine, "line-width": ["interpolate", ["linear"], ["zoom"], 4, 0.2, 8, 0.6, 12, 1.2], "line-opacity": 0.8 } },
+      paint: { "line-color": BASEMAPS[state.basemap === "auto" ? presetBasemap(state.preset, state.mode, state.surface) : state.basemap].seatLine, "line-width": ["interpolate", ["linear"], ["zoom"], 4, 0.2, 8, 0.6, 12, 1.2], "line-opacity": 0.8 } },
     overlayBefore);
   };
   const seatSrc = () => ({ source: SEATS.source, "source-layer": SEATS.sourceLayer }) as const;
@@ -452,10 +457,13 @@ export function createAtlas(container: HTMLElement, initial: AtlasState): Atlas 
     if (s.kind === "hex") {
       const key = `n_${s.dataset}`;
       map.setFilter("surface-hex", ["has", key]);
-      map.setPaintProperty("surface-hex", "fill-color", stepExpression(["get", key], c));
+      const expression = state.surfaceTreatments[s.dataset] === "continuous" ? interpolateExpression(["get", key], c) : stepExpression(["get", key], c);
+      map.setPaintProperty("surface-hex", "fill-color", expression);
     } else {
       pushSurfaceValues();
-      map.setPaintProperty("surface-seat", "fill-color", stepExpression(["coalesce", ["feature-state", "v"], 0], c));
+      const value = ["coalesce", ["feature-state", "v"], 0] as ExpressionSpecification;
+      const expression = state.surfaceTreatments[s.dataset] === "continuous" ? interpolateExpression(value, c) : stepExpression(value, c);
+      map.setPaintProperty("surface-seat", "fill-color", expression);
     }
     emit();
   };
@@ -536,7 +544,7 @@ export function createAtlas(container: HTMLElement, initial: AtlasState): Atlas 
 
   const layerOf = (id: LayerId): LayerDef => LAYERS.find((layer) => layer.id === id)!;
   const pointIds = (id: LayerId) => {
-    const ids = [`${id}-cluster-halo`, `${id}-cluster`, `${id}-cluster-count`, id, `${id}-icon`];
+    const ids = [`${id}-cluster-halo`, `${id}-cluster`, `${id}-cluster-count`, id, `${id}-dot`, `${id}-icon`];
     if (id === "hospitals") ids.push("hospitals-hi");
     return ids;
   };
@@ -580,10 +588,13 @@ export function createAtlas(container: HTMLElement, initial: AtlasState): Atlas 
           : { "circle-radius": zoomRadius(layer.pointScale), "circle-color": layer.color, "circle-opacity": 0.95,
             "circle-stroke-width": 0.8, "circle-stroke-color": "rgba(255,255,255,0.92)" } }, before);
     }
+    map.addLayer({ id: `${id}-dot`, type: "circle", ...src, filter: NOT_CLUSTER, minzoom,
+      paint: { "circle-radius": zoomRadius(layer.pointScale * 0.85), "circle-color": layer.color, "circle-opacity": 0.92,
+        "circle-stroke-width": 0.7, "circle-stroke-color": "rgba(255,255,255,0.9)" } }, before);
     const iconId = `${id}-icon`;
     const placeIcon = () => {
       if (map.getLayer(iconId)) return;
-      map.addLayer({ id: iconId, type: "symbol", ...src, filter: NOT_CLUSTER, minzoom: ICON_MINZOOM,
+      map.addLayer({ id: iconId, type: "symbol", ...src, filter: NOT_CLUSTER, minzoom: 3,
         layout: { visibility: shown(id) ? "visible" : "none", "icon-image": iconId,
           "icon-size": ["interpolate", ["linear"], ["zoom"], ICON_MINZOOM, 0.85, 14, 1],
           "icon-allow-overlap": id === "hospitals", "icon-padding": 1 } }, beforeFor(layer));
@@ -600,8 +611,14 @@ export function createAtlas(container: HTMLElement, initial: AtlasState): Atlas 
   const applyPoint = (id: LayerId) => {
     if (!loaded) return;
     if (shown(id)) addPoint(id);
-    for (const layerId of pointIds(id)) {
-      if (map.getLayer(layerId)) map.setLayoutProperty(layerId, "visibility", shown(id) ? "visible" : "none");
+    const treatment = state.pointTreatments[id] ?? "clustered";
+    const visibleIds = treatment === "clustered"
+      ? [`${id}-cluster-halo`, `${id}-cluster`, `${id}-cluster-count`, id, `${id}-icon`]
+      : treatment === "dots" ? [`${id}-dot`] : [`${id}-icon`];
+    if (treatment === "clustered" && id === "hospitals") visibleIds.push("hospitals-hi");
+    const visible = new Set(visibleIds);
+    for (const layerId of pointIds(id)) if (map.getLayer(layerId)) {
+      map.setLayoutProperty(layerId, "visibility", shown(id) && visible.has(layerId) ? "visible" : "none");
     }
   };
 
@@ -830,13 +847,21 @@ export function createAtlas(container: HTMLElement, initial: AtlasState): Atlas 
       if (state.mode === mode) return;
       state.mode = mode;
       popup.remove();
+      if (loaded) applyBasemap();
       void applySurface();
       void applyElection();
     },
     setSurface: (surface) => {
       state.surface = normaliseSurface(surface);
       popup.remove();
+      if (loaded) applyBasemap();
       void applySurface();
+    },
+    setSurfaceTreatment: (id, treatment) => {
+      if (treatment === "classes") delete state.surfaceTreatments[id];
+      else state.surfaceTreatments[id] = treatment;
+      void applySurface();
+      emit();
     },
     setPoint: (id, on) => {
       if (on === state.points.includes(id)) return true;
@@ -850,6 +875,13 @@ export function createAtlas(container: HTMLElement, initial: AtlasState): Atlas 
       countInView();
       return true;
     },
+    setPointTreatment: (id, treatment) => {
+      if (treatment === "clustered") delete state.pointTreatments[id];
+      else state.pointTreatments[id] = treatment;
+      applyPoint(id);
+      emit();
+      countInView();
+    },
     clearPoints: () => {
       const was = state.points;
       state.points = [];
@@ -857,6 +889,7 @@ export function createAtlas(container: HTMLElement, initial: AtlasState): Atlas 
       emit();
     },
     setBasemap: (id) => { state.basemap = id; if (loaded) applyBasemap(); emit(); },
+    setPreset: (preset) => { state.preset = preset; if (loaded) applyBasemap(); emit(); },
     setRoads: (on) => { state.roads = on; if (loaded) applyBasemap(); emit(); },
     setLabels: (on) => { state.labels = on; if (loaded) applyBasemap(); emit(); },
     setElectionView: (view) => { state.electionView = view; hexmap.refresh(); void applyElection(); },

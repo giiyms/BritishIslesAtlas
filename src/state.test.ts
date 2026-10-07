@@ -2,6 +2,29 @@ import { describe, expect, it } from "vitest";
 import { MAX_POINTS, decodeState, defaultState, encodeState } from "./state";
 
 describe("URL state", () => {
+  it("uses Auto and Recommended as the backwards-compatible defaults", () => {
+    expect(defaultState().basemap).toBe("auto");
+    expect(defaultState().preset).toBe("recommended");
+    expect(encodeState(defaultState())).toBe("");
+  });
+
+  it("round-trips a manual style preset and basemap override", () => {
+    const s = { ...defaultState(), preset: "night" as const, basemap: "mono" as const };
+    expect(decodeState(`#${encodeState(s)}`)).toMatchObject({ preset: "night", basemap: "mono" });
+  });
+
+  it("round-trips per-layer point treatments and ignores malformed choices", () => {
+    const s = { ...defaultState(), pointTreatments: { hospitals: "dots", castles: "symbols" } as const };
+    expect(decodeState(`#${encodeState(s)}`).pointTreatments).toEqual({ hospitals: "dots", castles: "symbols" });
+    expect(decodeState("#q=hospitals:bogus,not-a-layer:dots,castles:symbols").pointTreatments).toEqual({ castles: "symbols" });
+  });
+
+  it("persists continuous treatment only for supported areal layers", () => {
+    const s = { ...defaultState(), surfaceTreatments: { pharmacies: "continuous" } as const };
+    expect(decodeState(`#${encodeState(s)}`).surfaceTreatments).toEqual({ pharmacies: "continuous" });
+    expect(decodeState("#u=pharmacies:bogus,hospitals:continuous").surfaceTreatments).toEqual({ hospitals: "continuous" });
+  });
+
   it("encodes the default as an empty hash", () => {
     expect(encodeState(defaultState())).toBe("");
   });

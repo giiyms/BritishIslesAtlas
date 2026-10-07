@@ -1,18 +1,24 @@
 import { LAYERS, isLayerId, type LayerId } from "./layers";
 import { DEFAULT_SURFACE, normaliseSurface, type Surface, type SurfaceKind } from "./surfaces";
 import type { ElectionLayout, ElectionView } from "./election";
+import type { StylePresetId } from "./style-presets";
 
 export type Mode = "atlas" | "election";
-export type BasemapId = "relief" | "light" | "dark" | "mono";
+export type BasemapId = "auto" | "relief" | "light" | "dark" | "mono";
+export type PointTreatment = "clustered" | "dots" | "symbols";
+export type SurfaceTreatment = "classes" | "continuous";
 
 export const MAX_POINTS = 5;
-export const BASEMAP_IDS: readonly BasemapId[] = ["relief", "light", "dark", "mono"];
+export const BASEMAP_IDS: readonly BasemapId[] = ["auto", "relief", "light", "dark", "mono"];
 
 export interface AtlasState {
   mode: Mode;
   surface: Surface;
   points: LayerId[];
+  pointTreatments: Partial<Record<LayerId, PointTreatment>>;
+  surfaceTreatments: Partial<Record<LayerId, SurfaceTreatment>>;
   basemap: BasemapId;
+  preset: StylePresetId;
   roads: boolean;
   labels: boolean;
   electionView: ElectionView;
@@ -24,7 +30,10 @@ export function defaultState(): AtlasState {
     mode: "atlas",
     surface: { ...DEFAULT_SURFACE },
     points: LAYERS.filter((layer) => layer.defaultOn).map((layer) => layer.id).slice(0, MAX_POINTS),
-    basemap: "relief",
+    pointTreatments: {},
+    surfaceTreatments: {},
+    basemap: "auto",
+    preset: "recommended",
     roads: true,
     labels: true,
     electionView: "winner",
@@ -39,7 +48,16 @@ export function encodeState(s: AtlasState): string {
   if (s.mode !== d.mode) parts.push(`m=${s.mode}`);
   if (s.surface.kind !== "none") parts.push(`s=${s.surface.kind}:${s.surface.dataset}`);
   if (s.points.join(",") !== d.points.join(",")) parts.push(`p=${s.points.join(",")}`);
+  const treatments = Object.entries(s.pointTreatments)
+    .filter(([id, treatment]) => isLayerId(id) && (treatment === "dots" || treatment === "symbols"))
+    .map(([id, treatment]) => `${id}:${treatment}`);
+  if (treatments.length) parts.push(`q=${treatments.join(",")}`);
+  const surfaces = Object.entries(s.surfaceTreatments)
+    .filter(([id, treatment]) => isLayerId(id) && treatment === "continuous")
+    .map(([id, treatment]) => `${id}:${treatment}`);
+  if (surfaces.length) parts.push(`u=${surfaces.join(",")}`);
   if (s.basemap !== d.basemap) parts.push(`b=${s.basemap}`);
+  if (s.preset !== d.preset) parts.push(`t=${s.preset}`);
   if (s.roads !== d.roads) parts.push(`r=${s.roads ? 1 : 0}`);
   if (s.labels !== d.labels) parts.push(`l=${s.labels ? 1 : 0}`);
   if (s.electionView !== d.electionView) parts.push(`v=${s.electionView}`);
@@ -60,8 +78,24 @@ export function decodeState(hash: string): AtlasState {
   }
   const points = q.get("p");
   if (points !== null) s.points = [...new Set(points.split(",").filter(isLayerId))].slice(0, MAX_POINTS);
+  const treatments = q.get("q");
+  if (treatments) {
+    for (const item of treatments.split(",")) {
+      const [id, treatment] = item.split(":");
+      if (isLayerId(id) && (treatment === "dots" || treatment === "symbols")) s.pointTreatments[id] = treatment;
+    }
+  }
+  const surfaceTreatments = q.get("u");
+  if (surfaceTreatments) {
+    for (const item of surfaceTreatments.split(",")) {
+      const [id, treatment] = item.split(":");
+      if (isLayerId(id) && treatment === "continuous") s.surfaceTreatments[id] = treatment;
+    }
+  }
   const b = q.get("b");
   if (b && (BASEMAP_IDS as readonly string[]).includes(b)) s.basemap = b as BasemapId;
+  const t = q.get("t");
+  if (t === "recommended" || t === "relief" || t === "paper" || t === "night") s.preset = t;
   if (q.get("r") !== null) s.roads = q.get("r") === "1";
   if (q.get("l") !== null) s.labels = q.get("l") === "1";
   const v = q.get("v");

@@ -47,6 +47,13 @@ export function stepExpression(input: ExpressionSpecification, c: Classes): Expr
   return expr as ExpressionSpecification;
 }
 
+export function interpolateExpression(input: ExpressionSpecification, c: Classes): ExpressionSpecification {
+  if (!c.breaks.length) return c.colors[0] as unknown as ExpressionSpecification;
+  const expr: unknown[] = ["interpolate", ["linear"], input, 0, c.colors[0]];
+  c.breaks.forEach((b, i) => expr.push(b, c.colors[i + 1]));
+  return expr as ExpressionSpecification;
+}
+
 export function classIndex(value: number, c: Classes): number {
   let i = 0;
   while (i < c.breaks.length && value >= c.breaks[i]) i++;
@@ -73,11 +80,11 @@ function escapeHtml(value: string): string {
   return value.replace(/[&<>"']/g, (ch) => `&#${ch.charCodeAt(0)};`);
 }
 
-export function legendHtml(c: Classes): string {
+export function legendHtml(c: Classes, continuous = false): string {
   const labels = classLabels(c);
   return `<div class="legend" role="img" aria-label="${escapeHtml(`${c.unit}: ${labels.join(", ")}`)}">` +
     `<div class="legend-unit">${escapeHtml(c.unit)}</div>` +
-    `<div class="legend-bar">${c.colors.map((col) => `<span style="background:${col}"></span>`).join("")}</div>` +
+    `<div class="legend-bar${continuous ? " is-continuous" : ""}">${c.colors.map((col) => `<span style="background:${col}"></span>`).join("")}</div>` +
     `<div class="legend-labels">${labels.map((l) => `<span>${escapeHtml(l)}</span>`).join("")}</div>` +
     (c.source ? `<div class="legend-source">${escapeHtml(c.source)}</div>` : "") +
     `</div>`;

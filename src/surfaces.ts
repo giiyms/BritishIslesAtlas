@@ -16,7 +16,7 @@ export interface Surface {
 
 export const SURFACE_KINDS: ReadonlyArray<{ kind: SurfaceKind; label: string; hint: string }> = [
   { kind: "none", label: "None", hint: "Points only" },
-  { kind: "seat", label: "Count per seat", hint: "Each 2024 seat has ≈73k voters, so this is a per-person rate" },
+  { kind: "seat", label: "Count per seat", hint: "Observed OSM features inside each 2024 constituency" },
   { kind: "hex", label: "Hex density", hint: `Equal-area ${config.hex.radiusKm} km hexagons` },
   { kind: "distance", label: "Distance to nearest", hint: "Straight-line km from anywhere on land" },
 ];
