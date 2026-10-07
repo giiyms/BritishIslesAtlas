@@ -1,15 +1,13 @@
 import bakeRaw from "../public/data/endorsements-gb.json?raw";
-import geoRaw from "../public/data/constituencies-gb-2024.geojson?raw";
+import seatIndex from "../public/data/seat-index.json";
+import { pickKey } from "./election";
 import { describe, expect, it } from "vitest";
 import { ENDORSE_COLORS } from "./endorse";
 import {
   canonicalParty,
   constituencyPopupHtml,
-  enrichConstituencies,
   formatShortDate,
-  restoreCallouts,
   type EndorsementsFile,
-  type FeatureCollection,
 } from "./voting";
 
 function luminance(hex: string): number {
@@ -86,15 +84,13 @@ describe("constituencyPopupHtml (Great Yarmouth)", () => {
   });
 });
 
-describe("restoreCallouts", () => {
-  it("emits one centroid inside East Anglia for Great Yarmouth", () => {
-    const geo = JSON.parse(geoRaw) as FeatureCollection;
-    const enriched = enrichConstituencies(geo, bake.seats);
-    const callouts = restoreCallouts(enriched);
-    expect(callouts.features).toHaveLength(1);
-    const f = callouts.features[0] as unknown as { properties: { pcon24nm: string }; geometry: { coordinates: [number, number] } };
-    expect(f.properties.pcon24nm).toBe("Great Yarmouth");
-    const [lon, lat] = f.geometry.coordinates;
+describe("Restore callout", () => {
+  it("has exactly one Restore pick, labelled inside Great Yarmouth", () => {
+    const restore = Object.values(bake.seats).filter((seat) => pickKey(seat) === "restore");
+    expect(restore.map((seat) => seat.pcon24nm)).toEqual(["Great Yarmouth"]);
+    const entry = (seatIndex as Record<string, { name: string; label: number[] }>)[restore[0].pcon24cd];
+    expect(entry.name).toBe("Great Yarmouth");
+    const [lon, lat] = entry.label;
     expect(lon).toBeGreaterThan(1.5);
     expect(lon).toBeLessThan(1.8);
     expect(lat).toBeGreaterThan(52.5);

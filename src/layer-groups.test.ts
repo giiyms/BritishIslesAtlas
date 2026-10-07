@@ -3,9 +3,9 @@ import { LAYERS } from "./layers";
 import { LAYER_SECTIONS, singularLabel } from "./layer-groups";
 
 describe("LAYER_SECTIONS", () => {
-  it("covers every data layer except constituencies exactly once", () => {
+  it("covers every point layer exactly once", () => {
     const listed = LAYER_SECTIONS.flatMap((section) => section.layers);
-    const data = LAYERS.filter((layer) => layer.group === "data" && layer.id !== "constituencies").map((l) => l.id);
+    const data = LAYERS.map((l) => l.id);
     expect(new Set(listed).size).toBe(listed.length);
     expect([...listed].sort()).toEqual([...data].sort());
   });
@@ -13,7 +13,7 @@ describe("LAYER_SECTIONS", () => {
 
 describe("palette dedupe", () => {
   it("has no exact duplicate map colours among data layers", () => {
-    const data = LAYERS.filter((layer) => layer.group === "data" && layer.id !== "townhalls");
+    const data = LAYERS.filter((layer) => layer.id !== "townhalls");
     const colours = data.map((layer) => layer.color.toLowerCase());
     const dupes = colours.filter((c, i) => colours.indexOf(c) !== i);
     // courthouses + townhalls share the civic slate on purpose (roast fix 8).
@@ -22,8 +22,6 @@ describe("palette dedupe", () => {
 
   it("moves amenity dots off the pick colours", () => {
     const byId = Object.fromEntries(LAYERS.map((layer) => [layer.id, layer.color]));
-    expect(byId.schools).toBe("#3f7fbf");
-    expect(byId.pubs).toBe("#d9822b");
     expect(byId["community-centres"]).toBe("#5a6fb0");
     expect(byId["nature-reserves"]).toBe("#5e8c3a");
     expect(byId.windmills).toBe("#b07a45");

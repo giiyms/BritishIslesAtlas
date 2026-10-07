@@ -60,15 +60,19 @@ function haversineMeters(
   return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
 }
 
+/**
+ * Classic segmented ruler: four alternating ink/paper segments of a round length,
+ * labelled "0" and the total. Its width is the true distance, not a progress fill.
+ */
 export function mountScale(el: HTMLElement, map: Map): void {
-  const track = document.createElement("div");
-  track.className = "scale-track";
-  const fill = document.createElement("div");
-  fill.className = "scale-fill";
-  track.append(fill);
+  const ruler = document.createElement("div");
+  ruler.className = "scale-ruler";
+  const zero = document.createElement("span");
+  zero.className = "scale-zero";
+  zero.textContent = "0";
   const label = document.createElement("span");
   label.className = "scale-label";
-  el.replaceChildren(track, label);
+  el.replaceChildren(zero, ruler, label);
 
   const update = () => {
     const container = map.getContainer();
@@ -76,17 +80,11 @@ export function mountScale(el: HTMLElement, map: Map): void {
     const rect = el.getBoundingClientRect();
     const y = Math.min(container.clientHeight - 8, Math.max(8, rect.top - mapRect.top + rect.height / 2));
     const x = container.clientWidth / 2;
-    const a = map.unproject([x, y]);
-    const b = map.unproject([x + 100, y]);
-    const metersPerPixel = haversineMeters(a, b) / 100;
-    const trackWidth = track.clientWidth;
-    const scale = chooseScale(metersPerPixel, trackWidth * 0.65, trackWidth * 0.3, trackWidth * 0.95);
-    const px = Math.max(1, Math.min(trackWidth, Math.round(scale.px)));
-    fill.style.width = `${px}px`;
-    const text = formatDistance(scale.meters);
-    label.textContent = text;
-    const unit = scale.meters >= 1000 ? "kilometres" : "metres";
-    const spoken = scale.meters >= 1000 ? `${scale.meters / 1000} ${unit}` : `${scale.meters} ${unit}`;
+    const metersPerPixel = haversineMeters(map.unproject([x, y]), map.unproject([x + 100, y])) / 100;
+    const scale = chooseScale(metersPerPixel, 110, 70, 150);
+    ruler.style.width = `${Math.max(1, Math.round(scale.px))}px`;
+    label.textContent = formatDistance(scale.meters);
+    const spoken = scale.meters >= 1000 ? `${scale.meters / 1000} kilometres` : `${scale.meters} metres`;
     el.setAttribute("aria-label", `Scale bar, ${spoken}`);
   };
 

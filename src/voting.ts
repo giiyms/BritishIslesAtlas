@@ -73,74 +73,6 @@ export async function loadVotingBundle(): Promise<VotingBundle> {
   return cached;
 }
 
-export function fillColorExpression(): unknown {
-  // Data-driven colours from feature properties set at load.
-  return [
-    "match",
-    ["get", "endorseColor"],
-    "reform", ENDORSE_COLORS.reform.fill,
-    "restore", ENDORSE_COLORS.restore.fill,
-    "none", ENDORSE_COLORS.none.fill,
-    "override", ENDORSE_COLORS.override.fill,
-    ENDORSE_COLORS.reform.fill,
-  ];
-}
-
-export function outlineColorExpression(): unknown {
-  return [
-    "match",
-    ["get", "endorseColor"],
-    "reform", ENDORSE_COLORS.reform.accent,
-    "restore", ENDORSE_COLORS.restore.accent,
-    "none", ENDORSE_COLORS.none.accent,
-    "override", ENDORSE_COLORS.override.accent,
-    ENDORSE_COLORS.reform.accent,
-  ];
-}
-
-export function fillOpacityExpression(): unknown {
-  return [
-    "match",
-    ["get", "endorseColor"],
-    "reform", ENDORSE_COLORS.reform.fillOpacity,
-    "restore", ENDORSE_COLORS.restore.fillOpacity,
-    "none", ENDORSE_COLORS.none.fillOpacity,
-    "override", ENDORSE_COLORS.override.fillOpacity,
-    ENDORSE_COLORS.reform.fillOpacity,
-  ];
-}
-
-export type FeatureCollection = {
-  type: "FeatureCollection";
-  features: Array<{ type: string; properties?: Record<string, unknown> | null; geometry?: unknown }>;
-};
-
-export function enrichConstituencies(
-  geojson: FeatureCollection,
-  seats: Record<string, VotingSeat>,
-): FeatureCollection {
-  return {
-    type: "FeatureCollection",
-    features: geojson.features.map((feature) => {
-      const props = { ...(feature.properties ?? {}) } as Record<string, unknown>;
-      const code = String(props.PCON24CD ?? "");
-      const seat = seats[code];
-      const colorKey = seat?.isOverride
-        ? "override"
-        : seat?.endorse === "restore"
-          ? "restore"
-          : seat?.endorse === "none" || (typeof seat?.endorse === "string" && seat.endorse.startsWith("other:"))
-            ? "none"
-            : "reform";
-      props.endorse = seat?.endorse ?? "reform";
-      props.endorseColor = colorKey;
-      props.endorseReason = seat?.reason ?? "";
-      props.isOverride = seat?.isOverride ? 1 : 0;
-      return { ...feature, properties: props };
-    }),
-  };
-}
-
 function escapeHtml(value: string): string {
   return value.replace(/[&<>"']/g, (char) => {
     switch (char) {
@@ -329,50 +261,6 @@ export function constituencyPopupHtml(seat: VotingSeat, retrievedAt: string): st
 }
 
 /** Centroid-ish label point for a (Multi)Polygon: area-weighted centroid of its largest ring. */
-export function labelPoint(geometry: unknown): [number, number] | null {
-  const g = geometry as { type?: string; coordinates?: unknown } | null;
-  if (!g?.coordinates) return null;
-  const polys = (g.type === "Polygon" ? [g.coordinates] : g.type === "MultiPolygon" ? g.coordinates : []) as number[][][][];
-  let best: { area: number; c: [number, number] } | null = null;
-  for (const poly of polys) {
-    const ring = poly[0];
-    if (!ring || ring.length < 4) continue;
-    let a = 0, cx = 0, cy = 0;
-    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-      const [x0, y0] = ring[j];
-      const [x1, y1] = ring[i];
-      const f = x0 * y1 - x1 * y0;
-      a += f; cx += (x0 + x1) * f; cy += (y0 + y1) * f;
-    }
-    if (a === 0) continue;
-    const area = Math.abs(a / 2);
-    const c: [number, number] = [cx / (3 * a), cy / (3 * a)];
-    if (!best || area > best.area) best = { area, c };
-  }
-  return best?.c ?? null;
-}
-
-/** Point features (one per Restore seat) for the GB-scale callout. */
-export function restoreCallouts(enriched: FeatureCollection): FeatureCollection {
-  const features = enriched.features
-    .filter((f) => f.properties?.endorseColor === "restore")
-    .map((f) => {
-      const c = labelPoint(f.geometry);
-      return c
-        ? {
-          type: "Feature",
-          properties: {
-            pcon24cd: String(f.properties?.PCON24CD ?? ""),
-            pcon24nm: String(f.properties?.PCON24NM ?? f.properties?.name ?? ""),
-          },
-          geometry: { type: "Point", coordinates: c },
-        }
-        : null;
-    })
-    .filter((f): f is NonNullable<typeof f> => f !== null);
-  return { type: "FeatureCollection", features };
-}
-
 export function formatPollsUpdated(iso: string | undefined): string {
   if (!iso) return "";
   const d = iso.slice(0, 10);

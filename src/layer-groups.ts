@@ -1,9 +1,8 @@
 import type { LayerId } from "./layers";
 
 /**
- * Panel IA (style roast 2026-10-05 fix 6): Voting is pinned first; the other data
- * layers live in collapsible groups. Every data layer except `constituencies`
- * appears in exactly one section (enforced in layer-groups.test.ts).
+ * Point-layer catalogue groups. Every layer appears in exactly one section
+ * (enforced in layer-groups.test.ts).
  */
 export interface LayerSection {
   id: string;
@@ -15,7 +14,7 @@ export const LAYER_SECTIONS: readonly LayerSection[] = [
   {
     id: "transport",
     label: "Transport",
-    layers: ["roads", "railway-stations", "aerodromes", "ferry-terminals", "marinas", "petrol"],
+    layers: ["railway-stations", "aerodromes", "ferry-terminals", "marinas", "petrol"],
   },
   {
     id: "health",
@@ -41,12 +40,12 @@ export const LAYER_SECTIONS: readonly LayerSection[] = [
   {
     id: "faith",
     label: "Faith & community",
-    layers: ["places-of-worship", "churches", "mosques", "other-religious", "community-centres", "pubs", "population"],
+    layers: ["places-of-worship", "community-centres"],
   },
   {
     id: "services",
     label: "Services",
-    layers: ["schools", "universities", "libraries", "post-offices", "marketplaces", "ev", "power", "census"],
+    layers: ["universities", "libraries", "post-offices", "marketplaces", "ev", "power"],
   },
 ];
 
@@ -56,19 +55,6 @@ const SINGULAR_OVERRIDES: Record<string, string> = {
   Police: "Police station",
   Power: "Power plant",
   "EV charging": "EV charger",
-  "Other religious": "Religious site",
-  Population: "Settlement",
-  Census: "Census marker",
-  Roads: "Road",
-  Crime: "Crime marker",
-  Health: "Health site",
-  Weather: "Weather station",
-  Immigration: "Port of entry",
-  Nuclear: "Nuclear site",
-  Historic: "Historic site",
-  Legends: "Legend site",
-  Mountains: "Summit",
-  "Wind turbines": "Wind turbine",
 };
 
 export function singularLabel(label: string): string {
