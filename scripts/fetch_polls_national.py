@@ -141,7 +141,8 @@ def extract_main_table(html: str) -> list[list[str]]:
 
             entry = {
                 "fieldwork": cell(idx_date),
-                "pollster": re.sub(r"\[\d+\]", "", pollster).strip(),
+                # Strip Wikipedia footnote marks ([1], [a], [b], …) from pollster names.
+                "pollster": re.sub(r"\[[A-Za-z0-9]+\]", "", pollster).strip(),
                 "client": cell(idx_client) or None,
                 "area": area or "GB",
                 "sample": parse_pct(cell(idx_sample).replace(",", ""))  # may fail

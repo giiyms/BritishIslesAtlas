@@ -1,5 +1,5 @@
 {
-  "retrieved_at": "2026-10-06T15:52:12Z",
+  "retrieved_at": "2026-10-07T15:37:48Z",
   "source": "Wikipedia — Opinion polling for the next United Kingdom general election",
   "source_url": "https://en.wikipedia.org/wiki/Opinion_polling_for_the_next_United_Kingdom_general_election",
   "secondary": {
@@ -27,6 +27,24 @@
       "snp": 3.0,
       "pc": 1.0,
       "rb": 3.0,
+      "others": 2.0,
+      "url": "https://en.wikipedia.org/wiki/Opinion_polling_for_the_next_United_Kingdom_general_election"
+    },
+    {
+      "fieldwork": "3–5 Oct",
+      "pollster": "More in Common",
+      "client": "N/A",
+      "area": "GB",
+      "sample": 2088,
+      "sample_raw": "2,088",
+      "lab": 29.0,
+      "con": 21.0,
+      "ref": 24.0,
+      "ld": 10.0,
+      "grn": 7.0,
+      "snp": 2.0,
+      "pc": null,
+      "rb": 4.0,
       "others": 2.0,
       "url": "https://en.wikipedia.org/wiki/Opinion_polling_for_the_next_United_Kingdom_general_election"
     },
@@ -713,24 +731,6 @@
       "rb": 5.0,
       "others": 2.0,
       "url": "https://en.wikipedia.org/wiki/Opinion_polling_for_the_next_United_Kingdom_general_election"
-    },
-    {
-      "fieldwork": "23–24 Aug",
-      "pollster": "YouGov",
-      "client": "The Times/Sky News",
-      "area": "GB",
-      "sample": 2380,
-      "sample_raw": "2,380",
-      "lab": 22.0,
-      "con": 20.0,
-      "ref": 23.0,
-      "ld": 13.0,
-      "grn": 13.0,
-      "snp": 3.0,
-      "pc": 1.0,
-      "rb": 3.0,
-      "others": 2.0,
-      "url": "https://en.wikipedia.org/wiki/Opinion_polling_for_the_next_United_Kingdom_general_election"
     }
   ],
   "rolling_average": {
@@ -738,25 +738,25 @@
     "n": 7,
     "pollsters": [
       "YouGov",
+      "More in Common",
       "Opinium",
       "Find Out Now",
       "Survation",
       "More in Common",
-      "YouGov",
-      "Lord Ashcroft Polls"
+      "YouGov"
     ],
     "fieldwork_span": {
       "newest": "4–5 Oct",
-      "oldest": "24–28 Sep"
+      "oldest": "27–28 Sep"
     },
-    "lab": 27.4,
-    "con": 19.4,
-    "ref": 22.6,
-    "ld": 10.0,
-    "grn": 11.0,
-    "snp": 2.7,
-    "pc": 1.1,
-    "rb": 3.5,
-    "rb_polls_in_window": 4
+    "lab": 27.6,
+    "con": 19.3,
+    "ref": 23.3,
+    "ld": 10.1,
+    "grn": 10.0,
+    "snp": 2.6,
+    "pc": 1.2,
+    "rb": 3.6,
+    "rb_polls_in_window": 5
   }
 }
