@@ -1,0 +1,25 @@
+{
+  "$comment": "Single source of truth for surface classes. Read by src/surfaces.ts (paint expressions + legends) and scripts/build_tiles.py (baked distance rasters). Change here, rebuild tiles.",
+  "palettes": {
+    "perSeat": ["#d1eeea", "#85c4c9", "#4f90a6", "#3b738f", "#2a5674"],
+    "hex": ["#e4f1e1", "#9cceba", "#63a6a0", "#337f7f", "#0d585f"],
+    "distance": ["#fcde9c", "#faa476", "#f0746e", "#dc3977", "#7c1d6f"],
+    "reform": ["#e3f6f9", "#a6e2ec", "#5cc9db", "#129fb5", "#0a6878"]
+  },
+  "hex": { "radiusKm": 7 },
+  "distance": {
+    "bounds": [-11.0, 49.8, 2.0, 61.0],
+    "pixelKm": 0.8,
+    "opacity": 0.85,
+    "layers": {
+      "hospitals": [5, 10, 20, 30],
+      "pharmacies": [1, 2, 5, 10],
+      "railway-stations": [2, 5, 10, 20],
+      "ev": [1, 2, 5, 10],
+      "post-offices": [1, 2, 5, 10],
+      "dentists": [1, 2, 5, 10]
+    }
+  },
+  "reformShare": [15, 22, 28, 34],
+  "electorateNote": "2024 seats were drawn to an electorate quota of 69,724–77,062, so per-seat counts are roughly per 73k voters."
+}
