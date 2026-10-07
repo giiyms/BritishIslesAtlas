@@ -1,8 +1,6 @@
 # British Isles Atlas
 
-A British Isles mega-map website covering Great Britain, Ireland, and the surrounding islands.
-
-The site centers on an ultra-fast interactive map hero. Data layers are combinable and controlled with toggles, so the map can show one layer or many at once.
+An interactive atlas of Great Britain, Ireland and the surrounding islands. Pick one **surface** (a choropleth, hexbin or distance map), up to five **point layers**, and a **basemap**. A separate **Election** mode maps the 632 GB Westminster seats.
 
 ## Run
 
@@ -10,47 +8,53 @@ Requires Node.js 20+ and [pnpm](https://pnpm.io/).
 
 ```bash
 pnpm install
-pnpm dev
+pnpm dev          # http://localhost:5173
+pnpm test         # vitest
+pnpm build && pnpm preview
 ```
 
-Open http://localhost:5173.
+The map state lives in the URL hash (e.g. `#s=seat:pharmacies&p=hospitals,castles&b=light`), so every view is shareable.
+
+## What's on the map
+
+**Atlas mode**
+
+| Role | Choices |
+|---|---|
+| Surface (pick one) | **Count per seat**: any layer, per 2024 seat. Seats were drawn to an electorate quota of 69,724–77,062, so this is roughly a per-73k-voters rate. **Hex density**: equal-area 7 km hexes (127 km²). **Distance to nearest**: hospitals, pharmacies, railway stations, EV chargers, post offices or dentists (straight line, not travel time). |
+| Points (up to 5) | 49 OpenStreetMap layers in six groups (transport, health, culture, leisure, faith & community, services). Clustered to z10, individual icons from z11, live "in view" counts. |
+| Basemap | Relief (grey hillshade), Light, Dark, Mono; toggles for main roads and place names. |
+
+Every surface's legend is generated from the same `Classes` object that writes its MapLibre `step` expression (`src/classify.ts`), and the class breaks and palettes live in `src/surfaces.json`, which the tile build reads too. The legend can't drift from the map.
+
+**Election mode**: projected winner (Electoral Calculus, More in Common fallback) drawn as value-by-alpha, where faded means marginal. Also Reform UK projected vote share, and **Our pick**, the editorial Reform / Restore Britain endorsement. Every view can be shown as a geographic map or an equal-area hex cartogram (one hexagon per seat). Search a postcode to open your seat.
+
+### Our pick (editorial)
+
+Our pick never endorses Labour or the Conservatives. Daniel's per-seat overrides win first. If any trusted seat poll (Electoral Calculus or More in Common) has Restore strictly ahead of Reform, the seat is **Restore**; otherwise Reform is the anti-split default. See `src/endorse.ts` and `SOURCES.md`.
+
+## Data pipeline
+
+```
+scripts/osm_extract.py   OSM Overpass → data/osm/<layer>.geojson          (raw, not served)
+scripts/build_tiles.py   data/ → public/tiles/*.pmtiles, distance-*.png,
+                         public/data/seat-stats.json, seat-index.json      (served)
+```
 
 ```bash
-pnpm build
-pnpm preview
+python3 scripts/osm_extract.py pharmacies     # or --all / --list
+brew install tippecanoe                       # once
+python3 scripts/build_tiles.py                # or --only points|seats|seatdata|hex|distance
 ```
 
-## v0 map
+Point layers are served as one PMTiles archive per layer and loaded only when switched on. MapLibre reads them with HTTP range requests, so no tile server is needed. Voting data refreshes daily via `scripts/refresh_voting_data.py`. See `scripts/README.md`.
 
-- Full-bleed [MapLibre GL JS](https://maplibre.org/) map, framed on the British Isles
-- Cool gray altitude basemap: Esri World Hillshade, lightened, with flat water from [OpenFreeMap](https://openfreemap.org/) / OpenMapTiles
-- Multi-select layer chips. Roads, schools, churches, mosques, other religious sites, pubs, population, and census ship with preview geometry. **Petrol stations, EV charging, power plants, hospitals, fire stations, police, castles, libraries, universities, museums, railway stations, aerodromes, ferry terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme parks, viewpoints, arts centres, aquariums, piers, ruins, golf courses, galleries, marketplaces, nature reserves, camp sites, memorials, sports centres, caravan sites, fitness centres, community centres, playgrounds, beaches, swimming pools, pharmacies, town halls, places of worship, lighthouses, courthouses, nightclubs, windmills, prisons, clinics, dentists, and post offices are real OpenStreetMap layers** (static GeoJSON, off by default). **Constituencies** is a real ONS July 2024 GB Westminster polygon layer (BGC, OGL v3; off by default). Cemeteries, immigration, crime, health, weather, wind turbines, nuclear, historic, legends, and mountains remain upcoming stubs
-- Fixed-width scale track in round kilometres or metres. The fill tracks the current view; the label only uses nice round distances. Zoom level is not printed on the map
-- Place search over the bundled gazetteer, with postcodes.io for UK postcodes and rate-limited OpenStreetMap Nominatim for smaller places
+`docs/map-style-lab.html` is the standalone design study behind v2 (heatmap pitfalls, surfaces, basemaps).
 
-Dense point preview layers cluster at low zoom and reveal individual points as you zoom in. The population glow remains visible independently of its chip. Water shares the OpenFreeMap vector source, so its overzoom follows the provider tile metadata. Mobile attribution is always visible; panel, search, scale, and controls share glass styling tokens.
+## Not shipped yet
 
-Petrol stations, EV charging, power plants, hospitals, fire stations, police, castles, libraries, universities, museums, railway stations, aerodromes, ferry terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme parks, viewpoints, arts centres, aquariums, piers, ruins, golf courses, galleries, marketplaces, nature reserves, camp sites, memorials, sports centres, caravan sites, fitness centres, community centres, playgrounds, beaches, swimming pools, pharmacies, town halls, places of worship, lighthouses, courthouses, nightclubs, windmills, prisons, clinics, dentists, and post offices load once from static OpenStreetMap GeoJSON under `public/data/` (ODbL 1.0; see `SOURCES.md`). Constituencies load from static ONS BGC GeoJSON (`constituencies-gb-2024.geojson`, OGL v3; GB-only 632 seats). Other feature geometry in this version is still preview data for the scaffold, not a live survey.
-
-## Planned stack
-
-- MapLibre for the interactive map
-- PMTiles, or an equivalent vector-tile format, for fast tile delivery
-
-## UI direction
-
-Concept 1 is locked:
-
-- Monotone gray altitude and hillshade basemap
-- Distinct saturated accent colors for feature layers: roads, schools, churches, mosques, other religious sites, pubs, hospitals, post offices, population, and census
-- Light theme and clean cartography
-- Continuous scales, clustering, and density, with no fragmented zoom-number labels
-
-
-## Voting (editorial)
-
-GB Westminster seats can show an editorial **Reform / Restore Britain** endorsement layer (never Labour or Conservatives). Daniel per-seat overrides win first. If any trusted seat poll (Electoral Calculus or More in Common) has Restore's share strictly ahead of Reform's, the map picks **Restore** even when Democracy Club has no confirmed Restore candidate; otherwise Reform is the anti-split default. See `SOURCES.md` (Voting P1) and `src/endorse.ts`.
+Pubs, schools, population density and census layers were sample geometry and have been removed until real extracts exist. Northern Ireland seats are not in the ONS GB boundary file.
 
 ## Credits
 
-Hillshade tiles © Esri, USGS, NOAA. Water polygons © OpenStreetMap contributors, rendered via OpenMapTiles and OpenFreeMap. Petrol, EV, power, hospitals, fire stations, police, castles, libraries, universities, museums, railway stations, aerodromes, ferry terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme parks, viewpoints, arts centres, aquariums, piers, ruins, golf courses, galleries, marketplaces, nature reserves, camp sites, memorials, sports centres, caravan sites, fitness centres, community centres, playgrounds, beaches, swimming pools, pharmacies, town halls, places of worship, lighthouses, courthouses, nightclubs, windmills, prisons, clinics, dentists, and post offices layers © OpenStreetMap contributors (ODbL 1.0); see `SOURCES.md`. Constituencies: Contains Ordnance Survey data © Crown copyright and database right 2024; Contains National Statistics data © Crown copyright and database right 2024 (OGL v3.0). Search may query Nominatim and postcodes.io.
+Hillshade © Esri, USGS, NOAA. Basemap, roads and place names © OpenStreetMap contributors via OpenMapTiles / OpenFreeMap. Points of interest © OpenStreetMap contributors (ODbL 1.0). Constituencies: contains OS data © Crown copyright and database right 2024; contains National Statistics data © Crown copyright and database right 2024 (OGL v3.0). Hex layout © Open Innovations (MIT). Full detail in `SOURCES.md`.
