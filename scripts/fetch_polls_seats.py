@@ -26,7 +26,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "public" / "data" / "polls-seats.json"
-GEOJSON = ROOT / "public" / "data" / "constituencies-gb-2024.geojson"
+GEOJSON = ROOT / "data" / "constituencies-gb-2024.geojson"
 
 EC_URL = "https://www.electoralcalculus.co.uk/electdata_pred.txt"
 EC_PAGE = "https://www.electoralcalculus.co.uk/prediction_main.html"

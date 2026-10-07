@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CAND = ROOT / "public" / "data" / "candidates-gb.json"
 POLLS = ROOT / "public" / "data" / "polls-seats.json"
 OVERRIDES = ROOT / "public" / "data" / "overrides.json"
-GEOJSON = ROOT / "public" / "data" / "constituencies-gb-2024.geojson"
+GEOJSON = ROOT / "data" / "constituencies-gb-2024.geojson"
 OUT = ROOT / "public" / "data" / "endorsements-gb.json"
 
 TRUSTED_PROVIDER_RE = re.compile(

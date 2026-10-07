@@ -1,17 +1,20 @@
 #!/usr/bin/env python3
-"""Extract stadiums (OSM leisure=stadium) as static GeoJSON for British Isles.
+"""Generic OSM point-layer extractor for the British Isles atlas.
 
-Same admin-area pipeline as extract_osm_aerodromes.py / ferry terminals /
-marinas / zoos / theatres / battlefields / cinemas: per-region Overpass bbox
-tiles clipped to OSM admin polygons (ENG/SCT/WLS/NIR/IE/IM/GG/JE).
+One pipeline for every OpenStreetMap-derived point layer: per-region Overpass
+bbox tiles (``out center tags``), clipped to OSM admin polygons
+(ENG/SCT/WLS/NIR/IE/IM/GG/JE, Nominatim-cached under ``scripts/cache/``),
+written as static GeoJSON to ``data/osm/<layer>.geojson`` and merged into
+``public/data/extract-meta.json``.
 
-Tight scope: leisure=stadium only (nodes, ways, and relations;
-relations use Overpass centre points like ways). Does NOT include
-leisure=sports_centre, leisure=pitch, leisure=track, leisure=stadium
-buildings without the leisure tag, building=stadium alone, amenity=theatre,
-or tourism=attraction. Disused stadiums retaining leisure=stadium ARE
-included. Large stadiums mapped as multipolygon relations are included via
-out center (Heathrow lesson).
+Per-layer differences (tags, require_name, relations, tile cache, sanity
+thresholds, meta caveats, rationale notes) live in ``scripts/osm_layers.py``.
+
+    python3 scripts/osm_extract.py castles museums
+    python3 scripts/osm_extract.py --all
+    python3 scripts/osm_extract.py --list
+
+Requires ``shapely`` and ``curl``.
 """
 
 from __future__ import annotations
@@ -30,9 +33,18 @@ from shapely.geometry import Point, shape
 from shapely.ops import unary_union
 from shapely.validation import make_valid
 
+from osm_layers import LAYERS, LayerSpec, Stat
+
 REPO = Path(__file__).resolve().parents[1]
 CACHE = Path(__file__).resolve().parent / "cache"
+OUT_DIR_DEFAULT = REPO / "data" / "osm"
+META_PATH_DEFAULT = REPO / "public" / "data" / "extract-meta.json"
 ENDPOINT_DEFAULT = "https://overpass.openstreetmap.fr/api/interpreter"
+ENDPOINT_FALLBACKS = [
+    "https://overpass-api.de/api/interpreter",
+    "https://overpass.kumi.systems/api/interpreter",
+    "https://overpass.openstreetmap.fr/api/interpreter",
+]
 USER_AGENT = (
     "BritishIslesAtlas-extractor/1.0 "
     "(static GeoJSON; polite; https://github.com/giiyms/BritishIslesAtlas)"
@@ -48,15 +60,6 @@ REGIONS = [
     "guernsey",
     "jersey",
 ]
-
-LAYERS = {
-    "stadiums": {
-        "tag_key": "leisure",
-        "tag_value": "stadium",
-        "generic_name": "Stadium",
-        "layer": "stadiums",
-    },
-}
 
 
 def load_region_polygon(label: str):
@@ -123,10 +126,25 @@ def post_overpass(endpoint: str, query: str, timeout: int) -> dict[str, Any]:
     return payload
 
 
+def build_query(spec: LayerSpec, south: float, west: float, north: float, east: float, timeout: int) -> str:
+    name_filter = '["name"]' if spec.require_name else ""
+    bbox = f"({south},{west},{north},{east})"
+    kinds = ("node", "way", "relation") if spec.include_relations else ("node", "way")
+    body = "".join(
+        f'  {kind}["{spec.tag_key}"="{spec.tag_value}"]{name_filter}{bbox};\n' for kind in kinds
+    )
+    return f"[out:json][timeout:{timeout}];\n(\n{body});\nout center tags;\n"
+
+
+def tile_cache_path(spec: LayerSpec, south: float, west: float, north: float, east: float) -> Path:
+    flag = "named" if spec.require_name else "all"
+    name = f"{flag}_{south:.5f}_{west:.5f}_{north:.5f}_{east:.5f}.json"
+    return CACHE / spec.tile_cache_dir / name
+
+
 def fetch_bbox(
+    spec: LayerSpec,
     endpoint: str,
-    tag_key: str,
-    tag_value: str,
     south: float,
     west: float,
     north: float,
@@ -136,40 +154,58 @@ def fetch_bbox(
     pause: float,
     label: str,
 ) -> list[dict[str, Any]]:
-    query = f"""[out:json][timeout:{timeout}];
-(
-  node["{tag_key}"="{tag_value}"]({south},{west},{north},{east});
-  way["{tag_key}"="{tag_value}"]({south},{west},{north},{east});
-  relation["{tag_key}"="{tag_value}"]({south},{west},{north},{east});
-);
-out center tags;
-"""
+    tag = f"{spec.tag_key}={spec.tag_value}"
+    box = f"({south:.3f},{west:.3f},{north:.3f},{east:.3f})"
+    query = build_query(spec, south, west, north, east, timeout)
+
+    cache_path: Path | None = None
+    endpoints = [endpoint]
+    if spec.resilient:
+        # Tile cache (re-runs skip finished tiles) + endpoint rotation.
+        cache_path = tile_cache_path(spec, south, west, north, east)
+        if cache_path.exists():
+            cached = json.loads(cache_path.read_text(encoding="utf-8"))
+            elements = cached.get("elements") or []
+            print(f"  [{label}] cache hit {tag} {box} {len(elements)} elements", flush=True)
+            return elements
+        endpoints = []
+        for ep in [endpoint, *ENDPOINT_FALLBACKS]:
+            if ep not in endpoints:
+                endpoints.append(ep)
+
     last_err: Exception | None = None
     for attempt in range(1, retries + 1):
+        ep = endpoints[(attempt - 1) % len(endpoints)]
         try:
-            print(
-                f"  [{label}] {tag_key}={tag_value} "
-                f"({south:.3f},{west:.3f},{north:.3f},{east:.3f}) "
-                f"attempt {attempt}/{retries} …",
-                flush=True,
-            )
-            payload = post_overpass(endpoint, query, timeout)
+            via = f" via {ep}" if spec.resilient else ""
+            print(f"  [{label}] {tag} {box} attempt {attempt}/{retries}{via} …", flush=True)
+            payload = post_overpass(ep, query, timeout)
             elements = payload.get("elements") or []
             print(f"  [{label}] got {len(elements)} elements", flush=True)
+            if cache_path is not None:
+                cache_path.parent.mkdir(parents=True, exist_ok=True)
+                cache_path.write_text(
+                    json.dumps({"elements": elements}, ensure_ascii=False),
+                    encoding="utf-8",
+                )
             time.sleep(pause)
             return elements
         except Exception as e:  # noqa: BLE001
             last_err = e
-            wait = max(pause, 8.0) * attempt
+            if spec.resilient:
+                wait = min(20.0, max(pause, 4.0) * attempt)
+            else:
+                wait = max(pause, 8.0) * attempt
             print(f"  [{label}] error {e!r} — retry in {wait:.0f}s", flush=True)
             time.sleep(wait)
     raise RuntimeError(f"Failed {label} after {retries} retries: {last_err}")
 
 
-def element_point(el: dict[str, Any]) -> tuple[str, str, float, float, dict[str, str]] | None:
+def element_point(el: dict[str, Any], include_relations: bool) -> tuple[str, str, float, float, dict[str, str]] | None:
     etype = el.get("type")
     eid = el.get("id")
-    if etype not in ("node", "way", "relation") or eid is None:
+    allowed = ("node", "way", "relation") if include_relations else ("node", "way")
+    if etype not in allowed or eid is None:
         return None
     tags = el.get("tags") or {}
     if etype == "node":
@@ -183,14 +219,14 @@ def element_point(el: dict[str, Any]) -> tuple[str, str, float, float, dict[str,
     return etype, str(eid), float(lon), float(lat), tags
 
 
-def to_feature(etype: str, eid: str, lon: float, lat: float, tags: dict[str, str], layer_cfg: dict[str, str]) -> dict[str, Any]:
+def to_feature(etype: str, eid: str, lon: float, lat: float, tags: dict[str, str], spec: LayerSpec) -> dict[str, Any]:
     brand = tags.get("brand") or tags.get("operator") or ""
-    name = tags.get("name") or layer_cfg["generic_name"]
+    name = tags.get("name") or spec.generic_name
     note = brand if brand else "OpenStreetMap"
     osm_id = f"{etype}/{eid}"
     props: dict[str, Any] = {
         "name": name,
-        "layer": layer_cfg["layer"],
+        "layer": spec.layer,
         "note": note,
         "osm_id": osm_id,
         "osm_url": f"https://www.openstreetmap.org/{osm_id}",
@@ -198,6 +234,10 @@ def to_feature(etype: str, eid: str, lon: float, lat: float, tags: dict[str, str
     }
     if brand:
         props["brand"] = brand
+    if spec.religion_prop:
+        religion = (tags.get("religion") or "").strip()
+        if religion:
+            props["religion"] = religion
     return {
         "type": "Feature",
         "geometry": {"type": "Point", "coordinates": [lon, lat]},
@@ -231,14 +271,13 @@ def in_jersey(lon: float, lat: float) -> bool:
 
 
 def extract_layer(
-    layer_name: str,
+    spec: LayerSpec,
     endpoint: str,
     timeout: int,
     retries: int,
     pause: float,
     max_span: float,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
-    cfg = LAYERS[layer_name]
     by_id: dict[str, dict[str, Any]] = {}
     region_counts: dict[str, int] = {}
 
@@ -248,30 +287,20 @@ def extract_layer(
         print(f"=== region {label}: {len(tiles)} tile(s) ===", flush=True)
         before = len(by_id)
         for south, west, north, east in tiles:
-            elements = fetch_bbox(
-                endpoint,
-                cfg["tag_key"],
-                cfg["tag_value"],
-                south,
-                west,
-                north,
-                east,
-                timeout,
-                retries,
-                pause,
-                label,
-            )
+            elements = fetch_bbox(spec, endpoint, south, west, north, east, timeout, retries, pause, label)
             for el in elements:
-                parsed = element_point(el)
+                parsed = element_point(el, spec.include_relations)
                 if parsed is None:
                     continue
                 etype, eid, lon, lat, tags = parsed
+                if spec.require_name and not (tags.get("name") or "").strip():
+                    continue
                 osm_id = f"{etype}/{eid}"
                 if osm_id in by_id:
                     continue
                 if not poly.contains(Point(lon, lat)):
                     continue
-                by_id[osm_id] = to_feature(etype, eid, lon, lat, tags, cfg)
+                by_id[osm_id] = to_feature(etype, eid, lon, lat, tags, spec)
         region_counts[label] = len(by_id) - before
         print(
             f"  [{label}] kept {region_counts[label]} after clip "
@@ -280,7 +309,7 @@ def extract_layer(
         )
 
     features: list[dict[str, Any]] = []
-    ways = relations = generic = france = iom = gg = je = 0
+    ways = relations = generic = france = iom = gg = je = with_religion = 0
     for feat in by_id.values():
         etype = feat.pop("_etype")
         if etype == "way":
@@ -288,8 +317,10 @@ def extract_layer(
         elif etype == "relation":
             relations += 1
         props = feat["properties"]
-        if props["name"] == cfg["generic_name"]:
+        if props["name"] == spec.generic_name:
             generic += 1
+        if props.get("religion"):
+            with_religion += 1
         lon, lat = feat["geometry"]["coordinates"]
         if in_france_bleed(lon, lat):
             france += 1
@@ -311,8 +342,8 @@ def extract_layer(
     )
 
     fc = {"type": "FeatureCollection", "features": features}
-    meta = {
-        "layer": layer_name,
+    stats = {
+        "layer": spec.layer,
         "count": len(features),
         "region_counts": region_counts,
         "ways_as_centre_points": ways,
@@ -324,9 +355,49 @@ def extract_layer(
         "jersey_bbox_count": je,
         "channel_islands_bbox_count": gg + je,
         "northern_france_bleed_approx": france,
-        "tag": f'{cfg["tag_key"]}={cfg["tag_value"]}',
+        "with_religion_tag": with_religion,
+        "tag": f"{spec.tag_key}={spec.tag_value}" + (" + name=*" if spec.require_name else ""),
     }
-    return fc, meta
+    return fc, stats
+
+
+def build_meta(spec: LayerSpec, stats: dict[str, Any], endpoint: str, extracted_at: str) -> dict[str, Any]:
+    limitations: dict[str, Any] = {
+        "isle_of_man": stats["isle_of_man_bbox_count"],
+        "channel_islands": stats["channel_islands_bbox_count"],
+        "guernsey": stats["guernsey_bbox_count"],
+        "jersey": stats["jersey_bbox_count"],
+        "northern_france_approx": stats["northern_france_bleed_approx"],
+        "ways_as_centre_points": stats["ways_as_centre_points"],
+    }
+    if spec.include_relations:
+        limitations["relations_as_centre_points"] = stats["relations_as_centre_points"]
+    limitations["pipeline_generic_names"] = stats["pipeline_generic_names"]
+    limitations["pipeline_note_repeats_brand"] = stats["pipeline_note_brand_or_osm"]
+    limitations["note_semantics"] = "pipeline field (brand/operator or 'OpenStreetMap'), not OSM note=*"
+    limitations["clip_note"] = "features clipped to OSM admin polygons (+~200m buffer)"
+    for key, value in spec.limitations.items():
+        limitations[key] = stats[value.key] if isinstance(value, Stat) else value
+    return {
+        "extracted_at": extracted_at,
+        "method": (
+            "Overpass per-nation/territory bbox tiles clipped to OSM admin "
+            "polygons (Nominatim); endpoint overpass.openstreetmap.fr"
+        ),
+        "license": "ODbL 1.0",
+        "endpoint": endpoint,
+        "layer": spec.layer,
+        "count": stats["count"],
+        "coverage": (
+            "Admin-area extract (ENG/SCT/WLS/NIR/IE/IM/GG/JE); "
+            f"IoM≈{stats['isle_of_man_bbox_count']}; "
+            f"GG≈{stats['guernsey_bbox_count']}; "
+            f"JE≈{stats['jersey_bbox_count']}; "
+            f"northern France bleed≈{stats['northern_france_bleed_approx']}"
+        ),
+        "region_counts": stats["region_counts"],
+        "limitations": limitations,
+    }
 
 
 def refresh_polygons() -> None:
@@ -373,22 +444,41 @@ def refresh_polygons() -> None:
         print(f"  wrote {out}", flush=True)
 
 
-def main() -> int:
-    ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--out-dir", type=Path, default=REPO / "public" / "data")
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("layers", nargs="*", metavar="layer-id", help="Layer id(s) from scripts/osm_layers.py.")
+    ap.add_argument("--all", action="store_true", help="Extract every layer in osm_layers.LAYERS.")
+    ap.add_argument("--list", action="store_true", help="List layer ids and tags, then exit.")
+    ap.add_argument("--out-dir", type=Path, default=OUT_DIR_DEFAULT, help="GeoJSON output dir.")
+    ap.add_argument("--meta-path", type=Path, default=META_PATH_DEFAULT, help="extract-meta.json to merge-update.")
     ap.add_argument("--endpoint", default=ENDPOINT_DEFAULT)
-    ap.add_argument("--timeout", type=int, default=180)
-    ap.add_argument("--retries", type=int, default=6)
-    ap.add_argument("--pause", type=float, default=6.0)
+    ap.add_argument("--timeout", type=int, default=None, help="Overpass timeout s (default: per layer, 180).")
+    ap.add_argument("--retries", type=int, default=None, help="Attempts per tile (default: per layer, 6).")
+    ap.add_argument("--pause", type=float, default=None, help="Pause between tiles s (default: per layer, 6.0).")
     ap.add_argument(
         "--max-span",
         type=float,
-        default=2.5,
-        help="Max bbox tile span in degrees (lon/lat).",
+        default=None,
+        help="Max bbox tile span in degrees (lon/lat) (default: per layer, 1.5-2.5).",
     )
     ap.add_argument("--refresh-polygons", action="store_true")
-    ap.add_argument("--layers", nargs="+", default=["stadiums"], choices=list(LAYERS))
-    args = ap.parse_args()
+    args = ap.parse_args(argv)
+    if args.list:
+        for lid, spec in LAYERS.items():
+            print(f"{lid:20s} {spec.tag_key}={spec.tag_value}")
+        raise SystemExit(0)
+    if args.all:
+        args.layers = list(LAYERS)
+    if not args.layers:
+        ap.error("give at least one layer id (or --all / --list)")
+    unknown = [lid for lid in args.layers if lid not in LAYERS]
+    if unknown:
+        ap.error(f"unknown layer(s): {', '.join(unknown)} (see --list)")
+    return args
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = parse_args(argv)
 
     if args.refresh_polygons or any(not (CACHE / f"{r}.geojson").exists() for r in REGIONS):
         refresh_polygons()
@@ -398,68 +488,25 @@ def main() -> int:
     all_meta: dict[str, Any] = {}
 
     for layer_name in args.layers:
+        spec = LAYERS[layer_name]
         print(f"##### Extracting {layer_name} #####", flush=True)
         fc, stats = extract_layer(
-            layer_name,
+            spec,
             args.endpoint,
-            args.timeout,
-            args.retries,
-            args.pause,
-            args.max_span,
+            args.timeout if args.timeout is not None else spec.timeout,
+            args.retries if args.retries is not None else spec.retries,
+            args.pause if args.pause is not None else spec.pause,
+            args.max_span if args.max_span is not None else spec.max_span,
         )
         out_path = args.out_dir / f"{layer_name}.geojson"
         with out_path.open("w", encoding="utf-8") as f:
             json.dump(fc, f, ensure_ascii=False, separators=(",", ":"))
             f.write("\n")
         print(f"Wrote {out_path} ({stats['count']} features)", flush=True)
+        all_meta[layer_name] = build_meta(spec, stats, args.endpoint, extracted_at)
 
-        limitations: dict[str, Any] = {
-            "isle_of_man": stats["isle_of_man_bbox_count"],
-            "channel_islands": stats["channel_islands_bbox_count"],
-            "guernsey": stats["guernsey_bbox_count"],
-            "jersey": stats["jersey_bbox_count"],
-            "northern_france_approx": stats["northern_france_bleed_approx"],
-            "ways_as_centre_points": stats["ways_as_centre_points"],
-            "relations_as_centre_points": stats["relations_as_centre_points"],
-            "pipeline_generic_names": stats["pipeline_generic_names"],
-            "pipeline_note_repeats_brand": stats["pipeline_note_brand_or_osm"],
-            "note_semantics": "pipeline field (brand/operator or 'OpenStreetMap'), not OSM note=*",
-            "clip_note": "features clipped to OSM admin polygons (+~200m buffer)",
-        }
-        if layer_name == "stadiums":
-            limitations["counting_caveat"] = (
-                "leisure=stadium only; sports centres, pitches, tracks, and "
-                "building=stadium without leisure=stadium are omitted; feature "
-                "counts are OSM objects not distinct stadiums (a complex may "
-                "be several nodes/ways/relations); disused sites still tagged "
-                "leisure=stadium are included; multipolygon relations use "
-                "Overpass centre points (not footprints), and a site may "
-                "appear both as a relation and as member ways if both carry "
-                "leisure=stadium"
-            )
-
-        all_meta[layer_name] = {
-            "extracted_at": extracted_at,
-            "method": (
-                "Overpass per-nation/territory bbox tiles clipped to OSM admin "
-                "polygons (Nominatim); endpoint overpass.openstreetmap.fr"
-            ),
-            "license": "ODbL 1.0",
-            "endpoint": args.endpoint,
-            "layer": layer_name,
-            "count": stats["count"],
-            "coverage": (
-                "Admin-area extract (ENG/SCT/WLS/NIR/IE/IM/GG/JE); "
-                f"IoM≈{stats['isle_of_man_bbox_count']}; "
-                f"GG≈{stats['guernsey_bbox_count']}; "
-                f"JE≈{stats['jersey_bbox_count']}; "
-                f"northern France bleed≈{stats['northern_france_bleed_approx']}"
-            ),
-            "region_counts": stats["region_counts"],
-            "limitations": limitations,
-        }
-
-    meta_path = args.out_dir / "extract-meta.json"
+    meta_path = args.meta_path
+    meta_path.parent.mkdir(parents=True, exist_ok=True)
     merged = {}
     if meta_path.exists():
         try:
@@ -473,9 +520,11 @@ def main() -> int:
     print(f"Wrote {meta_path}", flush=True)
     print(json.dumps({k: v["count"] for k, v in all_meta.items()}, indent=2))
     for name, meta in all_meta.items():
+        if LAYERS[name].min_count is None:
+            continue  # layer has no count sanity gate (power, petrol, ev)
         count = meta["count"]
         france = meta["limitations"]["northern_france_approx"]
-        if count < 50:
+        if count < LAYERS[name].min_count:
             raise SystemExit(f"REFUSE: {name} count {count} suspiciously low")
         if count % 1000 == 0:
             raise SystemExit(f"REFUSE: {name} count {count} suspiciously round (x1000)")

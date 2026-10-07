@@ -2,7 +2,7 @@
 """Ingest ONS July 2024 Westminster PCON BGC boundaries (GB-only, 632 seats).
 
 Downloads WGS84 GeoJSON from the ONS ArcGIS FeatureServer, drops Northern
-Ireland (18 seats), writes public/data/constituencies-gb-2024.geojson, and
+Ireland (18 seats), writes data/constituencies-gb-2024.geojson, and
 merges metadata into public/data/extract-meta.json.
 
 Usage:
@@ -20,7 +20,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT_GEOJSON = ROOT / "public" / "data" / "constituencies-gb-2024.geojson"
+OUT_GEOJSON = ROOT / "data" / "constituencies-gb-2024.geojson"
 META_PATH = ROOT / "public" / "data" / "extract-meta.json"
 
 FEATURE_SERVER = (
