@@ -48,6 +48,7 @@ import { presetBasemap, type StylePresetId } from "./style-presets";
 import { showToast } from "./toast";
 import {
   CROME_ATTRIBUTION,
+  CROP_PALETTE,
   CROME_VECTOR_LAYER,
   CROME_VECTOR_PATH,
   CROME_VECTOR_SOURCE,
@@ -92,6 +93,39 @@ const SNAPCHAT_LABEL = "#6F8798";
 const SNAPCHAT_VALLEY = "#EAEBDE";
 const SNAPCHAT_DESERT = "#E5D3B8";
 const SNAPCHAT_SNOW = "#FFFFFF";
+
+// Regional crop markers use the same six palette keys as the optional CROME
+// vector artifact. The images are cached once and are only installed when the
+// vector source is available, so a WMS-only deployment never pays for them.
+const CROP_EMOJI = {
+  greens: "🌿",
+  brassica: "🥦",
+  berries: "🍓",
+  grain: "🌾",
+  flowers: "🌼",
+  nuts: "🌰",
+} as const;
+const CROP_EMOJI_IDS = {
+  greens: "crome-emoji-greens",
+  brassica: "crome-emoji-brassica",
+  berries: "crome-emoji-berries",
+  grain: "crome-emoji-grain",
+  flowers: "crome-emoji-flowers",
+  nuts: "crome-emoji-nuts",
+} as const;
+const CROP_EMOJI_IMAGE: ExpressionSpecification = [
+  "match", ["get", "crop_color"],
+  CROP_PALETTE.greens, CROP_EMOJI_IDS.greens,
+  CROP_PALETTE.brassica, CROP_EMOJI_IDS.brassica,
+  CROP_PALETTE.berries, CROP_EMOJI_IDS.berries,
+  CROP_PALETTE.grain, CROP_EMOJI_IDS.grain,
+  CROP_PALETTE.flowers, CROP_EMOJI_IDS.flowers,
+  CROP_PALETTE.nuts, CROP_EMOJI_IDS.nuts,
+  CROP_EMOJI_IDS.greens,
+];
+const CROP_EMOJI_SIZE: ExpressionSpecification = [
+  "interpolate", ["linear"], ["zoom"], 4, 0.56, 7, 0.8, 9, 0.98,
+];
 
 // OpenFreeMap currently serves Noto glyph PBFs. Keep rounded stacks first so
 // installations that provide Nunito glyphs get the intended treatment, while
@@ -367,6 +401,25 @@ function markerImage(kind: MarkerKind, color: string): ImageData {
   return ctx.getImageData(0, 0, canvas.width, canvas.height);
 }
 
+/** Cached regional emoji with a small translucent shadow for lift from fields. */
+function cropEmojiImage(emoji: string): ImageData {
+  const ratio = 2, size = 40;
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = size * ratio;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Canvas is unavailable");
+  ctx.scale(ratio, ratio);
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.font = '26px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
+  ctx.fillStyle = "#1c1c1e";
+  ctx.shadowColor = "rgba(0, 0, 0, 0.24)";
+  ctx.shadowBlur = 4;
+  ctx.shadowOffsetY = 2;
+  ctx.fillText(emoji, size / 2, size / 2 - 1);
+  return ctx.getImageData(0, 0, canvas.width, canvas.height);
+}
+
 const zoomScale = (a: number, b: number, c: number, d: number) => (scale: number): ExpressionSpecification =>
   ["interpolate", ["linear"], ["zoom"], 4, a * scale, 5.4, b * scale, 8, c * scale, 12, d * scale];
 const zoomRadius = zoomScale(2.15, 3.15, 4.8, 7.2);
@@ -607,6 +660,13 @@ export function createAtlas(container: HTMLElement, initial: AtlasState): Atlas 
     cropFaded = faded;
   };
 
+  const ensureCropEmojiImages = () => {
+    for (const key of Object.keys(CROP_EMOJI) as Array<keyof typeof CROP_EMOJI>) {
+      const id = CROP_EMOJI_IDS[key];
+      if (!map.hasImage(id)) map.addImage(id, cropEmojiImage(CROP_EMOJI[key]), { pixelRatio: 2 });
+    }
+  };
+
   const countCropsInView = () => {
     window.clearTimeout(cropCountTimer);
     cropCountTimer = window.setTimeout(() => {
@@ -634,6 +694,7 @@ export function createAtlas(container: HTMLElement, initial: AtlasState): Atlas 
         promoteId: { [CROME_VECTOR_LAYER]: "feature_id" },
       });
     }
+    ensureCropEmojiImages();
     map.addLayer({
       id: "crome-areas",
       type: "fill",
@@ -654,6 +715,30 @@ export function createAtlas(container: HTMLElement, initial: AtlasState): Atlas 
         "fill-outline-color": "rgba(255,255,255,0.4)",
       },
     }, "non-gb-land");
+    // One collision-aware symbol layer keeps the regional markers cheap while
+    // the cached images provide a soft drop shadow over the draped field fills.
+    // This layer is installed only with the optional vector source; the WMS
+    // fallback remains a clean raster map without failed image requests.
+    map.addLayer({
+      id: "crome-emoji-markers",
+      type: "symbol",
+      source: CROME_VECTOR_SOURCE,
+      "source-layer": CROME_VECTOR_LAYER,
+      minzoom: 4,
+      maxzoom: 9,
+      layout: {
+        visibility: state.mode === "atlas" && state.crops ? "visible" : "none",
+        "icon-image": CROP_EMOJI_IMAGE,
+        "icon-size": CROP_EMOJI_SIZE,
+        "icon-anchor": "center",
+        "icon-allow-overlap": false,
+        "icon-ignore-placement": false,
+        "icon-padding": 5,
+      },
+      paint: {
+        "icon-opacity": ["interpolate", ["linear"], ["zoom"], 4, 0.84, 6, 0.96, 9, 1],
+      },
+    }, "non-gb-land");
     countCropsInView();
   };
 
@@ -665,6 +750,7 @@ export function createAtlas(container: HTMLElement, initial: AtlasState): Atlas 
     if (map.getLayer("crome-raster") && map.getLayer("non-gb-land")) map.moveLayer("crome-raster", "non-gb-land");
     map.setLayoutProperty("crome-raster", "visibility", visible ? "visible" : "none");
     if (map.getLayer("crome-areas")) map.setLayoutProperty("crome-areas", "visibility", visible ? "visible" : "none");
+    if (map.getLayer("crome-emoji-markers")) map.setLayoutProperty("crome-emoji-markers", "visibility", visible ? "visible" : "none");
     if (!visible) {
       setCropHover(null);
       emitCrops(false, []);
