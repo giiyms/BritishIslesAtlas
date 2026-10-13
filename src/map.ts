@@ -1,6 +1,7 @@
 import {
   AttributionControl,
   Map,
+  NavigationControl,
   Popup,
   addProtocol,
   setWorkerUrl,
@@ -45,6 +46,19 @@ import { mountHexMap } from "./hexmap";
 import { MAX_POINTS, type AtlasState, type BasemapId, type Mode, type PointTreatment, type SurfaceTreatment } from "./state";
 import { presetBasemap, type StylePresetId } from "./style-presets";
 import { showToast } from "./toast";
+import {
+  CROME_ATTRIBUTION,
+  CROP_PALETTE,
+  CROME_VECTOR_LAYER,
+  CROME_VECTOR_PATH,
+  CROME_VECTOR_SOURCE,
+  CROME_WMS_LAYER,
+  CROME_WMS_VERSION,
+  CROME_WMS_URL,
+  cropPopupHtml,
+  rankCropFeatures,
+  type CropPanelDetail,
+} from "./crops";
 
 setWorkerUrl(workerUrl);
 addProtocol("pmtiles", new Protocol().tile);
@@ -61,19 +75,88 @@ const SEATS = { source: "seats", sourceLayer: "constituencies" } as const;
 const HILLSHADE_TILES =
   "https://server.arcgisonline.com/ArcGIS/rest/services/Elevation/World_Hillshade/MapServer/tile/{z}/{y}/{x}";
 const HILLSHADE_OPACITY: ExpressionSpecification = ["interpolate", ["linear"], ["zoom"], 4, 0.9, 7, 0.9, 10, 0.62, 14, 0.4];
+const CROME_WMS_TILES = `${CROME_WMS_URL}?service=WMS&request=GetMap&version=${CROME_WMS_VERSION}&layers=${encodeURIComponent(CROME_WMS_LAYER)}&styles=&format=image/png&transparent=true&width=256&height=256&crs=EPSG:3857&bbox={bbox-epsg-3857}`;
+
+// AWS-hosted Terrarium tiles keep the DEM bounded to z12, which is enough for
+// the regional map and avoids pulling high-resolution elevation tiles for the
+// point catalogue. The DEM also powers the painted hillshade below.
+const TERRAIN_TILES = "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png";
+const TERRAIN_MAX_ZOOM = 12;
+const TERRAIN_EXAGGERATION = 1.08;
+
+const SNAPCHAT_WATER_COAST = "#8DD6FF";
+const SNAPCHAT_WATER_MID = "#73BDF9";
+const SNAPCHAT_WATER_OFFSHORE = "#59A9F6";
+const SNAPCHAT_LAND = "#F5F4EF";
+const SNAPCHAT_INK = "#1C1C1E";
+const SNAPCHAT_LABEL = "#6F8798";
+const SNAPCHAT_VALLEY = "#EAEBDE";
+const SNAPCHAT_DESERT = "#E5D3B8";
+const SNAPCHAT_SNOW = "#FFFFFF";
+
+// Regional crop markers use the same six palette keys as the optional CROME
+// vector artifact. The images are cached once and are only installed when the
+// vector source is available, so a WMS-only deployment never pays for them.
+const CROP_EMOJI = {
+  greens: "🌿",
+  brassica: "🥦",
+  berries: "🍓",
+  grain: "🌾",
+  flowers: "🌼",
+  nuts: "🌰",
+} as const;
+const CROP_EMOJI_IDS = {
+  greens: "crome-emoji-greens",
+  brassica: "crome-emoji-brassica",
+  berries: "crome-emoji-berries",
+  grain: "crome-emoji-grain",
+  flowers: "crome-emoji-flowers",
+  nuts: "crome-emoji-nuts",
+} as const;
+const CROP_EMOJI_IMAGE: ExpressionSpecification = [
+  "match", ["get", "crop_color"],
+  CROP_PALETTE.greens, CROP_EMOJI_IDS.greens,
+  CROP_PALETTE.brassica, CROP_EMOJI_IDS.brassica,
+  CROP_PALETTE.berries, CROP_EMOJI_IDS.berries,
+  CROP_PALETTE.grain, CROP_EMOJI_IDS.grain,
+  CROP_PALETTE.flowers, CROP_EMOJI_IDS.flowers,
+  CROP_PALETTE.nuts, CROP_EMOJI_IDS.nuts,
+  CROP_EMOJI_IDS.greens,
+];
+const CROP_EMOJI_SIZE: ExpressionSpecification = [
+  "interpolate", ["linear"], ["zoom"], 4, 0.56, 7, 0.8, 9, 0.98,
+];
+
+// OpenFreeMap currently serves Noto glyph PBFs. Keep rounded stacks first so
+// installations that provide Nunito glyphs get the intended treatment, while
+// the Noto fallback keeps labels available with the existing endpoint.
+const MAP_ROUNDED_REGULAR = ["Nunito Regular", "Noto Sans Regular"];
+const MAP_ROUNDED_SEMIBOLD = ["Nunito SemiBold", "Noto Sans Bold"];
+
+const easeInOut = (t: number): number =>
+  t < 0.5 ? 4 * t * t * t : 1 - ((-2 * t + 2) ** 3) / 2;
+
+const pitchForZoom = (zoom: number): number => {
+  if (zoom <= 7) return 0;
+  return Math.min(54, ((zoom - 7) / 4) * 54);
+};
 
 /** Basemap tokens. Surfaces draw under `water`, so the sea clips every surface to the coast. */
 const BASEMAPS: Record<Exclude<BasemapId, "auto">, {
   land: string; water: string; coast: string; coastWidth: number; border: string; hillshade: boolean;
+  terrainExaggeration: number;
   road: string; roadCasing: string; label: string; halo: string; seatLine: string;
 }> = {
-  relief: { land: "#eef0f1", water: "#d6dee6", coast: "#9aa5b1", coastWidth: 0.6, border: "#8e959f", hillshade: true,
-    road: "#ffffff", roadCasing: "#b9c0c8", label: "#3d4652", halo: "rgba(255,255,255,0.9)", seatLine: "#ffffff" },
+  relief: { land: SNAPCHAT_LAND, water: SNAPCHAT_WATER_OFFSHORE, coast: SNAPCHAT_WATER_COAST, coastWidth: 0.9, border: "#D4D1C8", hillshade: true,
+    terrainExaggeration: TERRAIN_EXAGGERATION, road: "#ffffff", roadCasing: "rgba(255,255,255,0)", label: SNAPCHAT_INK, halo: SNAPCHAT_LAND, seatLine: "#ffffff" },
   light: { land: "#fafaf8", water: "#d4dadc", coast: "#b8c0c5", coastWidth: 0.6, border: "#a4abb3", hillshade: false,
+    terrainExaggeration: 0.92,
     road: "#ffffff", roadCasing: "#d3d7db", label: "#4b5563", halo: "rgba(255,255,255,0.95)", seatLine: "#ffffff" },
   dark: { land: "#22262c", water: "#0e1116", coast: "#3a4049", coastWidth: 0.6, border: "#555c66", hillshade: false,
+    terrainExaggeration: 0.92,
     road: "#3b414a", roadCasing: "#2b3037", label: "#c9ced6", halo: "rgba(14,17,22,0.85)", seatLine: "#2f343b" },
   mono: { land: "#ffffff", water: "#ffffff", coast: "#111111", coastWidth: 0.9, border: "#111111", hillshade: false,
+    terrainExaggeration: 0.78,
     road: "#ffffff", roadCasing: "#9a9a9a", label: "#111111", halo: "rgba(255,255,255,0.95)", seatLine: "#ffffff" },
 };
 
@@ -107,6 +190,8 @@ const STYLE: StyleSpecification = {
   glyphs: "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
   sources: {
     hillshade: { type: "raster", tiles: [HILLSHADE_TILES], tileSize: 256, maxzoom: 16 },
+    "crome-wms": { type: "raster", tiles: [CROME_WMS_TILES], tileSize: 256, minzoom: 4, maxzoom: 18, attribution: CROME_ATTRIBUTION },
+    terrain: { type: "raster-dem", tiles: [TERRAIN_TILES], tileSize: 256, maxzoom: TERRAIN_MAX_ZOOM, encoding: "terrarium" },
     openmaptiles: { type: "vector", url: "https://tiles.openfreemap.org/planet", attribution: "" },
     seats: { type: "vector", url: tiles("constituencies"), promoteId: { constituencies: "PCON24CD" } },
     "non-gb": { type: "geojson", data: NON_GB_LAND as never },
@@ -115,7 +200,36 @@ const STYLE: StyleSpecification = {
   layers: [
     { id: "land", type: "background", paint: { "background-color": BASEMAPS.relief.land } },
     {
-      id: "hillshade", type: "raster", source: "hillshade",
+      id: "dem-color-relief", type: "color-relief", source: "terrain", layout: { visibility: "none" },
+      paint: {
+        "color-relief-opacity": 0.34,
+        "color-relief-color": [
+          "interpolate", ["linear"], ["elevation"],
+          0, SNAPCHAT_LAND,
+          120, SNAPCHAT_VALLEY,
+          500, "#D8D9CC",
+          1000, SNAPCHAT_DESERT,
+          1600, SNAPCHAT_DESERT,
+          2200, SNAPCHAT_SNOW,
+        ],
+        resampling: "linear",
+      },
+    },
+    {
+      id: "dem-hillshade", type: "hillshade", source: "terrain", layout: { visibility: "none" },
+      paint: {
+        "hillshade-illumination-direction": 315,
+        "hillshade-illumination-altitude": 45,
+        "hillshade-illumination-anchor": "map",
+        "hillshade-exaggeration": 0.48,
+        "hillshade-shadow-color": "#C8BBAA",
+        "hillshade-highlight-color": "#FFFDF7",
+        "hillshade-accent-color": "#DFD1BC",
+        "hillshade-method": "multidirectional",
+      },
+    },
+    {
+      id: "hillshade", type: "raster", source: "hillshade", layout: { visibility: "none" },
       paint: {
         "raster-opacity": HILLSHADE_OPACITY,
         "raster-saturation": -1,
@@ -124,6 +238,10 @@ const STYLE: StyleSpecification = {
         // Contrast applies before brightness; 0.78 → 0.85 keeps flats near #e6e6e6.
         "raster-brightness-max": ["interpolate", ["linear"], ["zoom"], 7, 0.78, 11, 0.85],
       },
+    },
+    {
+      id: "crome-raster", type: "raster", source: "crome-wms", layout: { visibility: "none" },
+      paint: { "raster-opacity": 0.72, "raster-fade-duration": 0, "raster-resampling": "nearest" },
     },
     // Surfaces are inserted here, before "non-gb-land".
     {
@@ -135,11 +253,49 @@ const STYLE: StyleSpecification = {
       filter: ["!=", ["get", "class"], "swimming_pool"],
       paint: { "fill-color": BASEMAPS.relief.water },
     },
+    // MapLibre has no coast-distance expression for fill layers. Three
+    // translucent shoreline bands give the coast a continuous-to-offshore
+    // transition without adding a second raster or per-tile geometry source.
+    {
+      id: "water-shore-band", type: "line", source: "openmaptiles", "source-layer": "water",
+      filter: ["match", ["get", "class"], ["ocean", "lake"], true, false],
+      layout: { "line-join": "round" },
+      paint: {
+        "line-color": SNAPCHAT_WATER_COAST,
+        "line-width": ["interpolate", ["linear"], ["zoom"], 4, 20, 7, 14, 10, 8, 14, 3.5],
+        "line-opacity": 0.2,
+      },
+    },
+    {
+      id: "water-shore-glow", type: "line", source: "openmaptiles", "source-layer": "water",
+      filter: ["match", ["get", "class"], ["ocean", "lake"], true, false],
+      layout: { "line-join": "round" },
+      paint: {
+        "line-color": SNAPCHAT_WATER_MID,
+        "line-width": ["interpolate", ["linear"], ["zoom"], 4, 12, 7, 8, 10, 4.5, 14, 2],
+        "line-opacity": 0.42,
+      },
+    },
     {
       id: "water-coast", type: "line", source: "openmaptiles", "source-layer": "water",
       filter: ["match", ["get", "class"], ["ocean", "lake"], true, false],
       layout: { "line-join": "round" },
       paint: { "line-color": BASEMAPS.relief.coast, "line-width": ["interpolate", ["linear"], ["zoom"], 4, 0.4, 10, 0.9], "line-opacity": 0.7 },
+    },
+    {
+      id: "region-labels", type: "symbol", source: "openmaptiles", "source-layer": "place",
+      filter: ["match", ["get", "class"], ["state", "county"], true, false],
+      layout: {
+        "text-field": NAME,
+        "text-font": MAP_ROUNDED_SEMIBOLD,
+        "text-size": ["interpolate", ["linear"], ["zoom"], 4, 9, 7, 11, 10, 13],
+        "text-letter-spacing": 0.16,
+        "text-transform": "uppercase",
+        "text-max-width": 9,
+        "text-padding": 8,
+        "symbol-sort-key": ["coalesce", ["get", "rank"], 99],
+      },
+      paint: { "text-color": SNAPCHAT_LABEL, "text-opacity": 0.78, "text-halo-color": SNAPCHAT_LAND, "text-halo-width": 1.1 },
     },
     {
       id: "boundary-country", type: "line", source: "openmaptiles", "source-layer": "boundary",
@@ -174,22 +330,23 @@ const STYLE: StyleSpecification = {
       filter: ["match", ["get", "class"], ["city", "town", "village"], true, false],
       layout: {
         "text-field": NAME,
-        "text-font": ["match", ["get", "class"], "city", ["literal", ["Noto Sans Bold"]], ["literal", ["Noto Sans Regular"]]],
+        "text-font": ["match", ["get", "class"], "city", ["literal", MAP_ROUNDED_SEMIBOLD], ["literal", MAP_ROUNDED_REGULAR]],
         "text-size": ["interpolate", ["linear"], ["zoom"], 5, ["match", ["get", "class"], "city", 11, 9],
           10, ["match", ["get", "class"], "city", 15, "town", 12.5, 11]],
         "text-max-width": 8,
         "text-padding": 4,
         "symbol-sort-key": ["coalesce", ["get", "rank"], 99],
       },
-      paint: { "text-color": BASEMAPS.relief.label, "text-halo-color": BASEMAPS.relief.halo, "text-halo-width": 1.3 },
+      paint: { "text-color": BASEMAPS.relief.label, "text-halo-color": BASEMAPS.relief.halo, "text-halo-width": 1.6, "text-halo-blur": 0.18 },
     },
   ],
 };
 
 const ATTRIBUTION =
-  '© Esri · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap</a>' +
+  '© AWS Terrain Tiles · © Esri · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap</a>' +
   ' · <a href="https://openmaptiles.org/" target="_blank" rel="noopener noreferrer">OpenMapTiles</a>' +
-  " · Contains OS & ONS data © Crown 2024 (OGL)";
+  " · Contains OS & ONS data © Crown 2024 (OGL)" +
+  ` · ${CROME_ATTRIBUTION}`;
 
 const CLUSTER_RADIUS: ExpressionSpecification = ["interpolate", ["linear"], ["sqrt", ["get", "point_count"]],
   1.4, 4.5, 5, 8, 15, 13, 30, 18];
@@ -244,6 +401,25 @@ function markerImage(kind: MarkerKind, color: string): ImageData {
   return ctx.getImageData(0, 0, canvas.width, canvas.height);
 }
 
+/** Cached regional emoji with a small translucent shadow for lift from fields. */
+function cropEmojiImage(emoji: string): ImageData {
+  const ratio = 2, size = 40;
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = size * ratio;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Canvas is unavailable");
+  ctx.scale(ratio, ratio);
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.font = '26px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
+  ctx.fillStyle = "#1c1c1e";
+  ctx.shadowColor = "rgba(0, 0, 0, 0.24)";
+  ctx.shadowBlur = 4;
+  ctx.shadowOffsetY = 2;
+  ctx.fillText(emoji, size / 2, size / 2 - 1);
+  return ctx.getImageData(0, 0, canvas.width, canvas.height);
+}
+
 const zoomScale = (a: number, b: number, c: number, d: number) => (scale: number): ExpressionSpecification =>
   ["interpolate", ["linear"], ["zoom"], 4, a * scale, 5.4, b * scale, 8, c * scale, 12, d * scale];
 const zoomRadius = zoomScale(2.15, 3.15, 4.8, 7.2);
@@ -292,6 +468,7 @@ export interface Atlas {
   setPreset: (preset: StylePresetId) => void;
   setRoads: (on: boolean) => void;
   setLabels: (on: boolean) => void;
+  setCrops: (on: boolean) => void;
   setElectionView: (view: ElectionView) => void;
   setElectionLayout: (layout: ElectionLayout) => void;
   zoomIn: () => void;
@@ -306,6 +483,8 @@ export interface Atlas {
 export interface AtlasChange { state: AtlasState; legend: string }
 /** Features in view per active point layer (clusters count their members). */
 export interface AtlasCounts { counts: Partial<Record<LayerId, number>> }
+/** CROME crop-area detail availability and ranked crop areas in the viewport. */
+export interface AtlasCrops extends CropPanelDetail {}
 
 export function createAtlas(container: HTMLElement, initial: AtlasState): Atlas {
   const state: AtlasState = { ...initial, surface: normaliseSurface(initial.surface), points: [...initial.points] };
@@ -318,6 +497,9 @@ export function createAtlas(container: HTMLElement, initial: AtlasState): Atlas 
     maxBounds: [[-18, 45], [10, 64.5]],
     minZoom: 3.6,
     maxZoom: 16,
+    pitch: 0,
+    maxPitch: 60,
+    bearing: 0,
     attributionControl: false,
     renderWorldCopies: false,
     dragRotate: false,
@@ -331,8 +513,22 @@ export function createAtlas(container: HTMLElement, initial: AtlasState): Atlas 
     },
   });
 
+  // Keep the regional view flat and let local views open into the DEM. A
+  // short ease after wheel/button zoom leaves the map readable while still
+  // giving the terrain a physical, pitched feel when zoomed in.
+  const syncPitchToZoom = () => {
+    if (!map.isStyleLoaded()) return;
+    const pitch = pitchForZoom(map.getZoom());
+    if (Math.abs(map.getPitch() - pitch) < 0.5) return;
+    map.easeTo({ pitch, duration: motionDuration(360), easing: easeInOut, essential: true });
+  };
+  map.on("zoomend", syncPitchToZoom);
+
   const compactAttribution = window.matchMedia("(max-width: 860px)").matches;
   map.addControl(new AttributionControl({ compact: compactAttribution, customAttribution: ATTRIBUTION }), "bottom-right");
+  // Use MapLibre's real compass control so its action resets bearing/pitch;
+  // the custom HTML navigation group remains responsible for zoom buttons.
+  map.addControl(new NavigationControl({ showZoom: false, showCompass: true, visualizePitch: true }), "bottom-right");
   if (compactAttribution) {
     map.once("load", () => {
       const attrib = container.querySelector<HTMLDetailsElement>(".maplibregl-ctrl-attrib.maplibregl-compact");
@@ -347,6 +543,11 @@ export function createAtlas(container: HTMLElement, initial: AtlasState): Atlas 
   let voting: VotingBundle | null = null;
   let seatIndex: Record<string, SeatIndexEntry> | null = null;
   let seatIndexPromise: Promise<Record<string, SeatIndexEntry>> | null = null;
+  let cropVectorAvailable = false;
+  let cropVectorProbe: Promise<boolean> | null = null;
+  let cropCountTimer = 0;
+  let cropHovered: string | number | null = null;
+  let cropFaded = new Set<string | number>();
   const loadSeatIndex = () => {
     seatIndexPromise ??= fetch("/data/seat-index.json").then((r) => r.json() as Promise<Record<string, SeatIndexEntry>>)
       .then((index) => (seatIndex = index));
@@ -370,6 +571,194 @@ export function createAtlas(container: HTMLElement, initial: AtlasState): Atlas 
     }));
   };
 
+  const emitCrops = (england = false, ranking: ReturnType<typeof rankCropFeatures> = []) => {
+    window.dispatchEvent(new CustomEvent<AtlasCrops>("atlas:crops", {
+      detail: { available: cropVectorAvailable, england, ranking },
+    }));
+  };
+
+  const probeCropVector = async (): Promise<boolean> => {
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 5000);
+    const readMagic = async (response: Response): Promise<boolean> => {
+      if (!response.ok || !response.body) return false;
+      const reader = response.body.getReader();
+      const bytes: number[] = [];
+      try {
+        while (bytes.length < 7) {
+          const chunk = await reader.read();
+          if (chunk.done) break;
+          bytes.push(...(chunk.value ?? []));
+        }
+      } finally {
+        await reader.cancel().catch(() => undefined);
+      }
+      return new TextDecoder().decode(new Uint8Array(bytes.slice(0, 7))) === "PMTiles";
+    };
+    try {
+      // Read the PMTiles magic bytes first. A missing file may be served as an
+      // SPA fallback with status 200, so status alone cannot gate the layer.
+      let response = await fetch(CROME_VECTOR_PATH, {
+        headers: { Range: "bytes=0-6" },
+        cache: "no-store",
+        signal: controller.signal,
+      });
+      if (await readMagic(response)) return true;
+      // A few static hosts reject range requests. HEAD remains a conservative
+      // fallback: reject HTML/JSON and require a non-trivial Content-Length.
+      if (response.status !== 405 && response.status !== 416) return false;
+      response = await fetch(CROME_VECTOR_PATH, { method: "HEAD", cache: "no-store", signal: controller.signal });
+      const contentType = (response.headers.get("content-type") ?? "").toLowerCase();
+      const contentLength = Number(response.headers.get("content-length") ?? "");
+      return response.ok && !/text\/html|application\/json/.test(contentType) && contentLength > 7;
+    } catch {
+      return false;
+    } finally {
+      window.clearTimeout(timeout);
+    }
+  };
+
+  const cropFeatureId = (feature: MapGeoJSONFeature): string | number | null => {
+    if (feature.id !== undefined && feature.id !== null) return feature.id;
+    const value = feature.properties?.feature_id;
+    return typeof value === "string" || typeof value === "number" ? value : null;
+  };
+
+  const clearCropFade = () => {
+    for (const id of cropFaded) {
+      map.setFeatureState({ source: CROME_VECTOR_SOURCE, sourceLayer: CROME_VECTOR_LAYER, id }, { cropFaded: false });
+    }
+    cropFaded = new Set();
+  };
+
+  const setCropHover = (feature: MapGeoJSONFeature | null) => {
+    if (!feature) {
+      if (cropHovered !== null) {
+        map.setFeatureState({ source: CROME_VECTOR_SOURCE, sourceLayer: CROME_VECTOR_LAYER, id: cropHovered }, { cropHover: false });
+        cropHovered = null;
+      }
+      clearCropFade();
+      return;
+    }
+    const id = cropFeatureId(feature);
+    if (id === null) return;
+    if (cropHovered !== null && cropHovered !== id) {
+      map.setFeatureState({ source: CROME_VECTOR_SOURCE, sourceLayer: CROME_VECTOR_LAYER, id: cropHovered }, { cropHover: false });
+    }
+    cropHovered = id;
+    map.setFeatureState({ source: CROME_VECTOR_SOURCE, sourceLayer: CROME_VECTOR_LAYER, id }, { cropHover: true, cropFaded: false });
+    clearCropFade();
+    const visible = map.queryRenderedFeatures({ layers: ["crome-areas"] });
+    const faded = new Set<string | number>();
+    for (const candidate of visible) {
+      const candidateId = cropFeatureId(candidate);
+      if (candidateId === null || candidateId === id) continue;
+      if (faded.has(candidateId)) continue;
+      faded.add(candidateId);
+      map.setFeatureState({ source: CROME_VECTOR_SOURCE, sourceLayer: CROME_VECTOR_LAYER, id: candidateId }, { cropFaded: true });
+    }
+    cropFaded = faded;
+  };
+
+  const ensureCropEmojiImages = () => {
+    for (const key of Object.keys(CROP_EMOJI) as Array<keyof typeof CROP_EMOJI>) {
+      const id = CROP_EMOJI_IDS[key];
+      if (!map.hasImage(id)) map.addImage(id, cropEmojiImage(CROP_EMOJI[key]), { pixelRatio: 2 });
+    }
+  };
+
+  const countCropsInView = () => {
+    window.clearTimeout(cropCountTimer);
+    cropCountTimer = window.setTimeout(() => {
+      if (!state.crops || state.mode !== "atlas" || !cropVectorAvailable || !map.getLayer("crome-areas")) {
+        emitCrops(false, []);
+        return;
+      }
+      const features = map.queryRenderedFeatures({ layers: ["crome-areas"] });
+      emitCrops(features.length > 0, rankCropFeatures(features));
+    }, 180);
+  };
+
+  const ensureCropVectorLayer = async () => {
+    if (!loaded || map.getLayer("crome-areas")) return;
+    cropVectorProbe ??= probeCropVector();
+    cropVectorAvailable = await cropVectorProbe;
+    if (!cropVectorAvailable || map.getLayer("crome-areas")) {
+      emitCrops(false, []);
+      return;
+    }
+    if (!map.getSource(CROME_VECTOR_SOURCE)) {
+      map.addSource(CROME_VECTOR_SOURCE, {
+        type: "vector",
+        url: `pmtiles://${location.origin}${CROME_VECTOR_PATH}`,
+        promoteId: { [CROME_VECTOR_LAYER]: "feature_id" },
+      });
+    }
+    ensureCropEmojiImages();
+    map.addLayer({
+      id: "crome-areas",
+      type: "fill",
+      source: CROME_VECTOR_SOURCE,
+      "source-layer": CROME_VECTOR_LAYER,
+      minzoom: 8,
+      layout: { visibility: state.mode === "atlas" && state.crops ? "visible" : "none" },
+      paint: {
+        "fill-color": [
+          "case",
+          ["boolean", ["feature-state", "cropHover"], false],
+          ["coalesce", ["get", "crop_color"], "#7CD97C"],
+          ["boolean", ["feature-state", "cropFaded"], false],
+          "#E5D3B8",
+          ["coalesce", ["get", "crop_color"], "#7CD97C"],
+        ] as ExpressionSpecification,
+        "fill-opacity": ["interpolate", ["linear"], ["zoom"], 8, 0.12, 11, 0.38, 14, 0.56],
+        "fill-outline-color": "rgba(255,255,255,0.4)",
+      },
+    }, "non-gb-land");
+    // One collision-aware symbol layer keeps the regional markers cheap while
+    // the cached images provide a soft drop shadow over the draped field fills.
+    // This layer is installed only with the optional vector source; the WMS
+    // fallback remains a clean raster map without failed image requests.
+    map.addLayer({
+      id: "crome-emoji-markers",
+      type: "symbol",
+      source: CROME_VECTOR_SOURCE,
+      "source-layer": CROME_VECTOR_LAYER,
+      minzoom: 4,
+      maxzoom: 9,
+      layout: {
+        visibility: state.mode === "atlas" && state.crops ? "visible" : "none",
+        "icon-image": CROP_EMOJI_IMAGE,
+        "icon-size": CROP_EMOJI_SIZE,
+        "icon-anchor": "center",
+        "icon-allow-overlap": false,
+        "icon-ignore-placement": false,
+        "icon-padding": 5,
+      },
+      paint: {
+        "icon-opacity": ["interpolate", ["linear"], ["zoom"], 4, 0.84, 6, 0.96, 9, 1],
+      },
+    }, "non-gb-land");
+    countCropsInView();
+  };
+
+  const applyCrops = () => {
+    const visible = state.mode === "atlas" && state.crops;
+    // Dynamic surface/election fills are inserted before non-gb-land. Move
+    // the crop raster above those fills so the overlay remains visible when a
+    // surface is also selected; water and labels still render above it.
+    if (map.getLayer("crome-raster") && map.getLayer("non-gb-land")) map.moveLayer("crome-raster", "non-gb-land");
+    map.setLayoutProperty("crome-raster", "visibility", visible ? "visible" : "none");
+    if (map.getLayer("crome-areas")) map.setLayoutProperty("crome-areas", "visibility", visible ? "visible" : "none");
+    if (map.getLayer("crome-emoji-markers")) map.setLayoutProperty("crome-emoji-markers", "visibility", visible ? "visible" : "none");
+    if (!visible) {
+      setCropHover(null);
+      emitCrops(false, []);
+      return;
+    }
+    countCropsInView();
+  };
+
   // ------------------------------------------------------------------ basemap
 
   const applyBasemap = () => {
@@ -378,6 +767,10 @@ export function createAtlas(container: HTMLElement, initial: AtlasState): Atlas 
     const set = (id: string, prop: string, value: unknown) => { if (map.getLayer(id)) map.setPaintProperty(id, prop as never, value as never); };
     set("land", "background-color", b.land);
     set("water", "fill-color", b.water);
+    set("water-shore-band", "line-color", b.coast);
+    set("water-shore-band", "line-opacity", basemap === "relief" ? 0.2 : 0);
+    set("water-shore-glow", "line-color", basemap === "relief" ? SNAPCHAT_WATER_MID : b.coast);
+    set("water-shore-glow", "line-opacity", basemap === "relief" ? 0.42 : 0);
     set("water-coast", "line-color", b.coast);
     set("water-coast", "line-opacity", basemap === "mono" ? 1 : 0.7);
     set("boundary-country", "line-color", b.border);
@@ -385,12 +778,21 @@ export function createAtlas(container: HTMLElement, initial: AtlasState): Atlas 
     set("roads-casing", "line-color", b.roadCasing);
     set("place-labels", "text-color", b.label);
     set("place-labels", "text-halo-color", b.halo);
+    set("region-labels", "text-color", basemap === "relief" ? SNAPCHAT_LABEL : b.label);
+    set("region-labels", "text-halo-color", b.halo);
     set("surface-seat-line", "line-color", b.seatLine);
     set("election-line", "line-color", basemap === "dark" ? "#22262c" : "#ffffff");
-    map.setLayoutProperty("hillshade", "visibility", b.hillshade ? "visible" : "none");
+    set("dem-color-relief", "color-relief-opacity", state.mode === "election" ? 0.18 : 0.34);
+    map.setLayoutProperty("dem-color-relief", "visibility", b.hillshade ? "visible" : "none");
+    map.setLayoutProperty("dem-hillshade", "visibility", b.hillshade ? "visible" : "none");
+    // Keep the older raster source in the style as a fallback, but avoid
+    // paying for two hillshade tile sets in the normal path.
+    map.setLayoutProperty("hillshade", "visibility", "none");
     set("hillshade", "raster-opacity", state.mode === "election" ? 0.35 : HILLSHADE_OPACITY);
+    if (loaded) map.setTerrain({ source: "terrain", exaggeration: b.terrainExaggeration });
     for (const id of ["roads", "roads-casing"]) map.setLayoutProperty(id, "visibility", state.roads ? "visible" : "none");
     map.setLayoutProperty("place-labels", "visibility", state.labels ? "visible" : "none");
+    map.setLayoutProperty("region-labels", "visibility", state.labels ? "visible" : "none");
     document.documentElement.dataset.basemap = basemap;
   };
 
@@ -493,7 +895,7 @@ export function createAtlas(container: HTMLElement, initial: AtlasState): Atlas 
     map.addLayer({ id: "restore-callout-dot", type: "circle", source: "restore-callouts", maxzoom: 8, layout: vis,
       paint: { "circle-radius": 7, "circle-color": ENDORSE_COLORS.restore.fill, "circle-stroke-width": 2.5, "circle-stroke-color": "#ffffff" } });
     map.addLayer({ id: "restore-callout-label", type: "symbol", source: "restore-callouts", maxzoom: 8,
-      layout: { ...vis, "text-field": ["get", "name"], "text-font": ["Noto Sans Bold"], "text-size": 12,
+      layout: { ...vis, "text-field": ["get", "name"], "text-font": MAP_ROUNDED_SEMIBOLD, "text-size": 12,
         "text-offset": [1.4, 0], "text-anchor": "left", "text-allow-overlap": true },
       paint: { "text-color": ENDORSE_COLORS.restore.fill, "text-halo-color": "#ffffff", "text-halo-width": 1.5 } });
   };
@@ -568,7 +970,7 @@ export function createAtlas(container: HTMLElement, initial: AtlasState): Atlas 
         "circle-stroke-width": 1.5, "circle-stroke-color": layer.accent } }, before);
     map.addLayer({ id: `${id}-cluster-count`, type: "symbol", ...src, minzoom, maxzoom: ICON_MINZOOM,
       filter: ["all", IS_CLUSTER, [">=", ["get", "point_count"], 25]],
-      layout: { "text-field": ["get", "point_count_abbreviated"], "text-font": ["Noto Sans Regular"],
+      layout: { "text-field": ["get", "point_count_abbreviated"], "text-font": MAP_ROUNDED_REGULAR,
         "text-size": ["step", ["get", "point_count"], 10.5, 100, 11.5], "text-allow-overlap": true },
       paint: { "text-color": layer.accent } }, before);
     if (SYMBOL_KINDS.has(layer.kind)) {
@@ -646,6 +1048,7 @@ export function createAtlas(container: HTMLElement, initial: AtlasState): Atlas 
     }, 250);
   };
   map.on("idle", countInView);
+  map.on("idle", countCropsInView);
 
   // ------------------------------------------------------------------ hex cartogram
 
@@ -733,8 +1136,11 @@ export function createAtlas(container: HTMLElement, initial: AtlasState): Atlas 
     const ids: string[] = [];
     for (const id of state.points) if (shown(id)) ids.push(...pointIds(id).filter((l) => !l.endsWith("-halo") && !l.endsWith("-count")));
     if (state.mode === "election") ids.push("restore-callout-dot", "election-fill");
-    else if (state.surface.kind === "seat") ids.push("surface-seat");
-    else if (state.surface.kind === "hex") ids.push("surface-hex");
+    else {
+      if (state.crops) ids.push("crome-areas");
+      if (state.surface.kind === "seat") ids.push("surface-seat");
+      else if (state.surface.kind === "hex") ids.push("surface-hex");
+    }
     return ids.filter((id) => map.getLayer(id) && map.getLayoutProperty(id, "visibility") !== "none");
   };
   const topFeature = (point: { x: number; y: number }): MapGeoJSONFeature | undefined =>
@@ -758,6 +1164,11 @@ export function createAtlas(container: HTMLElement, initial: AtlasState): Atlas 
       return;
     }
     if (layerId === "election-fill") { void openSeat(String(feature.id ?? props.PCON24CD ?? ""), lngLat); return; }
+    if (layerId === "crome-areas") {
+      popupIsSeat = false;
+      popup.setLngLat(lngLat).setMaxWidth("280px").setHTML(cropPopupHtml(props)).addTo(map);
+      return;
+    }
     if (layerId === "surface-seat") { seatAtlasPopup(String(feature.id ?? props.PCON24CD ?? ""), String(props.PCON24NM ?? ""), lngLat); return; }
     if (layerId === "surface-hex") return;
     // POI popup: name, singular type + context, one source link.
@@ -791,10 +1202,15 @@ export function createAtlas(container: HTMLElement, initial: AtlasState): Atlas 
   map.on("mousemove", (event) => {
     const feature = topFeature(event.point);
     map.getCanvas().style.cursor = feature && feature.layer.id !== "surface-hex" ? "pointer" : "";
+    const isCrop = feature?.layer.id === "crome-areas";
+    setCropHover(isCrop ? feature : null);
     const isSeat = feature && (feature.layer.id === "surface-seat" || feature.layer.id === "election-fill");
     setHovered(isSeat ? String(feature.id ?? "") : null);
     let html = "";
-    if (feature?.layer.id === "surface-seat" && stats) {
+    if (isCrop) {
+      const crop = String(feature.properties?.crop_name ?? feature.properties?.crop_code ?? "Crop area");
+      html = `<b>${escapeHtml(crop)}</b> · CROME 2024`;
+    } else if (feature?.layer.id === "surface-seat" && stats) {
       const code = String(feature.id ?? "");
       const v = seatValues(stats, state.surface.dataset).get(code) ?? 0;
       html = `<b>${escapeHtml(String(feature.properties?.PCON24NM ?? ""))}</b> · ${v} ${escapeHtml(layerOf(state.surface.dataset).label.toLowerCase())}`;
@@ -811,7 +1227,7 @@ export function createAtlas(container: HTMLElement, initial: AtlasState): Atlas 
       tip.style.top = `${event.point.y + 14}px`;
     }
   });
-  map.getCanvas().addEventListener("mouseleave", () => { setHovered(null); tip.hidden = true; });
+  map.getCanvas().addEventListener("mouseleave", () => { setHovered(null); setCropHover(null); tip.hidden = true; });
 
   map.on("load", () => {
     loaded = true;
@@ -834,6 +1250,8 @@ export function createAtlas(container: HTMLElement, initial: AtlasState): Atlas 
     for (const id of state.points) applyPoint(id);
     void applySurface();
     void applyElection();
+    applyCrops();
+    void ensureCropVectorLayer();
     map.once("idle", () => { document.body.dataset.mapReady = "true"; });
   });
   let seatsPushed = false;
@@ -848,6 +1266,7 @@ export function createAtlas(container: HTMLElement, initial: AtlasState): Atlas 
       state.mode = mode;
       popup.remove();
       if (loaded) applyBasemap();
+      if (loaded) applyCrops();
       void applySurface();
       void applyElection();
     },
@@ -892,17 +1311,19 @@ export function createAtlas(container: HTMLElement, initial: AtlasState): Atlas 
     setPreset: (preset) => { state.preset = preset; if (loaded) applyBasemap(); emit(); },
     setRoads: (on) => { state.roads = on; if (loaded) applyBasemap(); emit(); },
     setLabels: (on) => { state.labels = on; if (loaded) applyBasemap(); emit(); },
+    setCrops: (on) => { state.crops = on; if (loaded) applyCrops(); emit(); countCropsInView(); },
     setElectionView: (view) => { state.electionView = view; hexmap.refresh(); void applyElection(); },
     setElectionLayout: (layout) => { state.electionLayout = layout; popup.remove(); void applyElection(); },
-    zoomIn: () => { map.zoomIn({ duration: motionDuration(280) }); },
-    zoomOut: () => { map.zoomOut({ duration: motionDuration(280) }); },
-    home: () => { map.fitBounds(HOME_BOUNDS, { padding: HOME_PADDING, duration: motionDuration(700) }); },
+    zoomIn: () => { map.zoomIn({ duration: motionDuration(280), easing: easeInOut }); },
+    zoomOut: () => { map.zoomOut({ duration: motionDuration(280), easing: easeInOut }); },
+    home: () => { map.fitBounds(HOME_BOUNDS, { padding: HOME_PADDING, pitch: 0, duration: motionDuration(700), easing: easeInOut }); },
     show: ({ lon, lat, zoom = 11, bounds }) => {
       if (bounds) {
-        map.fitBounds(bounds, { padding: searchPadding(container), duration: motionDuration(800), maxZoom: zoom });
+        map.fitBounds(bounds, { padding: searchPadding(container), pitch: pitchForZoom(zoom), duration: motionDuration(800), maxZoom: zoom, easing: easeInOut });
         return;
       }
-      map.flyTo({ center: [lon, lat], zoom: Math.max(map.getZoom(), zoom), duration: motionDuration(800) });
+      const targetZoom = Math.max(map.getZoom(), zoom);
+      map.flyTo({ center: [lon, lat], zoom: targetZoom, pitch: pitchForZoom(targetZoom), duration: motionDuration(800), easing: easeInOut });
     },
     openSeat: (code, lngLat) => { void openSeat(code, lngLat); },
     flyToRestore: () => {
@@ -916,7 +1337,7 @@ export function createAtlas(container: HTMLElement, initial: AtlasState): Atlas 
           [Math.max(...b.map((x) => x[2])), Math.max(...b.map((x) => x[3]))],
         ];
         if (state.electionLayout === "hex") { state.electionLayout = "map"; void applyElection(); }
-        map.fitBounds(bounds, { padding: searchPadding(container), duration: motionDuration(800), maxZoom: 11 });
+        map.fitBounds(bounds, { padding: searchPadding(container), pitch: pitchForZoom(11), duration: motionDuration(800), maxZoom: 11, easing: easeInOut });
         map.once("moveend", () => void openSeat(codes[0]));
       });
     },

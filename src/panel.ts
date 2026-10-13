@@ -7,6 +7,7 @@ import { BASEMAP_IDS, MAX_POINTS, type AtlasState, type BasemapId, type PointTre
 import { formatPollsUpdated, loadVotingBundle } from "./voting";
 import type { Atlas, AtlasChange, AtlasCounts } from "./map";
 import { STYLE_PRESETS, type StylePresetId } from "./style-presets";
+import { CROME_ATTRIBUTION, cropRankingHtml, type CropPanelDetail } from "./crops";
 
 const DATA_CREDITS: Array<[string, string]> = [
   ["Basemap", "OpenFreeMap · © OpenMapTiles · data © OpenStreetMap contributors (ODbL)"],
@@ -14,6 +15,7 @@ const DATA_CREDITS: Array<[string, string]> = [
   ["Points of interest", "© OpenStreetMap contributors (ODbL 1.0), extracted with scripts/osm_extract.py and served as PMTiles"],
   ["Surfaces", "Per-seat counts, 7 km equal-area hexes and distance rasters derived from the OSM extracts (scripts/build_tiles.py). Distances are straight-line, not travel time."],
   ["Constituencies", "ONS July 2024 BGC boundaries. Contains OS data © Crown copyright and database right 2024; contains National Statistics data © Crown copyright and database right 2024 (OGL v3.0)"],
+  ["CROME 2024", CROME_ATTRIBUTION],
   ["Hex map", "Seat layout © Open Innovations (odileeds/hexmaps, MIT)"],
   ["Projections", "Electoral Calculus and More in Common seat projections; Wikipedia national polling. Projections are projections."],
   ["Candidates", "© Democracy Club (CC-BY-SA)"],
@@ -114,6 +116,13 @@ export function mountPanel(root: HTMLElement, atlas: Atlas): void {
             <button type="button" role="radio" data-surface-treatment="continuous">Continuous</button>
           </div>
         </section>
+        <section class="sec crops-section">
+          <h3>What&apos;s in view <span class="sec-note">England only</span></h3>
+          <label class="opt crop-toggle"><input type="checkbox" data-toggle="crops">` +
+            `<span><b>CROME 2024</b><small>Crop cover raster · England only</small></span></label>
+          <div class="crop-status hint" role="status" aria-live="polite"></div>
+          <div class="crop-ranking-slot"></div>
+        </section>
         <section class="sec">
           <h3>Points <span class="sec-note point-count"></span><button type="button" class="link-btn points-clear">Clear</button></h3>
           <div class="active-points"></div>
@@ -164,7 +173,11 @@ export function mountPanel(root: HTMLElement, atlas: Atlas): void {
   const filter = $<HTMLInputElement>(".layer-filter");
   const pointCount = $<HTMLElement>(".point-count");
   const toggle = $<HTMLButtonElement>(".panel-toggle");
+  const cropToggle = $<HTMLInputElement>('[data-toggle="crops"]');
+  const cropStatus = $<HTMLElement>(".crop-status");
+  const cropRanking = $<HTMLElement>(".crop-ranking-slot");
   let counts: Partial<Record<LayerId, number>> = {};
+  let cropDetail: CropPanelDetail = { available: false, england: false, ranking: [] };
   let state: AtlasState = atlas.getState();
 
   // Catalogue groups.
@@ -198,6 +211,25 @@ export function mountPanel(root: HTMLElement, atlas: Atlas): void {
       empty.textContent = "No point layers. Pick up to five below.";
       activePoints.append(empty);
     }
+  };
+
+  const renderCrops = () => {
+    cropToggle.checked = state.crops;
+    cropRanking.innerHTML = "";
+    if (!state.crops) {
+      cropStatus.textContent = "Turn on the CROME 2024 raster to see England’s crop cover.";
+      return;
+    }
+    if (!cropDetail.available) {
+      cropStatus.textContent = "Raster is available; crop area details will appear after the CROME vector tiles are built.";
+      return;
+    }
+    if (!cropDetail.england || !cropDetail.ranking.length) {
+      cropStatus.textContent = "Open crop details are available for England only. Zoom into an English crop area.";
+      return;
+    }
+    cropStatus.textContent = "Largest crop areas in the current view";
+    cropRanking.innerHTML = cropRankingHtml(cropDetail.ranking);
   };
 
   const render = (legend: string) => {
@@ -236,6 +268,7 @@ export function mountPanel(root: HTMLElement, atlas: Atlas): void {
     for (const b of root.querySelectorAll<HTMLButtonElement>("[data-preset]")) b.setAttribute("aria-checked", String(b.dataset.preset === state.preset));
     $<HTMLInputElement>('[data-toggle="roads"]').checked = state.roads;
     $<HTMLInputElement>('[data-toggle="labels"]').checked = state.labels;
+    renderCrops();
     // Election.
     for (const input of root.querySelectorAll<HTMLInputElement>('input[name="eview"]')) input.checked = input.value === state.electionView;
     for (const b of root.querySelectorAll<HTMLButtonElement>("[data-layout]")) b.setAttribute("aria-checked", String(b.dataset.layout === state.electionLayout));
@@ -250,6 +283,10 @@ export function mountPanel(root: HTMLElement, atlas: Atlas): void {
   window.addEventListener("atlas:counts", (event) => {
     counts = (event as CustomEvent<AtlasCounts>).detail.counts;
     renderActive();
+  });
+  window.addEventListener("atlas:crops", (event) => {
+    cropDetail = (event as CustomEvent<CropPanelDetail>).detail;
+    renderCrops();
   });
   render("");
 
@@ -289,6 +326,7 @@ export function mountPanel(root: HTMLElement, atlas: Atlas): void {
     else if (t.name === "eview") atlas.setElectionView(t.value as ElectionView);
     else if (t instanceof HTMLInputElement && t.dataset.toggle === "roads") atlas.setRoads(t.checked);
     else if (t instanceof HTMLInputElement && t.dataset.toggle === "labels") atlas.setLabels(t.checked);
+    else if (t instanceof HTMLInputElement && t.dataset.toggle === "crops") atlas.setCrops(t.checked);
   });
 
   const openBefore = new Map<HTMLDetailsElement, boolean>();

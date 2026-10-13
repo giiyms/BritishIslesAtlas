@@ -21,6 +21,8 @@ export interface AtlasState {
   preset: StylePresetId;
   roads: boolean;
   labels: boolean;
+  /** England-only CROME 2024 WMS overlay. */
+  crops: boolean;
   electionView: ElectionView;
   electionLayout: ElectionLayout;
 }
@@ -36,6 +38,7 @@ export function defaultState(): AtlasState {
     preset: "recommended",
     roads: true,
     labels: true,
+    crops: false,
     electionView: "winner",
     electionLayout: "map",
   };
@@ -60,6 +63,7 @@ export function encodeState(s: AtlasState): string {
   if (s.preset !== d.preset) parts.push(`t=${s.preset}`);
   if (s.roads !== d.roads) parts.push(`r=${s.roads ? 1 : 0}`);
   if (s.labels !== d.labels) parts.push(`l=${s.labels ? 1 : 0}`);
+  if (s.crops !== d.crops) parts.push(`c=${s.crops ? 1 : 0}`);
   if (s.electionView !== d.electionView) parts.push(`v=${s.electionView}`);
   if (s.electionLayout !== d.electionLayout) parts.push(`h=${s.electionLayout === "hex" ? 1 : 0}`);
   return parts.join("&");
@@ -98,6 +102,7 @@ export function decodeState(hash: string): AtlasState {
   if (t === "recommended" || t === "relief" || t === "paper" || t === "night") s.preset = t;
   if (q.get("r") !== null) s.roads = q.get("r") === "1";
   if (q.get("l") !== null) s.labels = q.get("l") === "1";
+  if (q.get("c") !== null) s.crops = q.get("c") === "1";
   const v = q.get("v");
   if (v === "winner" || v === "reform" || v === "pick") s.electionView = v;
   if (q.get("h") === "1") s.electionLayout = "hex";
