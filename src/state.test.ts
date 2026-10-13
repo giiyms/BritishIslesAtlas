@@ -13,6 +13,13 @@ describe("URL state", () => {
     expect(decodeState(`#${encodeState(s)}`)).toMatchObject({ preset: "night", basemap: "mono" });
   });
 
+  it("round-trips the optional England-only crop overlay", () => {
+    const encoded = encodeState({ ...defaultState(), crops: true });
+    expect(encoded).toContain("c=1");
+    expect(decodeState(`#${encoded}`).crops).toBe(true);
+    expect(decodeState("#c=0").crops).toBe(false);
+  });
+
   it("round-trips per-layer point treatments and ignores malformed choices", () => {
     const s = { ...defaultState(), pointTreatments: { hospitals: "dots", castles: "symbols" } as const };
     expect(decodeState(`#${encodeState(s)}`).pointTreatments).toEqual({ hospitals: "dots", castles: "symbols" });
