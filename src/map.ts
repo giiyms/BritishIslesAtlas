@@ -60,16 +60,20 @@ import {
   type CropPanelDetail,
 } from "./crops";
 
-import { SLAB_SOURCES, SLAB_RELIEF, SLAB_SEA_LAYERS, SLAB_OUTSIDE, SLAB_WOOD, SLAB_LABEL_LAYERS, SLAB_LAYER_IDS, SLAB_CREAM, SLAB_SEA, SLAB_INK } from "./slab";
+import { SLAB_SOURCES, SLAB_RELIEF, SLAB_SEA_LAYERS, SLAB_OUTSIDE, SLAB_WOOD, SLAB_LABEL_LAYERS, SLAB_LAYER_IDS, SLAB_CREAM, SLAB_SEA, SLAB_INK, ISLES_WITHIN } from "./slab";
 
 setWorkerUrl(workerUrl);
 addProtocol("pmtiles", new Protocol().tile);
 
 export const HOME_BOUNDS: [[number, number], [number, number]] = [
-  [-10.7, 49.85],
-  [1.85, 60.9],
+  [-10.6, 49.85],
+  [1.85, 60.86],
 ];
 export const HOME_PADDING = { top: 28, bottom: 48, left: 36, right: 28 };
+/** Home padding that clears the desktop side panel / phone bottom sheet. */
+const homePadding = () => window.matchMedia("(max-width: 860px)").matches
+  ? { top: 70, bottom: 150, left: 16, right: 16 }
+  : { top: 70, bottom: 40, left: 290, right: 40 };
 
 const tiles = (name: string) => `pmtiles://${location.origin}/tiles/${name}.pmtiles`;
 const SEATS = { source: "seats", sourceLayer: "constituencies" } as const;
@@ -515,8 +519,8 @@ export function createAtlas(container: HTMLElement, initial: AtlasState): Atlas 
     container,
     style: STYLE,
     bounds: HOME_BOUNDS,
-    fitBoundsOptions: { padding: HOME_PADDING },
-    maxBounds: [[-18, 45], [10, 64.5]],
+    fitBoundsOptions: { padding: homePadding() },
+    maxBounds: [[-30, 42], [22, 66]],
     minZoom: 3.6,
     maxZoom: 16,
     pitch: 0,
@@ -808,6 +812,8 @@ export function createAtlas(container: HTMLElement, initial: AtlasState): Atlas 
   // ------------------------------------------------------------------ basemap
 
   const slabRestore: Record<string, unknown> = {};
+  let placeFilter: unknown;
+  const pointZoom: Record<string, [number, number]> = {};
   const applyBasemap = () => {
     const basemap = state.basemap === "auto" ? presetBasemap(state.preset, state.mode, state.surface) : state.basemap;
     const b = BASEMAPS[basemap];
@@ -867,11 +873,14 @@ export function createAtlas(container: HTMLElement, initial: AtlasState): Atlas 
         ["step", ["zoom"], ["match", ["get", "class"], "city", NAME, ""], 7.5, ["match", ["get", "class"], "village", "", NAME], 10, NAME]);
       map.setLayoutProperty("place-labels", "text-variable-anchor", ["left", "right", "top", "bottom"]);
       map.setLayoutProperty("place-labels", "text-radial-offset", 0.7);
+      if (placeFilter === undefined) placeFilter = map.getFilter("place-labels");
+      map.setFilter("place-labels", ["all", placeFilter as never, ISLES_WITHIN]);
     } else {
       for (const [k, v] of Object.entries(slabRestore)) { const [id, prop] = k.split("|"); set(id, prop, v); }
       set("boundary-country", "line-opacity", 1);
       map.setLayoutProperty("place-labels", "text-field", NAME);
       map.setLayoutProperty("place-labels", "text-variable-anchor", undefined);
+      if (placeFilter !== undefined) map.setFilter("place-labels", placeFilter as never);
     }
     if (loaded) map.setSky(snapTheme
       ? { "sky-color": "#8FCBFA", "horizon-color": "#E4F3FF", "fog-color": "#F2F6F4", "sky-horizon-blend": 0.6, "horizon-fog-blend": 0.7, "fog-ground-blend": 0.35, "atmosphere-blend": 0 }
@@ -1088,6 +1097,9 @@ export function createAtlas(container: HTMLElement, initial: AtlasState): Atlas 
         layout: { visibility: shown(id) ? "visible" : "none", "icon-image": iconId,
           "icon-size": ["interpolate", ["linear"], ["zoom"], ICON_MINZOOM, 0.85, 14, 1],
           "icon-allow-overlap": id === "hospitals", "icon-padding": 1 } }, beforeFor(layer));
+      // Icon layers arrive async (image decode); apply the slab theme's national-zoom hide.
+      pointZoom[iconId] = [3, 24];
+      if (snapTheme) map.setLayerZoomRange(iconId, 8, 24);
     };
     if (map.hasImage(iconId)) placeIcon();
     else {
@@ -1108,6 +1120,10 @@ export function createAtlas(container: HTMLElement, initial: AtlasState): Atlas 
     if (treatment === "clustered" && id === "hospitals") visibleIds.push("hospitals-hi");
     const visible = new Set(visibleIds);
     for (const layerId of pointIds(id)) if (map.getLayer(layerId)) {
+      const l = map.getLayer(layerId)!;
+      if (!(layerId in pointZoom)) pointZoom[layerId] = [l.minzoom ?? 0, l.maxzoom ?? 24];
+      const [zmin, zmax] = pointZoom[layerId];
+      map.setLayerZoomRange(layerId, snapTheme ? Math.max(zmin, 8) : zmin, zmax);
       map.setLayoutProperty(layerId, "visibility", shown(id) && visible.has(layerId) ? "visible" : "none");
     }
   };
@@ -1335,6 +1351,8 @@ export function createAtlas(container: HTMLElement, initial: AtlasState): Atlas 
       }
     });
     applyBasemap();
+    // Re-fit once the panel has laid out so the whole archipelago clears it.
+    if (!location.hash.includes("@")) map.fitBounds(HOME_BOUNDS, { padding: homePadding(), duration: 0 });
     for (const id of state.points) applyPoint(id);
     void applySurface();
     void applyElection();
@@ -1405,7 +1423,7 @@ export function createAtlas(container: HTMLElement, initial: AtlasState): Atlas 
     setElectionLayout: (layout) => { state.electionLayout = layout; popup.remove(); void applyElection(); },
     zoomIn: () => { map.zoomIn({ duration: motionDuration(280), easing: easeInOut }); },
     zoomOut: () => { map.zoomOut({ duration: motionDuration(280), easing: easeInOut }); },
-    home: () => { map.fitBounds(HOME_BOUNDS, { padding: HOME_PADDING, pitch: snapTheme ? pitchForZoom(5.5) : 0, duration: motionDuration(700), easing: easeInOut }); },
+    home: () => { map.fitBounds(HOME_BOUNDS, { padding: homePadding(), pitch: snapTheme ? pitchForZoom(5.5) : 0, duration: motionDuration(700), easing: easeInOut }); },
     show: ({ lon, lat, zoom = 11, bounds }) => {
       if (bounds) {
         map.fitBounds(bounds, { padding: searchPadding(container), pitch: pitchForZoom(zoom), duration: motionDuration(800), maxZoom: zoom, easing: easeInOut });

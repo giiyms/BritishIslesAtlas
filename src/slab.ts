@@ -8,10 +8,17 @@ import type { LayerSpecification, SourceSpecification, ExpressionSpecification }
  */
 export const SLAB_CREAM = "#F3EEDF";
 export const SLAB_SEA = "#4C9BEB";
-export const SLAB_SEA_NEAR = "#7FDAF6";
+export const SLAB_SEA_NEAR = "#A6DDF2";
 export const SLAB_INK = "#2B2B33";
 export const SLAB_REGION = "#7A6690";
 export const SLAB_SEA_LABEL = "#D8F0FF";
+
+/** Coarse GB + Ireland hull; town names/dots outside it (the continent) are hidden. */
+export const ISLES_WITHIN: ExpressionSpecification = ["within", {
+  type: "Polygon",
+  coordinates: [[[-11, 51.3], [-10.8, 55.6], [-7.8, 58.7], [-3.5, 59.5], [-1.2, 61], [1.9, 60.6], [-1.4, 57.8], [0.4, 53.6],
+    [1.95, 52.9], [1.5, 51.1], [-1, 50.6], [-6.5, 49.8], [-11, 51.3]]],
+} as never];
 
 const FONT_BOLD = ["Noto Sans Bold"];
 const FONT_REG = ["Noto Sans Regular"];
@@ -38,7 +45,7 @@ const LABELS: Label[] = [
   [-6.0, 54.17, "MOURNES", 2, "land"],
   [2.3, 56.2, "NORTH SEA", 0, "sea"],
   [-5.15, 53.85, "IRISH SEA", 0, "sea"],
-  [-12.6, 54.8, "ATLANTIC OCEAN", 0, "sea"],
+  [-11.4, 55.6, "ATLANTIC OCEAN", 0, "sea"],
   [-2.6, 50.2, "ENGLISH CHANNEL", 1, "sea"],
   [-7.6, 50.9, "CELTIC SEA", 1, "sea"],
   [-7.1, 56.75, "SEA OF THE HEBRIDES", 2, "sea"],
@@ -48,6 +55,8 @@ const LABELS: Label[] = [
 
 export const SLAB_SOURCES: Record<string, SourceSpecification> = {
   "isles-land": { type: "geojson", data: "/data/isles-land.geojson" },
+  "isles-edge": { type: "geojson", data: "/data/isles-edge.geojson" },
+  "isles-soft": { type: "geojson", data: "/data/isles-soft.geojson" },
   "isles-outside": { type: "geojson", data: "/data/isles-outside.geojson" },
   "slab-labels": {
     type: "geojson",
@@ -64,15 +73,15 @@ export const SLAB_SOURCES: Record<string, SourceSpecification> = {
 export const SLAB_RELIEF: ExpressionSpecification = [
   "interpolate", ["linear"], ["elevation"],
   -5, "#9FD67A",
-  30, "#A3D77C",
-  120, "#B4DA84",
-  220, "#C9D58C",
-  330, "#D8C58A",
-  480, "#D2B27E",
-  650, "#C9A97E",
-  800, "#D9CBB4",
-  900, "#F2EEE8",
-  1000, "#FFFFFF",
+  60, "#A2D77B",
+  180, "#A8D47C",
+  300, "#B0CF7E",
+  400, "#BCCB84",
+  520, "#CFC48E",
+  680, "#D6C29A",
+  820, "#E2D8C6",
+  920, "#F4F1EC",
+  1020, "#FFFFFF",
 ];
 
 const zw = (a: number, b: number, c: number): ExpressionSpecification =>
@@ -81,9 +90,9 @@ const zw = (a: number, b: number, c: number): ExpressionSpecification =>
 /** Layers drawn above the water fill (sea glow, slab shadow, coast edge). */
 export const SLAB_SEA_LAYERS: LayerSpecification[] = [
   // Outward-only glow: offset half the width so it never bleeds onto land.
-  ...[[60, 0.22], [30, 0.32], [14, 0.45], [6, 0.55]].map(([w, o], i): LayerSpecification => ({
-    id: `slab-glow-${i}`, type: "line", source: "isles-land",
-    layout: { "line-join": "round", visibility: "none" },
+  ...[[34, 0.16], [18, 0.22], [8, 0.28]].map(([w, o], i): LayerSpecification => ({
+    id: `slab-glow-${i}`, type: "line", source: "isles-soft",
+    layout: { "line-join": "round", "line-cap": "round", visibility: "none" },
     paint: {
       "line-color": SLAB_SEA_NEAR,
       "line-width": zw(w * 0.55, w, w * 1.6),
@@ -93,21 +102,21 @@ export const SLAB_SEA_LAYERS: LayerSpecification[] = [
     },
   })),
   {
-    id: "slab-shadow", type: "line", source: "isles-land",
-    layout: { "line-join": "round", visibility: "none" },
+    id: "slab-shadow", type: "line", source: "isles-soft",
+    layout: { "line-join": "round", "line-cap": "round", visibility: "none" },
     paint: {
-      "line-color": "#0E3A6B",
-      "line-width": zw(5, 9, 14),
-      "line-offset": zw(-2.5, -4.5, -7),
-      "line-blur": zw(4, 7, 11),
-      "line-translate": [3, 4],
-      "line-opacity": 0.38,
+      "line-color": "#0B2F5C",
+      "line-width": zw(9, 15, 22),
+      "line-offset": zw(-4.5, -7.5, -11),
+      "line-blur": zw(8, 13, 18),
+      "line-translate": [6, 8],
+      "line-opacity": 0.5,
     },
   },
   {
-    id: "slab-edge", type: "line", source: "isles-land",
-    layout: { "line-join": "round", visibility: "none" },
-    paint: { "line-color": "#FFFDF4", "line-width": zw(0.5, 1.0, 1.8), "line-opacity": 0.85 },
+    id: "slab-edge", type: "line", source: "isles-edge",
+    layout: { "line-join": "round", "line-cap": "round", visibility: "none" },
+    paint: { "line-color": "#FFFDF4", "line-width": zw(0.4, 0.8, 1.4), "line-blur": 0.4, "line-opacity": 0.7 },
   },
 ];
 
@@ -125,7 +134,7 @@ export const SLAB_WOOD: LayerSpecification = {
 export const SLAB_LABEL_LAYERS: LayerSpecification[] = [
   {
     id: "slab-town-dots", type: "circle", source: "openmaptiles", "source-layer": "place",
-    filter: ["match", ["get", "class"], ["city", "town"], true, false],
+    filter: ["all", ["match", ["get", "class"], ["city", "town"], true, false], ISLES_WITHIN],
     layout: { visibility: "none" },
     paint: {
       "circle-radius": ["step", ["zoom"], ["match", ["get", "class"], "city", 3.2, 0], 7.5, 3.2, 10, 0],
@@ -145,8 +154,10 @@ export const SLAB_LABEL_LAYERS: LayerSpecification[] = [
         ["match", ["get", "kind"], "outside", 20, "sea", 13, 13], 8,
         ["match", ["get", "kind"], "outside", 30, "sea", 18, 19]],
       "text-letter-spacing": ["match", ["get", "kind"], "outside", 0.5, "sea", 0.3, 0.32],
-      "text-max-width": 7,
-      "text-allow-overlap": false,
+      "text-max-width": ["match", ["get", "kind"], "sea", 6, 9],
+      // Region / sea names are the hierarchy: always place them, towns yield.
+      "text-allow-overlap": true,
+      "symbol-z-order": "source",
       "text-padding": 2,
     },
     paint: {
@@ -160,3 +171,4 @@ export const SLAB_LABEL_LAYERS: LayerSpecification[] = [
 export const SLAB_LAYER_IDS = [
   "slab-outside", "slab-wood", ...SLAB_SEA_LAYERS.map((l) => l.id), ...SLAB_LABEL_LAYERS.map((l) => l.id),
 ];
+
