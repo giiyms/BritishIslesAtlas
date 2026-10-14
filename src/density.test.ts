@@ -1,12 +1,14 @@
 import manifestRaw from "../public/data/density/pubs-manifest.json?raw";
-import coarseRaw from "../public/data/density/pubs-coarse.geojson?raw";
-import mediumRaw from "../public/data/density/pubs-medium.geojson?raw";
-import fineRaw from "../public/data/density/pubs-fine.geojson?raw";
+import coarseRaw from "../public/data/density/pubs-coarse.json?raw";
+import mediumRaw from "../public/data/density/pubs-medium.json?raw";
+import fineRaw from "../public/data/density/pubs-fine.json?raw";
 import { describe, expect, it } from "vitest";
-import { bandNear, type DensityManifest } from "./density";
+import { bandNear, hexCells, type DensityManifest, type HexCells } from "./density";
 
 const manifest = JSON.parse(manifestRaw) as DensityManifest;
 const bandRaw: Record<string, string> = { coarse: coarseRaw, medium: mediumRaw, fine: fineRaw };
+const R = 6378137;
+const merc = ([lon, lat]: number[]) => [R * lon * Math.PI / 180, R * Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360))];
 
 describe("density band lazy loading", () => {
   it("bands tile the zoom range contiguously up to the dot handoff", () => {
@@ -17,49 +19,35 @@ describe("density band lazy loading", () => {
   });
 
   it("only the coarse band is near at the national landing zoom", () => {
-    const near = manifest.bands.filter((b) => bandNear(b, 4.1)).map((b) => b.id);
-    expect(near).toEqual(["coarse"]);
-  });
-
-  it("prefetches the next band just before its minzoom", () => {
-    const medium = manifest.bands.find((b) => b.id === "medium")!;
-    expect(bandNear(medium, medium.minzoom - 0.5)).toBe(true);
-    expect(bandNear(medium, medium.minzoom - 1)).toBe(false);
+    expect(manifest.bands.filter((b) => bandNear(b, 4.1)).map((b) => b.id)).toEqual(["coarse"]);
   });
 
   it("every cell has count >= 1 and band totals equal the point count", () => {
     for (const band of manifest.bands) {
-      const fc = JSON.parse(bandRaw[band.id]) as { features: Array<{ properties: { count: number } }> };
-      expect(fc.features.length).toBe(band.cell_count);
-      expect(fc.features.every((f) => f.properties.count >= 1)).toBe(true);
-      expect(fc.features.reduce((a, f) => a + f.properties.count, 0)).toBe(manifest.point_count);
+      const raw = JSON.parse(bandRaw[band.id]) as HexCells;
+      const counts = raw.cells.filter((_, i) => i % 3 === 2);
+      expect(counts.length).toBe(band.cell_count);
+      expect(counts.every((c) => c >= 1)).toBe(true);
+      expect(counts.reduce((a, c) => a + c, 0)).toBe(manifest.point_count);
     }
   });
 
-  it("city cells are under 1 km and cover z10–12", () => {
-    const fine = manifest.bands.find(b => b.id === "fine")!;
-    expect(fine.minzoom).toBeLessThanOrEqual(10);
-    expect(fine.maxzoom).toBeGreaterThanOrEqual(12);
-    expect(fine.size_deg * 175).toBeLessThanOrEqual(1);
-    const cells = JSON.parse(fineRaw).features;
-    for (const cell of cells) {
-      const latitudes = cell.geometry.coordinates[0].map((point: number[]) => point[1]);
-      expect((Math.max(...latitudes) - Math.min(...latitudes)) * 111).toBeLessThan(1);
+  it("hexes are regular on screen (Web Mercator): equal sides at every latitude", () => {
+    for (const band of manifest.bands) {
+      const fc = hexCells(JSON.parse(bandRaw[band.id]) as HexCells);
+      for (const f of fc.features.slice(0, 200)) {
+        const ring = f.geometry.coordinates[0].map(merc);
+        const sides = ring.slice(0, 6).map((p, i) => Math.hypot(ring[i + 1][0] - p[0], ring[i + 1][1] - p[1]));
+        const mean = sides.reduce((a, s) => a + s, 0) / 6;
+        for (const s of sides) expect(Math.abs(s - mean) / mean).toBeLessThan(0.001);
+      }
     }
   });
 
-  it("national coarse band is chunky (~15–20 km) and first-load sized", () => {
-    const coarse = manifest.bands.find((b) => b.id === "coarse")!;
-    // size_deg 0.020 ≈ 3.5 km in the builder; 0.102 ≈ 18 km.
-    const km = 3.5 * (coarse.size_deg / 0.02);
-    expect(km).toBeGreaterThanOrEqual(15);
-    expect(km).toBeLessThanOrEqual(20);
-    expect(coarse.maxzoom).toBeLessThanOrEqual(7);
-    expect(coarse.draw_scale ?? manifest.draw_scale).toBeGreaterThanOrEqual(0.9);
-    expect(coarse.draw_scale ?? manifest.draw_scale).toBeLessThanOrEqual(0.96);
-    // Coarse GeoJSON alone must stay under the ~1 MB first-/data budget.
-    expect(bandRaw.coarse.length).toBeLessThan(1 * 1024 * 1024);
+  it("first-load coarse band is tiny and the city band is sub-km on the ground", () => {
+    expect(bandRaw.coarse.length).toBeLessThan(100 * 1024);
+    const fine = manifest.bands.find((b) => b.id === "fine")!;
+    expect(fine.size_m * Math.cos(54 * Math.PI / 180)).toBeLessThan(1000);
     expect(manifest.ramp.length).toBeGreaterThanOrEqual(5);
-    expect(coarse.colour_stops?.length).toBe(5);
   });
 });

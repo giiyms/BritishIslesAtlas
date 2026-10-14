@@ -62,7 +62,7 @@ describe("density lifecycle", () => {
     expect(sources.has("density-src-pubs-coarse")).toBe(false);
   });
   it.each(["hex", "auto"] as const)("hides reused %s hexes when Auto reaches its dots view", async initialStyle => {
-    vi.stubGlobal("fetch", vi.fn(async (url: string) => ({ ok: true, json: async () => url.endsWith("manifest.json") ? JSON.parse(manifestRaw) : { type: "FeatureCollection", features: [] } })));
+    vi.stubGlobal("fetch", vi.fn(async (url: string) => ({ ok: true, json: async () => url.endsWith("manifest.json") ? JSON.parse(manifestRaw) : { type: "FeatureCollection", features: [], size_m: 1000, cells: [] } })));
     const { renderer, layers, setZoom } = setup(9);
     renderer.update(initialStyle, ["pubs"]);
     await settle();
@@ -74,7 +74,7 @@ describe("density lifecycle", () => {
     expect(layers.get("pubs")?.layout.visibility).toBe("visible");
   });
   it.each(["contours", "spikes"] as const)("loads local %s geometry at London zoom and hides it on exit", async style => {
-    vi.stubGlobal("fetch", vi.fn(async (url: string) => ({ ok: true, json: async () => url.endsWith("manifest.json") ? JSON.parse(manifestRaw) : { type: "FeatureCollection", features: [] } })));
+    vi.stubGlobal("fetch", vi.fn(async (url: string) => ({ ok: true, json: async () => url.endsWith("manifest.json") ? JSON.parse(manifestRaw) : { type: "FeatureCollection", features: [], size_m: 1000, cells: [] } })));
     const { renderer, layers, sources } = setup(10.5);
     renderer.update(style, ["pubs"]);
     await settle();
@@ -84,19 +84,15 @@ describe("density lifecycle", () => {
     expect(layers.get(`density-${style}-pubs-local`)?.layout.visibility).toBe("none");
   });
 
-  it("spikes pitch once and return to flat when leaving", async () => {
-    vi.stubGlobal("fetch", vi.fn(async () => ({ ok: true, json: async () => ({ type: "FeatureCollection", features: [] }) })));
+  it.each(["spikes", "columns", "hex", "auto"] as const)("%s never changes the camera", async style => {
+    vi.stubGlobal("fetch", vi.fn(async () => ({ ok: true, json: async () => ({ type: "FeatureCollection", features: [], size_m: 1000, cells: [], bands: [] }) })));
     const { renderer, pitch, setExternalPitch } = setup();
-    renderer.update("spikes", ["pubs"]);
+    setExternalPitch(0);
+    renderer.update(style, ["pubs"]);
     await settle();
-    expect(pitch()).toBe(55);
-    setExternalPitch(0); // a camera jump reset pitch while spikes remained active
-    renderer.update("spikes", ["pubs"]);
-    expect(pitch()).toBe(55);
-    renderer.update("points", ["pubs"]);
     expect(pitch()).toBe(0);
-    setExternalPitch(55); // a camera jump interrupted the reset animation
+    setExternalPitch(30); // user tilted
     renderer.update("points", ["pubs"]);
-    expect(pitch()).toBe(0);
+    expect(pitch()).toBe(30);
   });
 });

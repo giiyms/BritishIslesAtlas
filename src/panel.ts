@@ -109,9 +109,15 @@ export function mountPanel(
   densitySelect.addEventListener("change", () => options.setDensityStyle(densitySelect.value as DensityStyle));
   densityControl.append(densitySelect);
   root.querySelector(".panel-sub")?.after(densityControl);
-  const refreshDensityPicker = () => { densityControl.hidden = !DENSE_LAYERS.some(options.isOn); };
+  const refreshDensityPicker = () => {
+    densityControl.hidden = !DENSE_LAYERS.some(options.isOn);
+    // Keep the visible label in step with the real style (URL restore, programmatic changes).
+    const current = options.getDensityStyle();
+    if (densitySelect.value !== current) densitySelect.value = current;
+  };
   refreshDensityPicker();
   window.addEventListener("atlas:density-layers", refreshDensityPicker);
+  window.addEventListener("atlas:density-style", refreshDensityPicker);
 
   // Filter (fix 6).
   const filter = document.createElement("input");
