@@ -82,7 +82,14 @@ const CROME_WMS_TILES = `${CROME_WMS_URL}?service=WMS&request=GetMap&version=${C
 // point catalogue. The DEM also powers the painted hillshade below.
 const TERRAIN_TILES = "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png";
 const TERRAIN_MAX_ZOOM = 12;
-const TERRAIN_EXAGGERATION = 1.08;
+const TERRAIN_EXAGGERATION = 1.8;
+/** Snapchat theme: GB peaks top out ~1.3 km, so relief needs more lift the further out you are. */
+const snapExaggeration = (zoom: number): number =>
+  zoom <= 5 ? 4.5 : zoom >= 12 ? 1.6 : zoom <= 8 ? 4.5 - ((zoom - 5) / 3) * 1.9 : 2.6 - ((zoom - 8) / 4) * 1.0;
+const SNAPCHAT_MEADOW = "#DDEBC6";
+const SNAPCHAT_MOSS = "#C6DDA8";
+const SNAPCHAT_FELL = "#B9CFA0";
+const SNAPCHAT_SCREE = "#D8D2C2";
 
 const SNAPCHAT_WATER_COAST = "#8DD6FF";
 const SNAPCHAT_WATER_MID = "#73BDF9";
@@ -91,7 +98,6 @@ const SNAPCHAT_LAND = "#F5F4EF";
 const SNAPCHAT_INK = "#1C1C1E";
 const SNAPCHAT_LABEL = "#6F8798";
 const SNAPCHAT_VALLEY = "#EAEBDE";
-const SNAPCHAT_DESERT = "#E5D3B8";
 const SNAPCHAT_SNOW = "#FFFFFF";
 
 // Regional crop markers use the same six palette keys as the optional CROME
@@ -136,7 +142,10 @@ const MAP_ROUNDED_SEMIBOLD = ["Nunito SemiBold", "Noto Sans Bold"];
 const easeInOut = (t: number): number =>
   t < 0.5 ? 4 * t * t * t : 1 - ((-2 * t + 2) ** 3) / 2;
 
+let snapTheme = false;
 const pitchForZoom = (zoom: number): number => {
+  // Theme mode: always tilted so the raised relief reads, even nationally.
+  if (snapTheme) return Math.min(62, 42 + Math.max(0, zoom - 5) * 4);
   if (zoom <= 7) return 0;
   return Math.min(54, ((zoom - 7) / 4) * 54);
 };
@@ -202,15 +211,17 @@ const STYLE: StyleSpecification = {
     {
       id: "dem-color-relief", type: "color-relief", source: "terrain", layout: { visibility: "none" },
       paint: {
-        "color-relief-opacity": 0.34,
+        "color-relief-opacity": 0.85,
         "color-relief-color": [
           "interpolate", ["linear"], ["elevation"],
           0, SNAPCHAT_LAND,
-          120, SNAPCHAT_VALLEY,
-          500, "#D8D9CC",
-          1000, SNAPCHAT_DESERT,
-          1600, SNAPCHAT_DESERT,
-          2200, SNAPCHAT_SNOW,
+          40, SNAPCHAT_VALLEY,
+          150, SNAPCHAT_MEADOW,
+          350, SNAPCHAT_MOSS,
+          600, SNAPCHAT_FELL,
+          800, SNAPCHAT_SCREE,
+          950, "#EEECE6",
+          1100, SNAPCHAT_SNOW,
         ],
         resampling: "linear",
       },
@@ -221,8 +232,8 @@ const STYLE: StyleSpecification = {
         "hillshade-illumination-direction": 315,
         "hillshade-illumination-altitude": 45,
         "hillshade-illumination-anchor": "map",
-        "hillshade-exaggeration": 0.48,
-        "hillshade-shadow-color": "#C8BBAA",
+        "hillshade-exaggeration": 0.62,
+        "hillshade-shadow-color": "#9AA89E",
         "hillshade-highlight-color": "#FFFDF7",
         "hillshade-accent-color": "#DFD1BC",
         "hillshade-method": "multidirectional",
@@ -498,7 +509,7 @@ export function createAtlas(container: HTMLElement, initial: AtlasState): Atlas 
     minZoom: 3.6,
     maxZoom: 16,
     pitch: 0,
-    maxPitch: 60,
+    maxPitch: 70,
     bearing: 0,
     attributionControl: false,
     renderWorldCopies: false,
@@ -523,6 +534,7 @@ export function createAtlas(container: HTMLElement, initial: AtlasState): Atlas 
     map.easeTo({ pitch, duration: motionDuration(360), easing: easeInOut, essential: true });
   };
   map.on("zoomend", syncPitchToZoom);
+  map.on("zoom", () => { if (snapTheme && map.getTerrain()) map.setTerrain({ source: "terrain", exaggeration: snapExaggeration(map.getZoom()) }); });
 
   const compactAttribution = window.matchMedia("(max-width: 860px)").matches;
   map.addControl(new AttributionControl({ compact: compactAttribution, customAttribution: ATTRIBUTION }), "bottom-right");
@@ -782,18 +794,24 @@ export function createAtlas(container: HTMLElement, initial: AtlasState): Atlas 
     set("region-labels", "text-halo-color", b.halo);
     set("surface-seat-line", "line-color", b.seatLine);
     set("election-line", "line-color", basemap === "dark" ? "#22262c" : "#ffffff");
-    set("dem-color-relief", "color-relief-opacity", state.mode === "election" ? 0.18 : 0.34);
+    set("dem-color-relief", "color-relief-opacity", state.mode === "election" ? 0.18 : 0.85);
     map.setLayoutProperty("dem-color-relief", "visibility", b.hillshade ? "visible" : "none");
     map.setLayoutProperty("dem-hillshade", "visibility", b.hillshade ? "visible" : "none");
     // Keep the older raster source in the style as a fallback, but avoid
     // paying for two hillshade tile sets in the normal path.
     map.setLayoutProperty("hillshade", "visibility", "none");
     set("hillshade", "raster-opacity", state.mode === "election" ? 0.35 : HILLSHADE_OPACITY);
-    if (loaded) map.setTerrain({ source: "terrain", exaggeration: b.terrainExaggeration });
+    snapTheme = basemap === "relief" && state.mode === "atlas";
+    if (loaded) map.setTerrain({ source: "terrain", exaggeration: snapTheme ? snapExaggeration(map.getZoom()) : b.terrainExaggeration });
+    if (loaded) map.setSky(snapTheme
+      ? { "sky-color": "#8FCBFA", "horizon-color": "#E4F3FF", "fog-color": "#F2F6F4", "sky-horizon-blend": 0.6, "horizon-fog-blend": 0.7, "fog-ground-blend": 0.35, "atmosphere-blend": 0 }
+      : { "sky-color": "#ffffff", "horizon-color": "#ffffff", "fog-color": "#ffffff", "fog-ground-blend": 1, "atmosphere-blend": 0 });
+    for (const id of state.points) applyPoint(id);
     for (const id of ["roads", "roads-casing"]) map.setLayoutProperty(id, "visibility", state.roads ? "visible" : "none");
     map.setLayoutProperty("place-labels", "visibility", state.labels ? "visible" : "none");
     map.setLayoutProperty("region-labels", "visibility", state.labels ? "visible" : "none");
     document.documentElement.dataset.basemap = basemap;
+    if (loaded) syncPitchToZoom();
   };
 
   // ------------------------------------------------------------------ seat feature-state
@@ -1015,7 +1033,7 @@ export function createAtlas(container: HTMLElement, initial: AtlasState): Atlas 
     if (shown(id)) addPoint(id);
     const treatment = state.pointTreatments[id] ?? "clustered";
     const visibleIds = treatment === "clustered"
-      ? [`${id}-cluster-halo`, `${id}-cluster`, `${id}-cluster-count`, id, `${id}-icon`]
+      ? (snapTheme ? [id, `${id}-icon`] : [`${id}-cluster-halo`, `${id}-cluster`, `${id}-cluster-count`, id, `${id}-icon`])
       : treatment === "dots" ? [`${id}-dot`] : [`${id}-icon`];
     if (treatment === "clustered" && id === "hospitals") visibleIds.push("hospitals-hi");
     const visible = new Set(visibleIds);
@@ -1316,7 +1334,7 @@ export function createAtlas(container: HTMLElement, initial: AtlasState): Atlas 
     setElectionLayout: (layout) => { state.electionLayout = layout; popup.remove(); void applyElection(); },
     zoomIn: () => { map.zoomIn({ duration: motionDuration(280), easing: easeInOut }); },
     zoomOut: () => { map.zoomOut({ duration: motionDuration(280), easing: easeInOut }); },
-    home: () => { map.fitBounds(HOME_BOUNDS, { padding: HOME_PADDING, pitch: 0, duration: motionDuration(700), easing: easeInOut }); },
+    home: () => { map.fitBounds(HOME_BOUNDS, { padding: HOME_PADDING, pitch: snapTheme ? pitchForZoom(5.5) : 0, duration: motionDuration(700), easing: easeInOut }); },
     show: ({ lon, lat, zoom = 11, bounds }) => {
       if (bounds) {
         map.fitBounds(bounds, { padding: searchPadding(container), pitch: pitchForZoom(zoom), duration: motionDuration(800), maxZoom: zoom, easing: easeInOut });
