@@ -412,9 +412,12 @@ export function createAtlas(container: HTMLElement): Atlas {
     maxZoom: 16,
     attributionControl: false,
     renderWorldCopies: false,
-    dragRotate: false,
-    pitchWithRotate: false,
-    touchPitch: false,
+    // Flat top-down by default. The camera is the user's: nothing in the app
+    // sets pitch; tilt is only via right-drag / two-finger gestures.
+    dragRotate: true,
+    pitchWithRotate: true,
+    touchPitch: true,
+    pitch: 0,
     fadeDuration: 0,
     canvasContextAttributes: {
       antialias: window.devicePixelRatio < 2,
@@ -908,6 +911,7 @@ export function createAtlas(container: HTMLElement): Atlas {
       densityStyle = style;
       window.history.replaceState(window.history.state, "", serializeDensityStyle(window.location.href, style));
       refreshDensity();
+      window.dispatchEvent(new CustomEvent("atlas:density-style", { detail: style }));
     },
     setLayer: (id, on) => {
       const was = state[id];

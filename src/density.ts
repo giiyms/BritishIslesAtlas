@@ -19,7 +19,8 @@ export interface DensityBand {
   url: string;
   minzoom: number;
   maxzoom: number;
-  size_deg: number;
+  size_m: number;
+  projection?: string;
   draw_scale?: number;
   cell_count: number;
   max_count: number;
@@ -39,8 +40,6 @@ export interface DensityManifest {
   bands: DensityBand[];
   ramp: string[];
   legend: string[];
-  pitch: number;
-  bearing?: number;
   scaling?: string;
   draw_scale?: number;
 }
@@ -220,7 +219,8 @@ async function ensureBand(
   const outlineId = `${OUTLINE_PREFIX}${id}-${band.id}`;
 
   if (!map.getSource(srcId)) {
-    map.addSource(srcId, { type: "geojson", data: band.url, maxzoom: 14 });
+    const data = hexCells(await fetchHexCells(band.url));
+    if (!map.getSource(srcId)) map.addSource(srcId, { type: "geojson", data, maxzoom: 14 });
   }
 
   loadedBands.add(key);
@@ -325,42 +325,39 @@ export function densityActive(map: MapLibreMap, id: LayerId, layerOn: boolean): 
   return map.getZoom() < man.dot_minzoom;
 }
 
-const DEFAULT_PITCH = 0;
-const DEFAULT_BEARING = 0;
-let pitchOwner: LayerId | null = null;
+const R = 6378137;
+const fromMerc = ([x, y]: number[]) => [x / R * 180 / Math.PI, (2 * Math.atan(Math.exp(y / R)) - Math.PI / 2) * 180 / Math.PI];
 
-export type DensityCameraOpts = { pitch?: number; bearing?: number };
+type HexFeature = { type: "Feature"; properties: { count: number }; geometry: { type: "Polygon"; coordinates: number[][][] } };
+type HexCollection = { type: "FeatureCollection"; features: HexFeature[] };
 
-/** Density-mode camera: steeper pitch + slight bearing; restore flat north-up on exit. */
-export function syncDensityPitch(
-  map: MapLibreMap,
-  activeLayer: LayerId | null,
-  opts: DensityCameraOpts | number = {},
-): void {
-  const pitch = typeof opts === "number" ? opts : (opts.pitch ?? 55);
-  const bearing = typeof opts === "number" ? -15 : (opts.bearing ?? -15);
-  if (activeLayer) {
-    const pitchDrift = Math.abs(map.getPitch() - pitch) > 1;
-    const bearingDrift = Math.abs(map.getBearing() - bearing) > 1;
-    if (pitchOwner !== activeLayer || pitchDrift || bearingDrift) {
-      pitchOwner = activeLayer;
-      map.easeTo({ pitch, bearing, duration: 450, essential: true });
-    }
-  } else if (pitchOwner || map.getPitch() > 1 || Math.abs(map.getBearing()) > 1) {
-    pitchOwner = null;
-    const needsReset = map.getPitch() > 1 || Math.abs(map.getBearing()) > 1;
-    if (needsReset) {
-      map.easeTo({ pitch: DEFAULT_PITCH, bearing: DEFAULT_BEARING, duration: 450, essential: true });
-    }
+/** Compact band file: flat [q, r, count, ...] axial cells on a Web Mercator hex grid. */
+export interface HexCells { size_m: number; draw_scale?: number; cells: number[] }
+
+/** Rebuild flat-top Mercator hexes (regular on screen) from compact cells. */
+export function hexCells(band: HexCells, scale = band.draw_scale ?? 0.93): HexCollection {
+  const size = band.size_m, draw = size * scale, s3 = Math.sqrt(3);
+  const corners = Array.from({ length: 6 }, (_, i) => [Math.cos(i * Math.PI / 3) * draw, Math.sin(i * Math.PI / 3) * draw]);
+  const features: HexFeature[] = [];
+  for (let i = 0; i + 2 < band.cells.length; i += 3) {
+    const q = band.cells[i], r = band.cells[i + 1], count = band.cells[i + 2];
+    const cx = size * 1.5 * q, cy = size * (s3 / 2 * q + s3 * r);
+    const ring = corners.map(([dx, dy]) => fromMerc([cx + dx, cy + dy]));
+    ring.push(ring[0]);
+    features.push({ type: "Feature", properties: { count }, geometry: { type: "Polygon", coordinates: [ring] } });
   }
+  return { type: "FeatureCollection", features };
 }
 
-/** Prefer desktop/mobile pitch+bearing from the manifest (or sensible defaults). */
-export function densityCameraForViewport(man: DensityManifest | null | undefined): DensityCameraOpts {
-  const narrow =
-    typeof window !== "undefined" && window.matchMedia("(max-width: 520px)").matches;
-  if (narrow) {
-    return { pitch: 50, bearing: man?.bearing ?? -15 };
+const hexCache = new Map<string, Promise<HexCells>>();
+export function fetchHexCells(url: string): Promise<HexCells> {
+  let p = hexCache.get(url);
+  if (!p) {
+    p = fetch(url).then(r => { if (!r.ok) throw new Error(`Density data unavailable (${r.status})`); return r.json() as Promise<HexCells>; });
+    p.catch(() => hexCache.delete(url));
+    hexCache.set(url, p);
   }
-  return { pitch: man?.pitch ?? 55, bearing: man?.bearing ?? -15 };
+  return p;
 }
+
+// The camera belongs to the user: density styles never set pitch, bearing or lock movement.

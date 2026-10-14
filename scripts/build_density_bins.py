@@ -6,9 +6,10 @@ Outputs small GeoJSON polygon FeatureCollections under public/data/density/
 plus a manifest for lazy zoom-band loading.
 
 Bands (MapLibre maxzoom exclusive) — thin NYC-style spikes:
-  coarse  — national  (z 0–6.5), ~18 km hex pitch
-  medium  — regional  (z 6.5–9.5), ~1.5 km
-  fine    — city      (z 9.5–12), ~400 m
+  coarse  — national  (z 0–6.5), 16 km Mercator radius (~9 km ground)
+  medium  — regional  (z 6.5–9.5), 4 km (~2.4 km ground)
+  fine    — city      (z 9.5–12), 1 km (~600 m ground)
+Hexes are built in Web Mercator metres so they are regular on screen.
 
 Only non-empty cells (count ≥ 1) are written — bins come from real points, so
 nothing is drawn over empty sea. Drawn hexes use ~93% of pitch radius so the
@@ -28,20 +29,18 @@ from typing import Any
 
 REPO = Path(__file__).resolve().parents[1]
 
-# Flat-top hexagon axial coords. `size_deg` is the *pitch* radius (vertex
-# distance) in degrees; drawn polygons use DRAW_SCALE × that so columns are
-# slightly thinner than the cell pitch (hairline seams, not grey gaps).
+# Flat-top hexagon axial coords in Web Mercator metres. `size_m` is the pitch
+# radius (vertex distance); drawn polygons use DRAW_SCALE x that (hairline seams).
 DRAW_SCALE = 0.93
 
-# ~1° lat ≈ 111 km; at 54°N 1° lon ≈ 65 km. size_deg is a compromise angular
-# radius so pitch ≈ listed km at mid-BI latitudes.
+# Fixed grid per band (each 4x the next) so levels never regroup mid-band.
 BANDS = [
     {
         "id": "coarse",
         "file": "pubs-coarse.geojson",
         "minzoom": 0,
         "maxzoom": 6.5,
-        "size_deg": 0.102,  # ~18 km pitch (chunky national columns)
+        "size_m": 16000,  # Mercator m; ~9.4 km ground radius at 54°N
         "label": "national",
         "peak_m": 7200,
     },
@@ -50,7 +49,7 @@ BANDS = [
         "file": "pubs-medium.geojson",
         "minzoom": 6.5,
         "maxzoom": 9.5,
-        "size_deg": 0.009,  # ~1.5 km pitch
+        "size_m": 4000,  # ~2.4 km ground
         "label": "regional",
         "peak_m": 1800,
     },
@@ -59,7 +58,7 @@ BANDS = [
         "file": "pubs-fine.geojson",
         "minzoom": 9.5,
         "maxzoom": 12.0,
-        "size_deg": 0.0024,  # ~400 m pitch
+        "size_m": 1000,  # ~590 m ground
         "label": "city",
         "peak_m": 900,
     },
@@ -81,28 +80,42 @@ def axial_round(q: float, r: float) -> tuple[int, int]:
     return int(rq), int(rr)
 
 
-def lonlat_to_axial(lon: float, lat: float, size: float) -> tuple[int, int]:
-    q = (2.0 / 3.0 * lon) / size
-    r = (-1.0 / 3.0 * lon + math.sqrt(3) / 3.0 * lat) / size
-    return axial_round(q, r)
+R_MERC = 6378137.0
 
 
-def axial_to_lonlat(q: int, r: int, size: float) -> tuple[float, float]:
-    lon = size * (3.0 / 2.0 * q)
-    lat = size * (math.sqrt(3) / 2.0 * q + math.sqrt(3) * r)
+def to_merc(lon: float, lat: float) -> tuple[float, float]:
+    """Web Mercator (EPSG:3857) metres — the map's own projection, so hexes
+    built here render as true regular hexagons on screen at every latitude."""
+    x = R_MERC * math.radians(lon)
+    y = R_MERC * math.log(math.tan(math.pi / 4 + math.radians(lat) / 2))
+    return x, y
+
+
+def from_merc(x: float, y: float) -> tuple[float, float]:
+    lon = math.degrees(x / R_MERC)
+    lat = math.degrees(2 * math.atan(math.exp(y / R_MERC)) - math.pi / 2)
     return lon, lat
 
 
+def lonlat_to_axial(lon: float, lat: float, size: float) -> tuple[int, int]:
+    x, y = to_merc(lon, lat)
+    q = (2.0 / 3.0 * x) / size
+    r = (-1.0 / 3.0 * x + math.sqrt(3) / 3.0 * y) / size
+    return axial_round(q, r)
+
+
+def axial_to_merc(q: int, r: int, size: float) -> tuple[float, float]:
+    return size * (3.0 / 2.0 * q), size * (math.sqrt(3) / 2.0 * q + math.sqrt(3) * r)
+
+
 def hex_polygon(q: int, r: int, pitch: float, draw: float) -> list[list[float]]:
-    """Polygon centred on the pitch cell, drawn at `draw` radius (< pitch)."""
-    cx, cy = axial_to_lonlat(q, r, pitch)
+    """Flat-top hexagon in Mercator metres, reprojected to lon/lat (5 dp ≈ 1 m)."""
+    cx, cy = axial_to_merc(q, r, pitch)
     ring: list[list[float]] = []
     for i in range(6):
         angle = math.radians(60 * i)
-        ring.append([
-            round(cx + draw * math.cos(angle), 5),
-            round(cy + draw * math.sin(angle), 5),
-        ])
+        lon, lat = from_merc(cx + draw * math.cos(angle), cy + draw * math.sin(angle))
+        ring.append([round(lon, 5), round(lat, 5)])
     ring.append(ring[0])
     return ring
 
@@ -166,13 +179,12 @@ def build_for_layer(layer: str, points_path: Path, out_dir: Path, compact: bool 
     out_dir.mkdir(parents=True, exist_ok=True)
     band_meta: list[dict[str, Any]] = []
     for band in BANDS:
-        pitch = float({"coarse": 0.102, "medium": 0.025, "fine": 0.0048}[band["id"]] if compact else band["size_deg"])
+        pitch = float(band["size_m"])
         draw = pitch * DRAW_SCALE
         cells, max_count = bin_points(features, pitch, draw)
-        if compact:
-            for cell in cells:
-                cell["properties"] = {"count": cell["properties"]["count"]}
-                cell["geometry"]["coordinates"] = [[[round(v, 4) for v in point] for point in cell["geometry"]["coordinates"][0]]]
+        binned = sum(c["properties"]["count"] for c in cells)
+        points = sum(1 for f in features if (f.get("geometry") or {}).get("type") == "Point")
+        assert binned == points, f"{layer} {band['id']}: hex total {binned} != points {points}"
         counts = sorted(c["properties"]["count"] for c in cells)
         intensities = sorted(math.sqrt(c) for c in counts)
         # Colour/height scale on p98: most cells stay low/pale; only top ~2% spike.
@@ -192,15 +204,20 @@ def build_for_layer(layer: str, points_path: Path, out_dir: Path, compact: bool 
         for i in range(1, len(colour_stops)):
             if colour_stops[i] <= colour_stops[i - 1]:
                 colour_stops[i] = round(colour_stops[i - 1] + 0.05, 4)
-        path = out_dir / band["file"].replace("pubs-", f"{layer}-")
-        payload = {"type": "FeatureCollection", "features": cells}
+        # Compact cells: flat [q, r, count, ...] axial ints. The browser rebuilds
+        # exact Mercator hexes (src/density.ts hexCells), ~20x smaller than polygons.
+        path = out_dir / band["file"].replace("pubs-", f"{layer}-").replace(".geojson", ".json")
+        flat: list[int] = []
+        for c in cells:
+            flat += [c["properties"]["q"], c["properties"]["r"], c["properties"]["count"]]
+        payload = {"size_m": pitch, "draw_scale": DRAW_SCALE, "cells": flat}
         with path.open("w", encoding="utf-8") as f:
-            json.dump(payload, f, ensure_ascii=False, separators=(",", ":"))
+            json.dump(payload, f, separators=(",", ":"))
             f.write("\n")
         size_kb = path.stat().st_size / 1024
         print(
             f"  {band['id']}: {len(cells)} cells, max={max_count}, "
-            f"scale_max={scale_max} (p98), pitch={pitch}°, draw={draw:.5f}°, "
+            f"scale_max={scale_max} (p98), pitch={pitch:.0f} m (Mercator), draw={draw:.0f} m, "
             f"colour_stops={colour_stops}, {size_kb:.1f} KB → {path.name}",
             flush=True,
         )
@@ -211,7 +228,8 @@ def build_for_layer(layer: str, points_path: Path, out_dir: Path, compact: bool 
                 "url": f"/data/density/{path.name}",
                 "minzoom": band["minzoom"],
                 "maxzoom": band["maxzoom"],
-                "size_deg": pitch,
+                "size_m": pitch,
+                "projection": "EPSG:3857",
                 "draw_scale": DRAW_SCALE,
                 "cell_count": len(cells),
                 "max_count": max_count,
@@ -230,9 +248,7 @@ def build_for_layer(layer: str, points_path: Path, out_dir: Path, compact: bool 
         "bands": band_meta,
         "ramp": RAMP,
         "legend": LEGEND,
-        "pitch": 55,
-        "bearing": -15,
-        "scaling": "sqrt",
+                "scaling": "sqrt",
         "draw_scale": DRAW_SCALE,
     }
     man_path = out_dir / f"{layer}-manifest.json"

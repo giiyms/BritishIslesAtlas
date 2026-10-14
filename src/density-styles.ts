@@ -21,7 +21,7 @@ export function styleLayerIds(id: LayerId, style: DensityStyle): string[] {
     case "points": return [id];
     case "heatmap": return [`density-heatmap-${id}`, id];
     case "auto": return [...styleLayerIds(id, "hex"), id];
-    case "hex": return levels.map(level => `density-hex-${id}-${level}`);
+    case "hex": return levels.flatMap(level => [`density-hex-${id}-${level}`, `density-hexline-${id}-${level}`]);
     case "columns": return [...levels.flatMap(level => [`density-fill-${id}-${level}`, `density-outline-${id}-${level}`]), id];
     case "constituency": return [`density-constituency-${id}`];
     case "contours": return ["national", "regional", "local"].flatMap(level => [`density-contours-${id}-${level}`, `density-contours-outline-${id}-${level}`]);

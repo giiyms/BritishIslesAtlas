@@ -7,8 +7,8 @@ from pathlib import Path
 import numpy as np
 from scipy.ndimage import gaussian_filter
 from shapely import set_precision
-from shapely.geometry import shape, Point, Polygon, mapping
-from shapely.ops import transform
+from shapely.geometry import shape, Point, Polygon, MultiPolygon, LinearRing, mapping
+from shapely.ops import transform, unary_union
 from shapely.strtree import STRtree
 import matplotlib
 matplotlib.use("Agg")
@@ -24,7 +24,7 @@ def write(name, data):
     path.write_text(json.dumps(data, separators=(",", ":")) + "\n")
 
 def rounded(value):
-    if isinstance(value, (float, np.floating)): return round(float(value), 5)
+    if isinstance(value, (float, np.floating)): return round(float(value), 4)
     if isinstance(value, (tuple, list)): return [rounded(v) for v in value]
     if isinstance(value, dict): return {k: rounded(v) for k, v in value.items()}
     return value
@@ -55,17 +55,26 @@ def contours(layer, points, band, step, sigma):
     fig, ax = plt.subplots()
     cs = ax.contourf((xs[:-1]+xs[1:])/2, (ys[:-1]+ys[1:])/2, smooth, levels=levels)
     features = []
-    for i, segments in enumerate(cs.allsegs):
-        for segment, kinds in zip(segments, cs.allkinds[i]):
-            # MOVETO separates outer rings and holes; retain both.
-            starts = np.where(kinds == 1)[0] if kinds is not None else np.array([0])
-            rings = [segment[a:b] for a,b in zip(starts, np.r_[starts[1:], len(segment)]) if b-a >= 4]
-            if not rings: continue
-            poly = Polygon(rings[0], rings[1:]).buffer(0).simplify(step*.2, preserve_topology=True)
-            if not poly.is_empty:
-                poly = set_precision(poly, 0.00001)
-                if not poly.is_empty:
-                    features.append(feature(poly, {"value": round(float(levels[i]), 4), "intensity": round(i / (len(levels)-2), 3)}))
+    # Matplotlib >= 3.10 removed allsegs/allkinds; one Path per filled band.
+    # contourpy emits each outer ring followed by its holes, with opposite winding.
+    for i, path in enumerate(cs.get_paths()):
+        if i >= len(levels) - 1: break
+        polys, outer, holes, outer_ccw = [], None, [], None
+        for ring in path.to_polygons(closed_only=True):
+            if len(ring) < 4: continue
+            ccw = LinearRing(ring).is_ccw
+            if outer_ccw is None: outer_ccw = ccw
+            if ccw == outer_ccw:
+                if outer is not None: polys.append(Polygon(outer, holes))
+                outer, holes = ring, []
+            else:
+                holes.append(ring)
+        if outer is not None: polys.append(Polygon(outer, holes))
+        geom = unary_union([p.buffer(0) for p in polys]) if polys else None
+        if geom is None or geom.is_empty: continue
+        geom = set_precision(geom.simplify(step*.25, preserve_topology=True), 0.0001)
+        if not geom.is_empty:
+            features.append(feature(geom, {"value": round(float(levels[i]), 4), "intensity": round(i / (len(levels)-2), 3)}))
     plt.close(fig)
     write(f"{layer}-contours-{band}.geojson", collection(features))
 
@@ -99,15 +108,6 @@ def main():
         write(f"{layer}-constituency.json", {f["properties"]["PCON24CD"]: {"count": n, "per_km2": round(n/a, 5)} for f,n,a in zip(seats,seat_counts,areas)})
         for band,step,sigma in [("national", .09, 1.6), ("regional", .035, 1.2), ("local", .006, 1.1)]:
             contours(layer, points, band, step, sigma)
-            source_band = {"national": "coarse", "regional": "medium", "local": "fine"}[band]
-            cells = json.loads((OUT / f"{layer}-{source_band}.geojson").read_text())["features"]
-            spikes = []
-            for cell in cells:
-                center = shape(cell["geometry"]).centroid
-                radius = {"national": .102*.16, "regional": .025*.18, "local": .0048*.25}[band]
-                ring = [(center.x+radius*math.cos(i*math.pi/3), center.y+radius*math.sin(i*math.pi/3)) for i in range(6)]
-                spikes.append(feature(Polygon(ring), cell["properties"]))
-            write(f"{layer}-spikes-{band}.geojson", collection(spikes))
         total = sum(p.stat().st_size for p in OUT.glob(f"{layer}-*"))
         print(f"{layer}: all artifacts {total/1e6:.2f} MB", flush=True)
 

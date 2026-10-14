@@ -19,7 +19,7 @@ describe("density URL state", () => {
 });
 describe("density layer mapping", () => {
   it("maps automatic view to hex levels and dots", () => {
-    expect(styleLayerIds("pubs", "auto")).toEqual(["density-hex-pubs-coarse", "density-hex-pubs-medium", "density-hex-pubs-fine", "pubs"]);
+    expect(styleLayerIds("pubs", "auto")).toEqual(["density-hex-pubs-coarse", "density-hexline-pubs-coarse", "density-hex-pubs-medium", "density-hexline-pubs-medium", "density-hex-pubs-fine", "density-hexline-pubs-fine", "pubs"]);
   });
   it("points and heatmap need no polygon layers", () => {
     expect(styleLayerIds("pubs", "points")).toEqual(["pubs"]);

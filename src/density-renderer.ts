@@ -1,7 +1,7 @@
 import { Popup, type ExpressionSpecification, type Map as MapLibreMap, type GeoJSONSourceSpecification } from "maplibre-gl";
 import type { LayerId } from "./layers";
 import { LAYERS } from "./layers";
-import { applyDensity, syncDensityBands, syncDensityPitch, densityCameraForViewport, densityLayerIds, heightExpression, type DensityManifest } from "./density";
+import { applyDensity, syncDensityBands, densityLayerIds, heightExpression, hexCells, fetchHexCells, type DensityManifest } from "./density";
 import { DENSE_LAYERS, densityNeedsPoints, styleLayerIds, type DensityStyle } from "./density-styles";
 
 const RAMP = ["#fbf3cf", "#f9d77e", "#f4a24c", "#e0452b", "#a50f15"];
@@ -16,7 +16,6 @@ export function createDensityRenderer(map: MapLibreMap, host: HTMLElement, onErr
   const pointsLoaded = new Set<LayerId>();
   let currentStyle: DensityStyle = "auto";
   let enabled: LayerId[] = [];
-  let cameraLayer: LayerId | null = null;
   let lastLegendKey = "";
   let lastMountKey = "";
   const legend = document.createElement("div");
@@ -112,7 +111,12 @@ export function createDensityRenderer(map: MapLibreMap, host: HTMLElement, onErr
         const [lo, hi, end] = ranges[i];
         if (zoom < lo-.75 || zoom > end+.75 || (style === "auto" && zoom >= 10.5)) return;
         const src = `density-src-${id}-${band.id}`;
-        if (!await source(id, style, src, band.url)) return;
+        if (!map.getSource(src)) {
+          const data = hexCells(await fetchHexCells(band.url));
+          if (!isCurrent(id, style)) return;
+          if (!map.getSource(src)) map.addSource(src, { type: "geojson", data });
+        }
+        if (!isCurrent(id, style)) return;
         const layerId = `density-hex-${id}-${band.id}`;
         if (!map.getLayer(layerId)) {
           let stops = band.colour_stops ?? [1, 2, 3, 5, 10];
@@ -128,11 +132,19 @@ export function createDensityRenderer(map: MapLibreMap, host: HTMLElement, onErr
             popup.setLngLat(event.lngLat).setText(`${LAYERS.find(l => l.id === id)?.label}: ${Number(event.features?.[0]?.properties?.count ?? 0).toLocaleString()} points in this hex`).addTo(map);
           });
         }
+        const lineId = `density-hexline-${id}-${band.id}`;
+        if (!map.getLayer(lineId)) map.addLayer({ id: lineId, type: "line", source: src, minzoom: lo, maxzoom: end,
+          paint: { "line-color": LAYERS.find(l => l.id === id)?.color ?? "#333", "line-width": 1.2 } }, id);
         // Auto ends at z10; explicit hex remains available at all zooms.
-        map.setPaintProperty(layerId, "fill-opacity", style === "auto" && i === 2
+        const fade: ExpressionSpecification = style === "auto" && i === 2
           ? ["interpolate", ["linear"], ["zoom"], lo, 0, lo+.5, .8, 10, 0]
           : i === 0 ? ["interpolate", ["linear"], ["zoom"], hi, .8, end, 0]
-          : ["interpolate", ["linear"], ["zoom"], lo, 0, lo+1, .8, hi, .8, end, 0]);
+          : ["interpolate", ["linear"], ["zoom"], lo, 0, lo+1, .8, hi, .8, end, 0];
+        // Two dense layers on: only the first gets coloured fills; the others draw hex outlines
+        // in their layer colour, so fills never blend into a misleading mixed colour.
+        const secondary = enabled.indexOf(id) > 0;
+        map.setPaintProperty(layerId, "fill-opacity", secondary ? 0 : fade);
+        map.setPaintProperty(lineId, "line-opacity", secondary ? fade : 0);
       }));
     } else if (style === "constituency") {
       const values = await fetchData<Record<string, { count: number; per_km2: number }>>(`/data/density/${id}-constituency.json`);
@@ -151,7 +163,15 @@ export function createDensityRenderer(map: MapLibreMap, host: HTMLElement, onErr
         const range = [{ minzoom: 0, maxzoom: 7 }, { minzoom: 7, maxzoom: 9 }, { minzoom: 9, maxzoom: 24 }][i];
         if (zoom < range.minzoom - .75 || zoom >= range.maxzoom + .75) return;
         const src = `density-${style}-src-${id}-${band}`;
-        if (!await source(id, style, src, `/data/density/${id}-${style}-${band}.geojson`)) return;
+        if (style === "spikes") {
+          // Spikes are thin regular hexes at each hex-cell centre, derived in the browser from
+          // the hex band (no separate download).
+          if (!map.getSource(src)) {
+            const cells = await fetchHexCells(man!.bands[i].url);
+            if (!isCurrent(id, style)) return;
+            if (!map.getSource(src)) map.addSource(src, { type: "geojson", data: hexCells(cells, [.17, .2, .27][i]) });
+          }
+        } else if (!await source(id, style, src, `/data/density/${id}-${style}-${band}.geojson`)) return;
         const layerId = `density-${style}-${id}-${band}`;
         if (!map.getLayer(layerId)) {
           if (style === "spikes") map.addLayer({ id: layerId, type: "fill-extrusion", source: src, ...range,
@@ -195,13 +215,6 @@ export function createDensityRenderer(map: MapLibreMap, host: HTMLElement, onErr
       label.textContent = (showingPoints ? "Every point" : units(style)) + (showingPoints ? "" : style === "constituency" ? " · 0 → 2+" : " · Low → High");
       legend.append(title, ramp, label);
     }
-    }
-    const nextCameraLayer = (style === "columns" && map.getZoom() < 12) || style === "spikes" ? layers[0] ?? null : null;
-    const camera = densityCameraForViewport(null);
-    const pitchDrift = Math.abs(map.getPitch() - (nextCameraLayer ? camera.pitch! : 0)) > 1;
-    if (cameraLayer !== nextCameraLayer || (pitchDrift && !map.isMoving())) {
-      cameraLayer = nextCameraLayer;
-      syncDensityPitch(map, cameraLayer, camera);
     }
     // Re-mount only when style/layers change or a half-zoom step is crossed.
     const mountKey = `${style}|${layers.join()}|${Math.floor(zoom * 2)}`;
