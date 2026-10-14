@@ -794,7 +794,9 @@ button { cursor: pointer; }
 
 .density-legend {
   position: absolute;
-  left: 12px;
+  /* Keep the key clear of the zoom buttons and centre scale. */
+  right: 12px;
+  max-width: min(330px, calc(100vw - 80px));
   bottom: 52px;
   z-index: 4;
   min-width: 132px;
@@ -819,5 +821,11 @@ button { cursor: pointer; }
   color: #5a6570;
 }
 @media (max-width: 860px) {
-  .density-legend { left: 8px; bottom: 64px; min-width: 110px; padding: 6px 8px; }
+  .density-legend { right: 8px; bottom: 64px; min-width: 110px; padding: 6px 8px; }
 }
+
+.density-picker { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 8px 12px; font-size: 12px; }
+.density-picker[hidden], .density-legend[hidden] { display: none; }
+.density-picker select { max-width: 170px; min-height: 30px; border: 1px solid #aab4bd; border-radius: 6px; padding: 3px 6px; background: #fff; color: #263442; font: inherit; }
+.density-picker select:focus-visible { outline: 2px solid #247b91; outline-offset: 2px; }
+.panel.collapsed .density-picker { display: none; }

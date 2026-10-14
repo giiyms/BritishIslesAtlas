@@ -160,15 +160,19 @@ def bin_points(
     return out, max_count
 
 
-def build_for_layer(layer: str, points_path: Path, out_dir: Path) -> dict[str, Any]:
+def build_for_layer(layer: str, points_path: Path, out_dir: Path, compact: bool = False) -> dict[str, Any]:
     fc = json.loads(points_path.read_text(encoding="utf-8"))
     features = fc.get("features") or []
     out_dir.mkdir(parents=True, exist_ok=True)
     band_meta: list[dict[str, Any]] = []
     for band in BANDS:
-        pitch = float(band["size_deg"])
+        pitch = float({"coarse": 0.102, "medium": 0.025, "fine": 0.0048}[band["id"]] if compact else band["size_deg"])
         draw = pitch * DRAW_SCALE
         cells, max_count = bin_points(features, pitch, draw)
+        if compact:
+            for cell in cells:
+                cell["properties"] = {"count": cell["properties"]["count"]}
+                cell["geometry"]["coordinates"] = [[[round(v, 4) for v in point] for point in cell["geometry"]["coordinates"][0]]]
         counts = sorted(c["properties"]["count"] for c in cells)
         intensities = sorted(math.sqrt(c) for c in counts)
         # Colour/height scale on p98: most cells stay low/pale; only top ~2% spike.
@@ -248,12 +252,13 @@ def main() -> int:
         type=Path,
         default=REPO / "public" / "data" / "density",
     )
+    ap.add_argument("--compact", action="store_true", help="Count-only bins with rounded coordinates and sub-km city cells")
     args = ap.parse_args()
     points = args.points or (REPO / "public" / "data" / f"{args.layer}.geojson")
     if not points.exists():
         raise SystemExit(f"Missing points file: {points}")
     print(f"Binning {points} …", flush=True)
-    build_for_layer(args.layer, points, args.out_dir)
+    build_for_layer(args.layer, points, args.out_dir, args.compact)
     return 0
 
 

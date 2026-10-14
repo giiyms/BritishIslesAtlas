@@ -805,3 +805,50 @@ Builds precomputed flat-top hex density GeoJSON for a point layer (pubs in
 this PR) under `public/data/density/`, plus a zoom-band manifest for lazy
 load. Generic — pass `--layer` once that layer has a point GeoJSON.
 
+
+## `build_density_styles.py`
+
+Prebuilds all Density style artifacts, without network access:
+
+```bash
+python3 scripts/build_density_styles.py --counts-only
+python3 scripts/build_density_styles.py
+# Rebuild selected dense layers only:
+python3 scripts/build_density_styles.py --layer pubs --layer places-of-worship
+```
+
+Only pubs and places-of-worship (the ~40k-point layers) get density artifacts, to cap committed size; other layers render as plain points.
+Keep `DENSE_LAYERS` in `src/density-styles.ts` in sync
+with the audit. Current counts: beaches 8,846; community centres 16,909;
+EV chargers 9,420; memorials 14,851; petrol 10,267; pharmacies 10,310;
+places of worship 43,032; post offices 9,784; pubs 43,184; sports centres 10,726.
+
+The builder calls `build_density_bins.build_for_layer(..., compact=True)`
+(equivalent to `python3 scripts/build_density_bins.py --layer <id> --compact`)
+for each layer. These non-empty, count-only hex cells are shared by flat hex
+and column styles. Compact radii are 0.102°, 0.025°, 0.0048° (sub-km city cells); coordinates use
+four decimals. Count-only properties and rounded geometry keep national first-load bands below 1 MB;
+Auto hands over to every-point dots at z9–10 for local detail. Columns keep
+the existing z12 dot handoff, quantile colours and screen-scaled heights.
+
+Additional `<layer>-constituency.json` files contain count and `per_km2`,
+keyed by `PCON24CD`. Points intersecting a shared boundary are assigned once.
+Areas use a spherical Lambert azimuthal equal-area projection centred on GB
+(radius 6,371,008.8 m). The join covers GB's 2024 seats only; points elsewhere
+are excluded. This is density by area, not population.
+
+`<layer>-contours-{national,regional,local}.geojson` contains simplified isobands
+from Gaussian-smoothed 0.09° / 0.035° / 0.006° point histograms (sigma 1.6 / 1.2 / 1.1 cells).
+The local band starts at z9. Per-band quantile intensity drives the colour ramp.
+Values are smoothed points per grid cell, not points per km². Rings retain
+holes; smoothing can extend slightly beyond the coast. Thin spike polygons
+at the centres of coarse/medium/fine bins are written as
+`<layer>-spikes-{national,regional,local}.geojson`. Counts sum to the source point
+count for each hex and spike level. All additional geometry uses five-decimal
+coordinates. Generated artifacts belong in version control.
+
+The UI offers all eight named values (including Auto), persisted as `density`
+in the URL. Auto is the default and removes that parameter. Only active dense
+layers load artifacts, and each style loads only its required files. Hex,
+column, contour and spike bands load near their zoom window; points and
+heatmap need no density artifacts. One legend describes the selected mode.

@@ -30,20 +30,9 @@ import { ENDORSE_COLORS } from "./endorse";
 import { singularLabel } from "./layer-groups";
 import { PLACES } from "./geo";
 import { mountVotingLegend, showVotingToast, hideVotingToast } from "./voting-ui";
-import {
-  DENSITY_ENABLED,
-  applyDensity,
-  setDensityVisibility,
-  densityLayerIds,
-  densityActive,
-  syncDensityPitch,
-  densityCameraForViewport,
-  mountDensityLegend,
-  densityDotMinZoom,
-  densityPointsNear,
-  syncDensityBands,
-  type DensityManifest,
-} from "./density";
+import { DENSE_LAYERS, parseDensityStyle, serializeDensityStyle, type DensityStyle } from "./density-styles";
+import type { createDensityRenderer } from "./density-renderer";
+const DENSITY_ENABLED = new Set<LayerId>(DENSE_LAYERS);
 
 export const HOME_BOUNDS: [[number, number], [number, number]] = [
   [-12.2, 49.35],
@@ -99,19 +88,6 @@ const NON_GB_LABEL = {
 /** Hillshade opacity: gray altitude (fix 4) vs capped texture in voting mode (fix 2). */
 const HILLSHADE_OPACITY: ExpressionSpecification = ["interpolate", ["linear"], ["zoom"], 4, 0.9, 7, 0.9, 10, 0.62, 14, 0.4];
 const HILLSHADE_OPACITY_VOTING = 0.35;
-
-/** Pubs-density basemap override (cream land / saturated water / quiet relief). */
-const DENSITY_LAND = "#f7efd2";
-const DEFAULT_LAND = "#eef0f1";
-const DENSITY_WATER = "#6f9fcf";
-const DEFAULT_WATER = "#d6dee6";
-const DENSITY_COAST = "#3f6f9f";
-const DEFAULT_COAST = "#9aa5b1";
-const DENSITY_COAST_OPACITY = 0.9;
-const DEFAULT_COAST_OPACITY = 0.7;
-const DENSITY_HILLSHADE = 0.2;
-const DENSITY_LIGHT = { anchor: "map" as const, position: [1.5, 300, 35] as [number, number, number], color: "#ffffff", intensity: 0.65 };
-const DEFAULT_LIGHT = { anchor: "viewport" as const, position: [1.15, 210, 30] as [number, number, number], color: "#ffffff", intensity: 0.5 };
 
 const STYLE: StyleSpecification = {
   version: 8,
@@ -211,14 +187,6 @@ const ATTRIBUTION =
   '© Esri · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap</a>' +
   ' · <a href="https://openmaptiles.org/" target="_blank" rel="noopener noreferrer">OpenMapTiles</a>' +
   " · Contains OS & ONS data © Crown 2024 (OGL)";
-
-/** Cluster radius scales with sqrt(count) so 250 and 862 no longer render the same (fix 8). */
-const CLUSTER_STOPS = [1.7, 9, 5, 13, 15, 19, 30, 26] as const;
-const clusterRadius = (extra = 0): ExpressionSpecification => [
-  "interpolate", ["linear"], ["sqrt", ["get", "point_count"]],
-  CLUSTER_STOPS[0], CLUSTER_STOPS[1] + extra, CLUSTER_STOPS[2], CLUSTER_STOPS[3] + extra,
-  CLUSTER_STOPS[4], CLUSTER_STOPS[5] + extra, CLUSTER_STOPS[6], CLUSTER_STOPS[7] + extra,
-];
 
 /** Chip icons replace the generic marker shapes from this zoom (fix 8). */
 const ICON_MINZOOM = 11;
@@ -393,6 +361,8 @@ function motionDuration(ms: number): number {
 export interface Atlas {
   map: MapLibreMap;
   isOn: (id: LayerId) => boolean;
+  getDensityStyle: () => DensityStyle;
+  setDensityStyle: (style: DensityStyle) => void;
   setLayer: (id: LayerId, on: boolean) => void;
   zoomIn: () => void;
   zoomOut: () => void;
@@ -469,11 +439,9 @@ export function createAtlas(container: HTMLElement): Atlas {
   let enrichedSeats: VotingFeatureCollection | null = null;
   /** User chose "Show" on the voting toast: keep context layers visible. */
   let showOthers = false;
-  const densityHost = container.parentElement ?? document.body;
-  let densityLegend: { setVisible: (on: boolean) => void; destroy: () => void } | null = null;
-  let densityManifest: DensityManifest | null = null;
-  let densityBasemapOn = false;
-  const densityPointsLoaded = new Set<LayerId>();
+  let densityStyle = parseDensityStyle(window.location.search);
+  let densityRenderer: ReturnType<typeof createDensityRenderer> | undefined;
+  let densityLoading: Promise<void> | undefined;
   let selected: string | null = null;
   function setSelected(code: string | null) {
     selected = code;
@@ -565,12 +533,8 @@ export function createAtlas(container: HTMLElement): Atlas {
   }
   const ordered = [...LAYERS].sort((a, b) => a.z - b.z);
   const OSM_STATIC = new Set<LayerId>(["petrol", "ev", "power", "hospitals", "fire-stations", "police", "castles", "libraries", "universities", "museums", "railway-stations", "aerodromes", "ferry-terminals", "marinas", "zoos", "theatres", "battlefields", "cinemas", "stadiums", "theme-parks", "viewpoints", "arts-centres", "aquariums", "piers", "ruins", "golf-courses", "galleries", "marketplaces", "nature-reserves", "camp-sites", "memorials", "sports-centres", "caravan-sites", "fitness-centres", "community-centres", "playgrounds", "post-offices", "beaches", "swimming-pools", "pharmacies", "townhalls", "places-of-worship", "lighthouses", "courthouses", "nightclubs", "windmills", "prisons", "clinics", "dentists", "pubs"]);
-  const clustered = new Set<LayerId>([
-    "pubs", "schools", "churches", "post-offices", "mosques", "other-religious", "petrol", "ev", "power", "hospitals", "fire-stations", "police", "castles", "libraries", "universities", "museums", "railway-stations", "aerodromes", "ferry-terminals", "marinas", "zoos", "theatres", "battlefields", "cinemas", "stadiums", "theme-parks", "viewpoints", "arts-centres", "aquariums", "piers", "ruins", "golf-courses", "galleries", "marketplaces", "nature-reserves", "camp-sites", "memorials", "sports-centres", "caravan-sites", "fitness-centres", "community-centres", "playgrounds", "beaches", "swimming-pools", "pharmacies", "townhalls", "places-of-worship", "lighthouses", "courthouses", "nightclubs", "windmills", "prisons", "clinics", "dentists",
-    "census", "weather", "crime", "legends",
-  ]);
   const minZoom = (id: LayerId) => {
-    if (DENSITY_ENABLED.has(id)) return densityDotMinZoom(id) ?? 12;
+    if (DENSITY_ENABLED.has(id)) return 0;
     if (id === "post-offices") return 7;
     return ["schools", "churches", "other-religious", "mosques", "petrol", "ev", "libraries", "universities", "museums", "railway-stations", "aerodromes", "ferry-terminals", "marinas", "zoos", "theatres", "battlefields", "cinemas", "stadiums", "theme-parks", "viewpoints", "arts-centres", "aquariums", "piers", "ruins", "golf-courses", "galleries", "marketplaces", "nature-reserves", "camp-sites", "memorials", "sports-centres", "caravan-sites", "fitness-centres", "community-centres", "playgrounds", "beaches", "swimming-pools", "pharmacies", "townhalls", "places-of-worship", "lighthouses", "courthouses", "nightclubs", "windmills", "prisons", "clinics", "dentists"].includes(id) ? 6 : 0;
   };
@@ -582,9 +546,7 @@ export function createAtlas(container: HTMLElement): Atlas {
     const layer = LAYERS.find((item) => item.id === id)!;
     const ids: string[] = [id];
     if (id === "hospitals") ids.push("hospitals-hi");
-    if (hasIcon(layer)) ids.push(`${id}-icon`);
-    if (clustered.has(id)) ids.push(`${id}-cluster-halo`, `${id}-cluster`, `${id}-cluster-count`);
-    if (DENSITY_ENABLED.has(id)) ids.push(...densityLayerIds(id));
+    if (hasIcon(layer) && !DENSITY_ENABLED.has(id)) ids.push(`${id}-icon`);
     return ids;
   };
   const beforeFor = (z: number): string | undefined => {
@@ -621,34 +583,30 @@ export function createAtlas(container: HTMLElement): Atlas {
   const add = (id: LayerId) => {
     if (map.getLayer(id)) return;
     const layer = LAYERS.find((item) => item.id === id)!;
-    const clusters = clustered.has(id);
     if (!map.getSource(id)) {
       const sourceData =
         id === "constituencies"
           ? "/data/constituencies-gb-2024.geojson"
-          : DENSITY_ENABLED.has(id) && !densityPointsNear(id, map.getZoom())
-            // Density layers: the (large) point file waits until dots are near (syncDensityLazy).
+          : DENSITY_ENABLED.has(id)
+            // The renderer loads every-point data only when the chosen view needs dots.
             ? { type: "FeatureCollection" as const, features: [] }
             : OSM_STATIC.has(id)
               ? `/data/${id}.geojson`
               : buildCollection(id);
-      if (DENSITY_ENABLED.has(id) && typeof sourceData === "string") densityPointsLoaded.add(id);
       // Source credits live in the single ATTRIBUTION line (fix 10), not per source.
       map.addSource(id, {
         type: "geojson",
         data: sourceData,
         ...(id === "constituencies" ? { promoteId: "PCON24CD" } : {}),
-        // maxzoom stays one above clusterMaxZoom so the last zoom is unclustered.
-        ...(clusters ? { cluster: true, clusterRadius: 64, clusterMaxZoom: 12, clusterMinPoints: 4,
-          maxzoom: 13, buffer: 64, tolerance: 0.5 } : {}),
       });
     }
     const before = beforeFor(layer.z);
     const visible = state[id] ? "visible" : "none";
     const layout = { visibility: visible } as const;
-    const pointFilter: { filter?: FilterSpecification } =
-      clusters ? { filter: ["!", ["has", "point_count"]] } : {};
-    if (layer.kind === "fill") {
+    if (DENSITY_ENABLED.has(id)) {
+      map.addLayer({ id, type: "circle", source: id, layout,
+        paint: { "circle-color": layer.color, "circle-radius": 1, "circle-opacity": 0 } }, before);
+    } else if (layer.kind === "fill") {
       const isConstituencies = id === "constituencies";
       map.addLayer({
         id,
@@ -723,8 +681,7 @@ export function createAtlas(container: HTMLElement): Atlas {
         "circle-opacity": 0.95, "circle-stroke-width": 0.8,
         "circle-stroke-color": "rgba(255,255,255,0.92)",
       };
-      map.addLayer({ id, type: "circle", source: id, layout, ...pointFilter,
-        minzoom: minZoom(id), ...(hasIcon(layer) ? { maxzoom: ICON_MINZOOM } : {}), paint }, before);
+      map.addLayer({ id, type: "circle", source: id, layout,         minzoom: minZoom(id), ...(hasIcon(layer) ? { maxzoom: ICON_MINZOOM } : {}), paint }, before);
     } else if (SYMBOL_KINDS.has(layer.kind)) {
       if (!map.hasImage(`${id}-mark`)) {
         map.addImage(`${id}-mark`, markerImage(layer.kind, layer.color), { pixelRatio: 2 });
@@ -734,46 +691,15 @@ export function createAtlas(container: HTMLElement): Atlas {
       map.addLayer({ id, type: "symbol", source: id, layout: {
         ...layout, "icon-image": `${id}-mark`, "icon-size": iconSize(layer.pointScale),
         "icon-allow-overlap": false,
-      }, ...pointFilter, minzoom: minZoom(id), maxzoom: isHospitals ? 10 : ICON_MINZOOM }, before);
+      }, minzoom: minZoom(id), maxzoom: isHospitals ? 10 : ICON_MINZOOM }, before);
       if (isHospitals) {
         map.addLayer({ id: "hospitals-hi", type: "symbol", source: id, layout: {
           ...layout, "icon-image": `${id}-mark`, "icon-size": iconSize(layer.pointScale),
           "icon-allow-overlap": true, "icon-ignore-placement": true,
-        }, ...pointFilter, minzoom: 10, maxzoom: ICON_MINZOOM }, before);
+        }, minzoom: 10, maxzoom: ICON_MINZOOM }, before);
       }
     }
-    if (hasIcon(layer)) addIconLayer(id, pointFilter.filter);
-    if (clusters) {
-      // White separator ring 1.5px wider, so overlapping clusters from different layers stay apart.
-      map.addLayer({ id: `${id}-cluster-halo`, type: "circle", source: id,
-        filter: ["has", "point_count"], minzoom: minZoom(id), layout,
-        paint: { "circle-radius": clusterRadius(1.5), "circle-color": "#ffffff", "circle-opacity": 0.95 },
-      }, before);
-      map.addLayer({ id: `${id}-cluster`, type: "circle", source: id,
-        filter: ["has", "point_count"], minzoom: minZoom(id), layout,
-        paint: { "circle-radius": clusterRadius(), "circle-color": layer.tint, "circle-opacity": 0.92,
-          "circle-stroke-width": 1.5, "circle-stroke-color": layer.accent },
-      }, before);
-      // Counts only from 10 up; smaller clusters read as plain dots.
-      map.addLayer({ id: `${id}-cluster-count`, type: "symbol", source: id,
-        filter: ["all", ["has", "point_count"], [">=", ["get", "point_count"], 10]], minzoom: minZoom(id),
-        layout: { ...layout, "text-field": ["get", "point_count_abbreviated"],
-          "text-font": ["Noto Sans Regular"],
-          "text-size": ["step", ["get", "point_count"], 11, 100, 12] },
-        paint: { "text-color": layer.accent },
-      }, before);
-    }
-    if (DENSITY_ENABLED.has(id) && state[id] && !paused(id)) {
-      void applyDensity(map, id, true, before).then((man) => {
-        // Voting may have muted the layer while the manifest was in flight.
-        setDensityVisibility(map, id, state[id] && !paused(id));
-        if (id === "pubs" && man) {
-          densityManifest = man;
-          if (!densityLegend) densityLegend = mountDensityLegend(densityHost, man);
-          refreshDensityCamera();
-        }
-      });
-    }
+    if (hasIcon(layer) && !DENSITY_ENABLED.has(id)) addIconLayer(id, undefined);
   };
   const votingOn = () => state.constituencies;
   const paused = (id: LayerId) => votingOn() && !showOthers && VOTING_MUTED.has(id);
@@ -784,21 +710,7 @@ export function createAtlas(container: HTMLElement): Atlas {
     for (const layerId of layerIds(id)) {
       if (map.getLayer(layerId)) map.setLayoutProperty(layerId, "visibility", visibility);
     }
-    if (DENSITY_ENABLED.has(id)) {
-      setDensityVisibility(map, id, shown);
-      if (shown && loaded) {
-        void applyDensity(map, id, shown, beforeFor(LAYERS.find((l) => l.id === id)!.z)).then((man) => {
-          setDensityVisibility(map, id, state[id] && !paused(id));
-          if (id === "pubs" && man) {
-            densityManifest = man;
-            if (!densityLegend) densityLegend = mountDensityLegend(densityHost, man);
-            refreshDensityCamera();
-          }
-        });
-      } else {
-        refreshDensityCamera();
-      }
-    }
+    refreshDensity();
   };
   /** Voting view: pause context layers, cap relief, mask non-GB land, show legend (fix 2). */
   const applyVotingMode = (announce: boolean) => {
@@ -808,7 +720,7 @@ export function createAtlas(container: HTMLElement): Atlas {
     if (map.getLayer("density-glow")) {
       map.setLayoutProperty("density-glow", "visibility", muteOthers ? "none" : "visible");
     }
-    if (map.getLayer("hillshade") && !densityBasemapOn) {
+    if (map.getLayer("hillshade")) {
       map.setPaintProperty("hillshade", "raster-opacity", on ? HILLSHADE_OPACITY_VOTING : HILLSHADE_OPACITY);
     }
     for (const layerId of ["non-gb-land", "non-gb-label"]) {
@@ -840,9 +752,7 @@ export function createAtlas(container: HTMLElement): Atlas {
   const NON_INTERACTIVE = new Set<string>(CONSTITUENCY_LAYERS.filter((id) =>
     id !== "constituencies" && id !== "restore-callout-dot"));
   const interactiveIds = () => ordered.flatMap((layer) => layerIds(layer.id))
-    .filter((id) => id !== "roads" && !id.endsWith("-cluster-count") && !id.endsWith("-cluster-halo")
-      && !id.startsWith("density-")
-      && !NON_INTERACTIVE.has(id) && !!map.getLayer(id));
+    .filter((id) => id !== "roads" && !NON_INTERACTIVE.has(id) && !!map.getLayer(id));
   const seatFallbackHtml = (name: string, code: string) =>
     `<strong class="popup-title">${escapeHtml(name)}</strong>` +
     (code ? `<div class="popup-meta">${escapeHtml(code)}</div>` : "");
@@ -897,53 +807,19 @@ export function createAtlas(container: HTMLElement): Atlas {
     reformColor: ENDORSE_COLORS.reform.fill,
     onRestore: flyToRestore,
   });
-  /** Lazy density data: mount bands / point file only as the camera approaches them. */
-  const syncDensityLazy = () => {
+  const refreshDensity = () => {
     if (!loaded) return;
-    for (const id of DENSITY_ENABLED) {
-      if (!state[id] || paused(id)) continue;
-      syncDensityBands(map, id, true);
-      if (!densityPointsLoaded.has(id) && densityPointsNear(id, map.getZoom())) {
-        const src = map.getSource(id) as import("maplibre-gl").GeoJSONSource | undefined;
-        if (src) {
-          densityPointsLoaded.add(id);
-          src.setData(`/data/${id}.geojson`);
-        }
-      }
-    }
-  };
-  const applyDensityBasemap = (on: boolean) => {
-    if (on === densityBasemapOn) return;
-    densityBasemapOn = on;
-    if (map.getLayer("land")) {
-      map.setPaintProperty("land", "background-color", on ? DENSITY_LAND : DEFAULT_LAND);
-    }
-    if (map.getLayer("water")) {
-      map.setPaintProperty("water", "fill-color", on ? DENSITY_WATER : DEFAULT_WATER);
-    }
-    if (map.getLayer("water-coast")) {
-      map.setPaintProperty("water-coast", "line-color", on ? DENSITY_COAST : DEFAULT_COAST);
-      map.setPaintProperty("water-coast", "line-opacity", on ? DENSITY_COAST_OPACITY : DEFAULT_COAST_OPACITY);
-    }
-    if (map.getLayer("hillshade")) {
-      if (on) {
-        map.setPaintProperty("hillshade", "raster-opacity", DENSITY_HILLSHADE);
-      } else {
-        map.setPaintProperty(
-          "hillshade",
-          "raster-opacity",
-          votingOn() ? HILLSHADE_OPACITY_VOTING : HILLSHADE_OPACITY,
-        );
-      }
-    }
-    map.setLight(on ? DENSITY_LIGHT : DEFAULT_LIGHT);
-  };
-  const refreshDensityCamera = () => {
-    const pubsOn = state.pubs && !paused("pubs");
-    const active = densityActive(map, "pubs", pubsOn) ? "pubs" as LayerId : null;
-    syncDensityPitch(map, active, densityCameraForViewport(densityManifest));
-    applyDensityBasemap(!!active);
-    densityLegend?.setVisible(!!active);
+    const active = DENSE_LAYERS.filter(id => state[id] && !paused(id));
+    window.dispatchEvent(new CustomEvent("atlas:density-layers", { detail: active }));
+    if (densityRenderer) { densityRenderer.update(densityStyle, active); return; }
+    if (!active.length || densityLoading) return;
+    densityLoading = import("./density-renderer").then(({ createDensityRenderer }) => {
+      densityRenderer = createDensityRenderer(map, container.parentElement ?? document.body, message => {
+        console.warn(message);
+        showVotingToast("Density data could not load", "Retry", refreshDensity);
+      });
+      refreshDensity();
+    }).finally(() => { densityLoading = undefined; });
   };
   let hovered: string | null = null;
   const setHovered = (code: string | null) => {
@@ -961,16 +837,6 @@ export function createAtlas(container: HTMLElement): Atlas {
   map.on("click", async (event) => {
     const feature = topFeature(event.point);
     if (!feature) return;
-    if (feature.layer.id.endsWith("-cluster")) {
-      const source = map.getSource(feature.layer.source) as import("maplibre-gl").GeoJSONSource;
-      const clusterId = Number(feature.properties?.cluster_id);
-      if (Number.isFinite(clusterId)) {
-        const zoom = await source.getClusterExpansionZoom(clusterId);
-        const center = feature.geometry.type === "Point" ? feature.geometry.coordinates as [number, number] : event.lngLat;
-        map.easeTo({ center, zoom, duration: motionDuration(450) });
-      }
-      return;
-    }
     const properties = feature.properties as Record<string, unknown>;
     const layerId = String(properties.layer ?? feature.source ?? "");
     const layer = LAYERS.find((item) => item.id === layerId);
@@ -1028,15 +894,21 @@ export function createAtlas(container: HTMLElement): Atlas {
     }, "population");
     for (const layer of ordered) if (state[layer.id] && !paused(layer.id)) add(layer.id);
     applyVotingMode(false);
-    map.on("zoom", syncDensityLazy);
-    map.on("zoomend", refreshDensityCamera);
-    map.on("pitchend", () => { /* keep legend in sync with densityActive */ refreshDensityCamera(); });
-    map.once("idle", () => { document.body.dataset.mapReady = "true"; refreshDensityCamera(); });
+    map.on("zoom", refreshDensity);
+    map.on("zoomend", refreshDensity);
+
+    map.once("idle", () => { document.body.dataset.mapReady = "true"; refreshDensity(); });
   });
 
   return {
     map,
     isOn: (id) => state[id],
+    getDensityStyle: () => densityStyle,
+    setDensityStyle: style => {
+      densityStyle = style;
+      window.history.replaceState(window.history.state, "", serializeDensityStyle(window.location.href, style));
+      refreshDensity();
+    },
     setLayer: (id, on) => {
       const was = state[id];
       state[id] = on;
