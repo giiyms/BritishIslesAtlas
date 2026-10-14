@@ -1044,3 +1044,30 @@ html[data-basemap="dark"] body { background: #0e1116; }
 
   .panel { border-radius: 22px 22px 0 0; }
 }
+
+/* ------------------------------------------------------------------ Snapchat slab theme */
+.slab-compass, .slab-tilt { display: none; }
+html[data-basemap="relief"] body:not(.election-mode) .slab-compass {
+  display: block; position: absolute; left: 18px; bottom: 26px; z-index: 2; pointer-events: none;
+  filter: drop-shadow(0 2px 6px rgba(20, 60, 120, 0.35));
+}
+html[data-basemap="relief"] body:not(.election-mode) .slab-tilt {
+  display: block; position: absolute; right: 18px; bottom: 168px; z-index: 3;
+  padding: 7px 12px; border: 0; border-radius: 999px; font: 600 12px/1 ui-rounded, "Nunito", system-ui, sans-serif;
+  color: #2b2b33; background: rgba(255, 255, 255, 0.86); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12); cursor: pointer;
+  backdrop-filter: blur(14px);
+}
+html[data-basemap="relief"] .slab-tilt[aria-pressed="true"] { background: #2b2b33; color: #fff; }
+html[data-basemap="relief"] #map, html[data-basemap="relief"] #map canvas { background: #F3EEDF; }
+html[data-basemap="relief"] body:not(.election-mode) .panel {
+  background: rgba(255, 255, 255, 0.68) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(1.5); backdrop-filter: blur(22px) saturate(1.5);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+}
+html[data-basemap="relief"] .search { border-radius: 999px; background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(16px); }
+html[data-basemap="relief"] .nav-group { border-radius: 16px; background: #fff; }
+html[data-basemap="relief"] body:not(.election-mode) .slab-compass { left: 282px; }
+@media (max-width: 860px) {
+  html[data-basemap="relief"] body:not(.election-mode) .slab-compass { left: 10px; bottom: calc(var(--sheet-h, 120px) + 10px); }
+  html[data-basemap="relief"] body:not(.election-mode) .slab-tilt { bottom: calc(var(--sheet-h, 120px) + 150px); }
+}
