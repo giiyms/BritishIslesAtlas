@@ -1,0 +1,90 @@
+{
+  "layer": "places-of-worship",
+  "point_count": 43032,
+  "point_url": "/data/places-of-worship.geojson",
+  "dot_minzoom": 12.0,
+  "bands": [
+    {
+      "id": "coarse",
+      "file": "places-of-worship-coarse.geojson",
+      "url": "/data/density/places-of-worship-coarse.geojson",
+      "minzoom": 0,
+      "maxzoom": 6.5,
+      "size_deg": 0.102,
+      "draw_scale": 0.93,
+      "cell_count": 1764,
+      "max_count": 977,
+      "scale_max": 214,
+      "intensity_max": 14.6287,
+      "colour_stops": [
+        1.0,
+        3.3166,
+        5.831,
+        9.2736,
+        14.3875
+      ],
+      "peak_m": 7200,
+      "label": "national"
+    },
+    {
+      "id": "medium",
+      "file": "places-of-worship-medium.geojson",
+      "url": "/data/density/places-of-worship-medium.geojson",
+      "minzoom": 6.5,
+      "maxzoom": 9.5,
+      "size_deg": 0.025,
+      "draw_scale": 0.93,
+      "cell_count": 13064,
+      "max_count": 96,
+      "scale_max": 21,
+      "intensity_max": 4.5826,
+      "colour_stops": [
+        1.0,
+        1.4142,
+        2.0,
+        3.3166,
+        5.2915
+      ],
+      "peak_m": 1800,
+      "label": "regional"
+    },
+    {
+      "id": "fine",
+      "file": "places-of-worship-fine.geojson",
+      "url": "/data/density/places-of-worship-fine.geojson",
+      "minzoom": 9.5,
+      "maxzoom": 12.0,
+      "size_deg": 0.0048,
+      "draw_scale": 0.93,
+      "cell_count": 30918,
+      "max_count": 19,
+      "scale_max": 8,
+      "intensity_max": 2.8284,
+      "colour_stops": [
+        1.0,
+        1.05,
+        1.4142,
+        1.7321,
+        2.4495
+      ],
+      "peak_m": 900,
+      "label": "city"
+    }
+  ],
+  "ramp": [
+    "#fbf3cf",
+    "#f9d77e",
+    "#f4a24c",
+    "#e0452b",
+    "#a50f15"
+  ],
+  "legend": [
+    "Low",
+    "Medium",
+    "High"
+  ],
+  "pitch": 55,
+  "bearing": -15,
+  "scaling": "sqrt",
+  "draw_scale": 0.93
+}

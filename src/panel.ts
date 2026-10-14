@@ -1,3 +1,4 @@
+import { DENSE_LAYERS, DENSITY_STYLES, type DensityStyle } from "./density-styles";
 import { ICONS } from "./icons";
 import { LAYERS, isLayerId, type LayerDef, type LayerId } from "./layers";
 import { LAYER_SECTIONS } from "./layer-groups";
@@ -69,6 +70,8 @@ export function mountPanel(
     isOn: (id: LayerId) => boolean;
     setOn: (id: LayerId, on: boolean) => void;
     onRestore?: () => void;
+    getDensityStyle: () => DensityStyle;
+    setDensityStyle: (style: DensityStyle) => void;
   },
 ): void {
   root.innerHTML = `
@@ -90,6 +93,25 @@ export function mountPanel(
   const clear = root.querySelector<HTMLButtonElement>(".status-clear");
   const toggle = root.querySelector<HTMLButtonElement>(".panel-toggle");
   if (!body || !count || !clear || !toggle) return;
+
+  const densityControl = document.createElement("label");
+  densityControl.className = "density-picker";
+  densityControl.textContent = "Density style";
+  const densitySelect = document.createElement("select");
+  densitySelect.setAttribute("aria-label", "Density style");
+  for (const value of DENSITY_STYLES) {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = value === "auto" ? "Auto (hex → points)" : value[0].toUpperCase() + value.slice(1);
+    densitySelect.append(option);
+  }
+  densitySelect.value = options.getDensityStyle();
+  densitySelect.addEventListener("change", () => options.setDensityStyle(densitySelect.value as DensityStyle));
+  densityControl.append(densitySelect);
+  root.querySelector(".panel-sub")?.after(densityControl);
+  const refreshDensityPicker = () => { densityControl.hidden = !DENSE_LAYERS.some(options.isOn); };
+  refreshDensityPicker();
+  window.addEventListener("atlas:density-layers", refreshDensityPicker);
 
   // Filter (fix 6).
   const filter = document.createElement("input");

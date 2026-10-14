@@ -1,6 +1,6 @@
 /**
  * Generic pre-binned density extrusion for point layers.
- * Only pubs opts in for now (see DENSITY_ENABLED). Any LayerId can join later
+ * Dense point layers opt in (see DENSE_LAYERS). Any LayerId can join later
  * by shipping public/data/density/<id>-manifest.json + band GeoJSON and adding
  * the id to DENSITY_ENABLED.
  *
@@ -11,6 +11,7 @@
  */
 import type { ExpressionSpecification, Map as MapLibreMap } from "maplibre-gl";
 import type { LayerId } from "./layers";
+import { DENSE_LAYERS } from "./density-styles";
 
 export interface DensityBand {
   id: string;
@@ -44,8 +45,8 @@ export interface DensityManifest {
   draw_scale?: number;
 }
 
-/** Layers that use the density extrusion view (generic machinery; pubs only today). */
-export const DENSITY_ENABLED = new Set<LayerId>(["pubs"]);
+/** Layers eligible for the columns style. */
+export const DENSITY_ENABLED = new Set<LayerId>(DENSE_LAYERS);
 
 const SOURCE_PREFIX = "density-src-";
 const LAYER_PREFIX = "density-fill-";
@@ -138,7 +139,7 @@ function colourExpression(band: DensityBand, ramp: string[]): ExpressionSpecific
  * ~20–25% of the viewport at national (z5.5) and regional (z8) zoom.
  * Mobile uses a lower screenScale so tall columns don't cover the chrome.
  */
-function heightExpression(band: DensityBand, screenScale: number): ExpressionSpecification {
+export function heightExpression(band: DensityBand, screenScale: number): ExpressionSpecification {
   const hi = Math.max(band.intensity_max ?? Math.sqrt(band.scale_max), Math.sqrt(2));
   const peak = band.peak_m ?? (band.id === "coarse" ? 7200 : band.id === "medium" ? 1800 : 900);
   // Relative curve: short stubs for most cells; only near hi do they spike.
@@ -167,7 +168,7 @@ function heightExpression(band: DensityBand, screenScale: number): ExpressionSpe
 
   return [
     "interpolate",
-    ["exponential", 2],
+    ["exponential", 0.5],
     ["zoom"],
     band.minzoom,
     ["*", byCount, mulAt(band.minzoom)],
@@ -220,9 +221,9 @@ async function ensureBand(
 
   if (!map.getSource(srcId)) {
     map.addSource(srcId, { type: "geojson", data: band.url, maxzoom: 14 });
-    loadedBands.add(key);
   }
 
+  loadedBands.add(key);
   const vis = visible ? "visible" : "none";
   const screenScale = densityScreenScale();
   if (!map.getLayer(fillId)) {
@@ -281,11 +282,13 @@ export async function applyDensity(
   id: LayerId,
   on: boolean,
   beforeId?: string,
+  stillActive: () => boolean = () => true,
 ): Promise<DensityManifest | null> {
   if (!DENSITY_ENABLED.has(id)) return null;
   beforeIds.set(id, beforeId);
   const man = await fetchManifest(id);
   if (!man) return null;
+  if (!stillActive()) return man;
   const zoom = map.getZoom();
   await Promise.all(man.bands.map((band) => {
     if (bandNear(band, zoom)) return ensureBand(map, id, band, man, on, beforeId);
@@ -343,7 +346,7 @@ export function syncDensityPitch(
       pitchOwner = activeLayer;
       map.easeTo({ pitch, bearing, duration: 450, essential: true });
     }
-  } else if (pitchOwner) {
+  } else if (pitchOwner || map.getPitch() > 1 || Math.abs(map.getBearing()) > 1) {
     pitchOwner = null;
     const needsReset = map.getPitch() > 1 || Math.abs(map.getBearing()) > 1;
     if (needsReset) {
@@ -360,29 +363,4 @@ export function densityCameraForViewport(man: DensityManifest | null | undefined
     return { pitch: 50, bearing: man?.bearing ?? -15 };
   }
   return { pitch: man?.pitch ?? 55, bearing: man?.bearing ?? -15 };
-}
-
-/** Small Low / Medium / High legend for the density ramp. */
-export function mountDensityLegend(
-  host: HTMLElement,
-  man: DensityManifest,
-): { setVisible: (on: boolean) => void; destroy: () => void } {
-  const el = document.createElement("div");
-  el.className = "density-legend";
-  el.setAttribute("aria-label", "Pub density");
-  el.hidden = true;
-  const labels = man.legend.length >= 3 ? man.legend : ["Low", "Medium", "High"];
-  const ramp = man.ramp.length ? man.ramp : DEFAULT_RAMP;
-  const gradient = ramp.join(",");
-  el.innerHTML =
-    `<div class="density-legend-title">Pub density</div>` +
-    `<div class="density-legend-ramp" style="background:linear-gradient(90deg,${gradient})"></div>` +
-    `<div class="density-legend-labels"><span>${labels[0]}</span><span>${labels[1]}</span><span>${labels[2]}</span></div>`;
-  host.appendChild(el);
-  return {
-    setVisible: (on) => {
-      el.hidden = !on;
-    },
-    destroy: () => el.remove(),
-  };
 }

@@ -36,6 +36,18 @@ describe("density band lazy loading", () => {
     }
   });
 
+  it("city cells are under 1 km and cover z10–12", () => {
+    const fine = manifest.bands.find(b => b.id === "fine")!;
+    expect(fine.minzoom).toBeLessThanOrEqual(10);
+    expect(fine.maxzoom).toBeGreaterThanOrEqual(12);
+    expect(fine.size_deg * 175).toBeLessThanOrEqual(1);
+    const cells = JSON.parse(fineRaw).features;
+    for (const cell of cells) {
+      const latitudes = cell.geometry.coordinates[0].map((point: number[]) => point[1]);
+      expect((Math.max(...latitudes) - Math.min(...latitudes)) * 111).toBeLessThan(1);
+    }
+  });
+
   it("national coarse band is chunky (~15–20 km) and first-load sized", () => {
     const coarse = manifest.bands.find((b) => b.id === "coarse")!;
     // size_deg 0.020 ≈ 3.5 km in the builder; 0.102 ≈ 18 km.
