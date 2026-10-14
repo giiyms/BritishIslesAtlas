@@ -60,12 +60,14 @@ import {
   type CropPanelDetail,
 } from "./crops";
 
+import { SLAB_SOURCES, SLAB_RELIEF, SLAB_SEA_LAYERS, SLAB_OUTSIDE, SLAB_WOOD, SLAB_LABEL_LAYERS, SLAB_LAYER_IDS, SLAB_CREAM, SLAB_SEA, SLAB_INK } from "./slab";
+
 setWorkerUrl(workerUrl);
 addProtocol("pmtiles", new Protocol().tile);
 
 export const HOME_BOUNDS: [[number, number], [number, number]] = [
-  [-12.2, 49.35],
-  [2.35, 61.15],
+  [-10.7, 49.85],
+  [1.85, 60.9],
 ];
 export const HOME_PADDING = { top: 28, bottom: 48, left: 36, right: 28 };
 
@@ -143,9 +145,11 @@ const easeInOut = (t: number): number =>
   t < 0.5 ? 4 * t * t * t : 1 - ((-2 * t + 2) ** 3) / 2;
 
 let snapTheme = false;
+/** Optional "Tilt 3D" toggle for the Snapchat theme (off by default: top-down slab). */
+let tilt3d = false;
 const pitchForZoom = (zoom: number): number => {
   // Theme mode: always tilted so the raised relief reads, even nationally.
-  if (snapTheme) return Math.min(62, 42 + Math.max(0, zoom - 5) * 4);
+  if (snapTheme) return tilt3d ? Math.min(62, 42 + Math.max(0, zoom - 5) * 4) : 0;
   if (zoom <= 7) return 0;
   return Math.min(54, ((zoom - 7) / 4) * 54);
 };
@@ -205,6 +209,7 @@ const STYLE: StyleSpecification = {
     seats: { type: "vector", url: tiles("constituencies"), promoteId: { constituencies: "PCON24CD" } },
     "non-gb": { type: "geojson", data: NON_GB_LAND as never },
     "restore-callouts": { type: "geojson", data: { type: "FeatureCollection", features: [] } },
+    ...SLAB_SOURCES,
   },
   layers: [
     { id: "land", type: "background", paint: { "background-color": BASEMAPS.relief.land } },
@@ -255,6 +260,8 @@ const STYLE: StyleSpecification = {
       paint: { "raster-opacity": 0.72, "raster-fade-duration": 0, "raster-resampling": "nearest" },
     },
     // Surfaces are inserted here, before "non-gb-land".
+    SLAB_WOOD,
+    SLAB_OUTSIDE,
     {
       id: "non-gb-land", type: "fill", source: "non-gb", layout: { visibility: "none" },
       paint: { "fill-color": "#e9ebee", "fill-opacity": 0.6 },
@@ -293,6 +300,7 @@ const STYLE: StyleSpecification = {
       layout: { "line-join": "round" },
       paint: { "line-color": BASEMAPS.relief.coast, "line-width": ["interpolate", ["linear"], ["zoom"], 4, 0.4, 10, 0.9], "line-opacity": 0.7 },
     },
+    ...SLAB_SEA_LAYERS,
     {
       id: "region-labels", type: "symbol", source: "openmaptiles", "source-layer": "place",
       filter: ["match", ["get", "class"], ["state", "county"], true, false],
@@ -335,6 +343,7 @@ const STYLE: StyleSpecification = {
           10, ["match", ["get", "class"], "motorway", 2.6, "trunk", 2, 1.2], 14, ["match", ["get", "class"], "motorway", 7, 5]],
       },
     },
+    ...SLAB_LABEL_LAYERS,
     // Point layers are inserted here, before "place-labels".
     {
       id: "place-labels", type: "symbol", source: "openmaptiles", "source-layer": "place",
@@ -480,6 +489,8 @@ export interface Atlas {
   setRoads: (on: boolean) => void;
   setLabels: (on: boolean) => void;
   setCrops: (on: boolean) => void;
+  /** Snapchat theme only: lift the slab into pitched 3D terrain. */
+  setTilt3d: (on: boolean) => void;
   setElectionView: (view: ElectionView) => void;
   setElectionLayout: (layout: ElectionLayout) => void;
   zoomIn: () => void;
@@ -534,13 +545,36 @@ export function createAtlas(container: HTMLElement, initial: AtlasState): Atlas 
     map.easeTo({ pitch, duration: motionDuration(360), easing: easeInOut, essential: true });
   };
   map.on("zoomend", syncPitchToZoom);
-  map.on("zoom", () => { if (snapTheme && map.getTerrain()) map.setTerrain({ source: "terrain", exaggeration: snapExaggeration(map.getZoom()) }); });
+  map.on("zoom", () => { if (snapTheme && tilt3d && map.getTerrain()) map.setTerrain({ source: "terrain", exaggeration: snapExaggeration(map.getZoom()) }); });
 
   const compactAttribution = window.matchMedia("(max-width: 860px)").matches;
   map.addControl(new AttributionControl({ compact: compactAttribution, customAttribution: ATTRIBUTION }), "bottom-right");
   // Use MapLibre's real compass control so its action resets bearing/pitch;
   // the custom HTML navigation group remains responsible for zoom buttons.
   map.addControl(new NavigationControl({ showZoom: false, showCompass: true, visualizePitch: true }), "bottom-right");
+
+  // Snapchat theme chrome: compass rose (bottom-left) and the optional Tilt 3D toggle.
+  const rose = document.createElement("div");
+  rose.className = "slab-compass";
+  rose.setAttribute("aria-hidden", "true");
+  rose.innerHTML = `<svg viewBox="0 0 64 64" width="64" height="64"><defs><radialGradient id="rg" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#fff" stop-opacity=".9"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient></defs>
+    <circle cx="32" cy="36" r="22" fill="url(#rg)"/><circle cx="32" cy="36" r="17" fill="none" stroke="#fff" stroke-width="1.2" opacity=".9"/>
+    <path d="M32 14 36 36 32 58 28 36Z" fill="#fff"/><path d="M32 14 36 36H28Z" fill="#E6566B"/><path d="M10 36 32 32 54 36 32 40Z" fill="#fff" opacity=".9"/>
+    <path d="M32 36 54 36 32 40Z" fill="#9BB7E8"/><path d="M32 36 10 36 32 32Z" fill="#9BB7E8"/>
+    <text x="32" y="9" text-anchor="middle" font-size="8" font-weight="700" fill="#2b2b33" font-family="system-ui">N</text></svg>`;
+  container.appendChild(rose);
+  map.on("rotate", () => { rose.style.transform = `rotate(${-map.getBearing()}deg)`; });
+  const tiltBtn = document.createElement("button");
+  tiltBtn.type = "button";
+  tiltBtn.className = "slab-tilt";
+  tiltBtn.textContent = "Tilt 3D";
+  tiltBtn.setAttribute("aria-pressed", "false");
+  tiltBtn.addEventListener("click", () => {
+    tilt3d = !tilt3d;
+    tiltBtn.setAttribute("aria-pressed", String(tilt3d));
+    if (loaded) applyBasemap();
+  });
+  container.appendChild(tiltBtn);
   if (compactAttribution) {
     map.once("load", () => {
       const attrib = container.querySelector<HTMLDetailsElement>(".maplibregl-ctrl-attrib.maplibregl-compact");
@@ -773,6 +807,7 @@ export function createAtlas(container: HTMLElement, initial: AtlasState): Atlas 
 
   // ------------------------------------------------------------------ basemap
 
+  const slabRestore: Record<string, unknown> = {};
   const applyBasemap = () => {
     const basemap = state.basemap === "auto" ? presetBasemap(state.preset, state.mode, state.surface) : state.basemap;
     const b = BASEMAPS[basemap];
@@ -802,7 +837,42 @@ export function createAtlas(container: HTMLElement, initial: AtlasState): Atlas 
     map.setLayoutProperty("hillshade", "visibility", "none");
     set("hillshade", "raster-opacity", state.mode === "election" ? 0.35 : HILLSHADE_OPACITY);
     snapTheme = basemap === "relief" && state.mode === "atlas";
-    if (loaded) map.setTerrain({ source: "terrain", exaggeration: snapTheme ? snapExaggeration(map.getZoom()) : b.terrainExaggeration });
+    if (loaded) map.setTerrain(snapTheme && !tilt3d ? null : { source: "terrain", exaggeration: snapTheme ? snapExaggeration(map.getZoom()) : b.terrainExaggeration });
+    // Slab theme layers (top-down Snapchat look); other styles keep the original stack.
+    const slab = snapTheme;
+    for (const id of SLAB_LAYER_IDS) if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", slab ? "visible" : "none");
+    for (const id of ["region-labels"]) if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", !slab && state.labels ? "visible" : "none");
+    const keep = (id: string, prop: string, value: unknown) => {
+      const k = `${id}|${prop}`;
+      if (!(k in slabRestore) && map.getLayer(id)) slabRestore[k] = map.getPaintProperty(id, prop as never);
+      set(id, prop, value);
+    };
+    if (slab) {
+      set("land", "background-color", SLAB_CREAM);
+      set("water", "fill-color", SLAB_SEA);
+      keep("roads", "line-opacity", 0.5);
+      set("water-shore-band", "line-opacity", 0);
+      set("water-shore-glow", "line-opacity", 0);
+      set("water-coast", "line-opacity", 0);
+      set("boundary-country", "line-opacity", 0);
+      keep("dem-color-relief", "color-relief-color", SLAB_RELIEF);
+      set("dem-color-relief", "color-relief-opacity", 1);
+      keep("dem-hillshade", "hillshade-shadow-color", "rgba(60,70,40,0.32)");
+      keep("dem-hillshade", "hillshade-highlight-color", "rgba(255,255,240,0.35)");
+      keep("dem-hillshade", "hillshade-accent-color", "rgba(90,80,50,0.18)");
+      keep("dem-hillshade", "hillshade-exaggeration", 0.45);
+      set("place-labels", "text-color", SLAB_INK);
+      set("place-labels", "text-halo-color", "rgba(255,255,255,0.85)");
+      map.setLayoutProperty("place-labels", "text-field",
+        ["step", ["zoom"], ["match", ["get", "class"], "city", NAME, ""], 7.5, ["match", ["get", "class"], "village", "", NAME], 10, NAME]);
+      map.setLayoutProperty("place-labels", "text-variable-anchor", ["left", "right", "top", "bottom"]);
+      map.setLayoutProperty("place-labels", "text-radial-offset", 0.7);
+    } else {
+      for (const [k, v] of Object.entries(slabRestore)) { const [id, prop] = k.split("|"); set(id, prop, v); }
+      set("boundary-country", "line-opacity", 1);
+      map.setLayoutProperty("place-labels", "text-field", NAME);
+      map.setLayoutProperty("place-labels", "text-variable-anchor", undefined);
+    }
     if (loaded) map.setSky(snapTheme
       ? { "sky-color": "#8FCBFA", "horizon-color": "#E4F3FF", "fog-color": "#F2F6F4", "sky-horizon-blend": 0.6, "horizon-fog-blend": 0.7, "fog-ground-blend": 0.35, "atmosphere-blend": 0 }
       : { "sky-color": "#ffffff", "horizon-color": "#ffffff", "fog-color": "#ffffff", "fog-ground-blend": 1, "atmosphere-blend": 0 });
@@ -1033,7 +1103,7 @@ export function createAtlas(container: HTMLElement, initial: AtlasState): Atlas 
     if (shown(id)) addPoint(id);
     const treatment = state.pointTreatments[id] ?? "clustered";
     const visibleIds = treatment === "clustered"
-      ? (snapTheme ? [id, `${id}-icon`] : [`${id}-cluster-halo`, `${id}-cluster`, `${id}-cluster-count`, id, `${id}-icon`])
+      ? (snapTheme ? [`${id}-icon`] : [`${id}-cluster-halo`, `${id}-cluster`, `${id}-cluster-count`, id, `${id}-icon`])
       : treatment === "dots" ? [`${id}-dot`] : [`${id}-icon`];
     if (treatment === "clustered" && id === "hospitals") visibleIds.push("hospitals-hi");
     const visible = new Set(visibleIds);
@@ -1329,6 +1399,7 @@ export function createAtlas(container: HTMLElement, initial: AtlasState): Atlas 
     setPreset: (preset) => { state.preset = preset; if (loaded) applyBasemap(); emit(); },
     setRoads: (on) => { state.roads = on; if (loaded) applyBasemap(); emit(); },
     setLabels: (on) => { state.labels = on; if (loaded) applyBasemap(); emit(); },
+    setTilt3d: (on: boolean) => { tilt3d = on; if (loaded) applyBasemap(); },
     setCrops: (on) => { state.crops = on; if (loaded) applyCrops(); emit(); countCropsInView(); },
     setElectionView: (view) => { state.electionView = view; hexmap.refresh(); void applyElection(); },
     setElectionLayout: (layout) => { state.electionLayout = layout; popup.remove(); void applyElection(); },
