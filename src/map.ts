@@ -32,17 +32,19 @@ import { PLACES } from "./geo";
 import { mountVotingLegend, showVotingToast, hideVotingToast } from "./voting-ui";
 import { DENSE_LAYERS, parseDensityStyle, serializeDensityStyle, type DensityStyle } from "./density-styles";
 import type { createDensityRenderer } from "./density-renderer";
+import { SLAB_SOURCES, SLAB_RELIEF_LAYERS, SLAB_SEA_LAYERS, SLAB_OUTSIDE, SLAB_WOOD, SLAB_LABEL_LAYERS, SLAB_PLACE_LABELS, SLAB_CREAM, SLAB_SEA, TERRAIN_SOURCE } from "./slab";
 const DENSITY_ENABLED = new Set<LayerId>(DENSE_LAYERS);
 
 export const HOME_BOUNDS: [[number, number], [number, number]] = [
-  [-12.2, 49.35],
-  [2.35, 61.15],
+  [-10.6, 49.85],
+  [1.85, 60.86],
 ];
 
 export const HOME_PADDING = { top: 28, bottom: 48, left: 36, right: 28 };
-
-const HILLSHADE_TILES =
-  "https://server.arcgisonline.com/ArcGIS/rest/services/Elevation/World_Hillshade/MapServer/tile/{z}/{y}/{x}";
+/** Home fit that clears the desktop layer panel (left) and search bar (top), so Shetland is never under the search box. */
+export const homePadding = () => window.matchMedia("(max-width: 860px)").matches
+  ? { top: 76, bottom: 64, left: 16, right: 16 }
+  : { top: 84, bottom: 48, left: 300, right: 40 };
 
 /**
  * Non-GB land masked in voting mode (style roast fix 2). Coarse hulls for the
@@ -85,20 +87,15 @@ const NON_GB_LABEL = {
   }],
 } as const;
 
-/** Hillshade opacity: gray altitude (fix 4) vs capped texture in voting mode (fix 2). */
-const HILLSHADE_OPACITY: ExpressionSpecification = ["interpolate", ["linear"], ["zoom"], 4, 0.9, 7, 0.9, 10, 0.62, 14, 0.4];
-const HILLSHADE_OPACITY_VOTING = 0.35;
+/** Relief opacity: full colour in atlas mode, muted under the voting map. */
+const RELIEF_OPACITY = 1;
+const RELIEF_OPACITY_VOTING = 0.35;
 
 const STYLE: StyleSpecification = {
   version: 8,
   glyphs: "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
   sources: {
-    hillshade: {
-      type: "raster",
-      tiles: [HILLSHADE_TILES],
-      tileSize: 256,
-      maxzoom: 16,
-    },
+    terrain: TERRAIN_SOURCE,
     openmaptiles: {
       type: "vector",
       url: "https://tiles.openfreemap.org/planet",
@@ -107,28 +104,13 @@ const STYLE: StyleSpecification = {
     },
     "non-gb": { type: "geojson", data: NON_GB_LAND as never },
     "non-gb-label": { type: "geojson", data: NON_GB_LABEL as never },
+    ...SLAB_SOURCES,
   },
   layers: [
-    {
-      id: "land",
-      type: "background",
-      paint: { "background-color": "#eef0f1" },
-    },
-    {
-      id: "hillshade",
-      type: "raster",
-      source: "hillshade",
-      paint: {
-        "raster-opacity": HILLSHADE_OPACITY,
-        "raster-saturation": -1,
-        "raster-contrast": ["interpolate", ["linear"], ["zoom"], 7, 0.28, 11, 0.12],
-        "raster-brightness-min": 0.12,
-        // Roast fix 4 asks for brightness-max 0.9 so flats land ≈ #e6e6e6. MapLibre applies
-        // raster-contrast *before* brightness, so 0.9 with contrast 0.28 clips flats to #ffffff.
-        // 0.78 (z≤7) → 0.85 (z≥11) renders the spec's intended #e6e6e6 flats (measured).
-        "raster-brightness-max": ["interpolate", ["linear"], ["zoom"], 7, 0.78, 11, 0.85],
-      },
-    },
+    { id: "land", type: "background", paint: { "background-color": SLAB_CREAM } },
+    ...SLAB_RELIEF_LAYERS,
+    SLAB_WOOD,
+    SLAB_OUTSIDE,
     {
       id: "non-gb-land",
       type: "fill",
@@ -142,26 +124,9 @@ const STYLE: StyleSpecification = {
       source: "openmaptiles",
       "source-layer": "water",
       filter: ["!=", ["get", "class"], "swimming_pool"],
-      paint: { "fill-color": "#d6dee6" },
+      paint: { "fill-color": SLAB_SEA },
     },
-    {
-      id: "water-coast",
-      type: "line",
-      source: "openmaptiles",
-      "source-layer": "water",
-      filter: ["match", ["get", "class"], ["ocean", "lake"], true, false],
-      layout: { "line-join": "round" },
-      paint: {
-        "line-color": "#9aa5b1",
-        "line-width": ["interpolate", ["linear"], ["zoom"], 4, 0.4, 10, 0.9],
-        "line-opacity": 0.7,
-      },
-    },
-    {
-      id: "boundary-country", type: "line", source: "openmaptiles", "source-layer": "boundary",
-      filter: ["all", ["==", ["get", "admin_level"], 2], ["==", ["get", "maritime"], 0]],
-      paint: { "line-color": "#8e959f", "line-width": 1, "line-dasharray": [3, 2], "line-opacity": 0.75 },
-    },
+    ...SLAB_SEA_LAYERS,
     {
       id: "non-gb-label",
       type: "symbol",
@@ -176,6 +141,8 @@ const STYLE: StyleSpecification = {
       },
       paint: { "text-color": "#6b7280", "text-halo-color": "rgba(255,255,255,0.85)", "text-halo-width": 1.2 },
     },
+    ...SLAB_LABEL_LAYERS,
+    SLAB_PLACE_LABELS,
   ],
 };
 
@@ -184,7 +151,7 @@ const ROADS_MAXZOOM = 7;
 
 /** One-line, deduped credit (roast fix 10); the panel's "About the data" has the full list. */
 const ATTRIBUTION =
-  '© Esri · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap</a>' +
+  '© AWS Terrain Tiles · Natural Earth · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap</a>' +
   ' · <a href="https://openmaptiles.org/" target="_blank" rel="noopener noreferrer">OpenMapTiles</a>' +
   " · Contains OS & ONS data © Crown 2024 (OGL)";
 
@@ -403,7 +370,7 @@ export function createAtlas(container: HTMLElement): Atlas {
     container,
     style: STYLE,
     bounds: HOME_BOUNDS,
-    fitBoundsOptions: { padding: HOME_PADDING },
+    fitBoundsOptions: { padding: homePadding() },
     maxBounds: [
       [-18, 45],
       [10, 64.5],
@@ -723,8 +690,8 @@ export function createAtlas(container: HTMLElement): Atlas {
     if (map.getLayer("density-glow")) {
       map.setLayoutProperty("density-glow", "visibility", muteOthers ? "none" : "visible");
     }
-    if (map.getLayer("hillshade")) {
-      map.setPaintProperty("hillshade", "raster-opacity", on ? HILLSHADE_OPACITY_VOTING : HILLSHADE_OPACITY);
+    if (map.getLayer("dem-color-relief")) {
+      map.setPaintProperty("dem-color-relief", "color-relief-opacity", on ? RELIEF_OPACITY_VOTING : RELIEF_OPACITY);
     }
     for (const layerId of ["non-gb-land", "non-gb-label"]) {
       if (map.getLayer(layerId)) map.setLayoutProperty(layerId, "visibility", on ? "visible" : "none");
@@ -937,7 +904,7 @@ export function createAtlas(container: HTMLElement): Atlas {
       map.zoomOut({ duration: motionDuration(280) });
     },
     home: () => {
-      map.fitBounds(HOME_BOUNDS, { padding: HOME_PADDING, duration: motionDuration(700) });
+      map.fitBounds(HOME_BOUNDS, { padding: homePadding(), duration: motionDuration(700) });
     },
     show: ({ lon, lat, zoom = 11, bounds }) => {
       if (bounds) {
