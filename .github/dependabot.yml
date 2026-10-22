@@ -1,0 +1,10 @@
+# Version updates wait at least 3 days after release (48h minimum release-age rule).
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 3
+    open-pull-requests-limit: 5
