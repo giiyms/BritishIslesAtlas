@@ -40,7 +40,6 @@ export const HOME_BOUNDS: [[number, number], [number, number]] = [
   [1.85, 60.86],
 ];
 
-export const HOME_PADDING = { top: 28, bottom: 48, left: 36, right: 28 };
 /** Home fit that clears the desktop layer panel (left) and search bar (top), so Shetland is never under the search box. */
 export const homePadding = () => window.matchMedia("(max-width: 860px)").matches
   ? { top: 76, bottom: 64, left: 16, right: 16 }
@@ -371,9 +370,11 @@ export function createAtlas(container: HTMLElement): Atlas {
     style: STYLE,
     bounds: HOME_BOUNDS,
     fitBoundsOptions: { padding: homePadding() },
+    // Leave enough sea around the home fit. Tighter bounds force a minimum
+    // zoom on wide screens, overriding the padding and clipping the islands.
     maxBounds: [
-      [-18, 45],
-      [10, 64.5],
+      [-30, 35],
+      [30, 72],
     ],
     minZoom: 3.6,
     maxZoom: 16,

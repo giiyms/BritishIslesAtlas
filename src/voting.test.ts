@@ -1,5 +1,4 @@
-import bakeRaw from "../public/data/endorsements-gb.json?raw";
-import geoRaw from "../public/data/constituencies-gb-2024.geojson?raw";
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { ENDORSE_COLORS } from "./endorse";
 import {
@@ -25,7 +24,10 @@ function contrast(a: string, b: string): number {
   return (hi + 0.05) / (lo + 0.05);
 }
 
-const bake = JSON.parse(bakeRaw) as EndorsementsFile;
+// Read fixtures directly: transforming the 20 MB GeoJSON as a JS string dominated
+// test startup and could exhaust slower workers. Keep the real data coverage.
+const fixture = (name: string) => readFileSync(new URL(`../public/data/${name}`, import.meta.url), "utf8");
+const bake = JSON.parse(fixture("endorsements-gb.json")) as EndorsementsFile;
 const gy = bake.seats.E14001256;
 
 describe("style roast palette", () => {
@@ -88,7 +90,7 @@ describe("constituencyPopupHtml (Great Yarmouth)", () => {
 
 describe("restoreCallouts", () => {
   it("emits one centroid inside East Anglia for Great Yarmouth", () => {
-    const geo = JSON.parse(geoRaw) as FeatureCollection;
+    const geo = JSON.parse(fixture("constituencies-gb-2024.geojson")) as FeatureCollection;
     const enriched = enrichConstituencies(geo, bake.seats);
     const callouts = restoreCallouts(enriched);
     expect(callouts.features).toHaveLength(1);

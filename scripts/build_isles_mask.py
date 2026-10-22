@@ -51,13 +51,13 @@ land_cut = land.buffer(0.004).simplify(0.006, preserve_topology=True)
 feats = []
 prev = land_cut
 for i, d in enumerate([0.04, 0.09, 0.16, 0.26]):  # glow
-    ring = smooth.buffer(d, join_style=1, resolution=4).difference(prev).simplify(0.012, preserve_topology=True)
+    ring = smooth.buffer(d, join_style=1, resolution=4).difference(prev).simplify(0.02, preserve_topology=True)
     feats.append({"type": "Feature", "properties": {"kind": "glow", "i": i}, "geometry": r(ring, 3)})
     prev = smooth.buffer(d, join_style=1, resolution=4)
 prev = land_cut
 for i, d in enumerate([0.03, 0.07, 0.12, 0.18]):  # shadow core → soft
     buffered = translate(smooth.buffer(d, join_style=1, resolution=4), 0.08, -0.06)
-    ring = buffered.difference(prev).simplify(0.01, preserve_topology=True)
+    ring = buffered.difference(prev).simplify(0.02, preserve_topology=True)
     feats.append({"type": "Feature", "properties": {"kind": "shadow", "i": i}, "geometry": r(ring, 3)})
     prev = buffered
 (out / "isles-halo.geojson").write_text(fc(feats))

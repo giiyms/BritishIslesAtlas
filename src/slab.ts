@@ -87,20 +87,25 @@ const zw = (a: number, b: number, c: number): ExpressionSpecification =>
   ["interpolate", ["exponential", 1.4], ["zoom"], 4, a, 7, b, 11, c];
 
 /** National-to-regional fade: the halo is a fixed-size geographic band, so it fades out by z9. */
-const haloFade = (o: number): ExpressionSpecification => ["interpolate", ["linear"], ["zoom"], 4, o, 7.5, o * 0.8, 9, 0];
+const haloFade = (a: number, b: number, c: number, d: number): ExpressionSpecification => {
+  const bands = (scale: number): ExpressionSpecification =>
+    ["match", ["get", "i"], 0, a * scale, 1, b * scale, 2, c * scale, d * scale];
+  // MapLibre permits a single zoom expression, at the top level of the paint value.
+  return ["interpolate", ["linear"], ["zoom"], 4, bands(1), 7.5, bands(0.8), 9, 0];
+};
 
 /** Layers drawn above the water fill: banded sea glow, stepped drop shadow, crisp coast + islet outlines. */
 export const SLAB_SEA_LAYERS: LayerSpecification[] = [
   {
     id: "slab-glow", type: "fill", source: "isles-halo", filter: ["==", ["get", "kind"], "glow"],
     paint: { "fill-color": SLAB_SEA_NEAR, "fill-antialias": false,
-      "fill-opacity": ["match", ["get", "i"], 0, haloFade(0.55), 1, haloFade(0.34), 2, haloFade(0.2), haloFade(0.1)] },
+      "fill-opacity": haloFade(0.55, 0.34, 0.2, 0.1) },
   },
   {
     // Darker and wider than the first slab cut (Daniel: closer to the reference's deep SE shadow).
     id: "slab-shadow", type: "fill", source: "isles-halo", filter: ["==", ["get", "kind"], "shadow"],
     paint: { "fill-color": "#0A2A55", "fill-antialias": false,
-      "fill-opacity": ["match", ["get", "i"], 0, haloFade(0.5), 1, haloFade(0.34), 2, haloFade(0.2), haloFade(0.09)] },
+      "fill-opacity": haloFade(0.5, 0.34, 0.2, 0.09) },
   },
   {
     id: "slab-edge", type: "line", source: "isles-edge",
