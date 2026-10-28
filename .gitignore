@@ -42,3 +42,6 @@ Thumbs.db
 # Regenerable Nominatim admin polygons for OSM extract clipping
 scripts/cache/
 scripts/__pycache__/
+
+# Raw downloads for data builds (large; regenerate via scripts)
+data-raw/

@@ -2027,7 +2027,13 @@ Democracy Club is **sparse** — most seats are presumed Reform under locked ant
 
 ### 2024 results
 
-Commons Library [CBP-10009](https://commonslibrary.parliament.uk/research-briefings/cbp-10009/) join is **deferred** (source fetch blocked by Cloudflare from this environment). Popup notes follow-up; no invented winners.
+| | |
+|---|---|
+| **File** | `public/data/results-2024-gb.json` (~205 KB, 632 GB seats keyed by ONS `PCON24CD`; joins 632/632 to `constituencies-gb-2024.geojson`) |
+| **Source** | House of Commons Library / UK Parliament [election results service](https://electionresults.parliament.uk/general-elections/6), general election of 4 July 2024, [candidacies CSV](https://electionresults.parliament.uk/general-elections/6/candidacies.csv). Same underlying data as Commons Library [CBP-10009](https://commonslibrary.parliament.uk/research-briefings/cbp-10009/) (whose file host is behind a Cloudflare challenge for scripted fetches). |
+| **Licence** | [Open Parliament Licence v3.0](https://www.parliament.uk/site-information/copyright-parliament/open-parliament-licence/) — attribute "Contains Parliamentary information licensed under the Open Parliament Licence v3.0." |
+| **Script** | `scripts/build_results_2024.py` (downloads the raw CSV to `data-raw/`, gitignored, when missing; `--refresh` re-downloads; exits non-zero on any join mismatch) |
+| **Fields per seat** | `name`, `country`, `winner_party`, `winner_name`, `result`, `majority`, `majority_pct`, `turnout_pct` (valid votes / electorate), `electorate`, `valid_votes`, `shares` (top 6 candidates as `[party, %]` plus summed `Other`). Party names in top-level `parties`. Northern Ireland excluded. |
 
 ### Postcode → seat
 
