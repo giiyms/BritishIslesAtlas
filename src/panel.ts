@@ -2,8 +2,6 @@ import { DENSE_LAYERS, DENSITY_STYLES, type DensityStyle } from "./density-style
 import { ICONS } from "./icons";
 import { LAYERS, isLayerId, type LayerDef, type LayerId } from "./layers";
 import { LAYER_SECTIONS } from "./layer-groups";
-import { ENDORSE_COLORS } from "./endorse";
-import { formatPollsUpdated, loadVotingBundle } from "./voting";
 
 const DATA_CREDITS: Array<[string, string]> = [
   ["Basemap", "OpenFreeMap · © OpenMapTiles · data © OpenStreetMap contributors (ODbL)"],
@@ -137,24 +135,7 @@ export function mountPanel(
   voting.grid.append(votingChip);
   const votingBox = document.createElement("div");
   votingBox.className = "voting-strip";
-  votingBox.innerHTML = `
-    <div class="voting-legend" role="group" aria-label="Endorsement legend">
-      <span class="vote-legend-item"><span class="vote-swatch" style="background:${ENDORSE_COLORS.reform.fill};opacity:0.6"></span>Reform <span class="vote-count" data-count="reform">–</span></span>
-      <span class="vote-legend-sep" aria-hidden="true">·</span>
-      <button type="button" class="vote-legend-item vote-legend-restore" title="Fly to the Restore seat"><span class="vote-swatch" style="background:${ENDORSE_COLORS.restore.fill}"></span>Restore <span class="vote-count" data-count="restore">–</span></button>
-    </div>
-    <p class="voting-vi" id="national-vi">National VI loading…</p>
-    <p class="voting-disclaimer"><strong>Editorial endorsement map</strong>: partisan Reform / Restore Britain guide. Never Labour or Conservatives. Not Electoral Commission advice. Projections are projections.</p>
-    <p class="voting-updated" id="polls-updated"></p>
-  `;
-  votingBox.querySelector(".vote-legend-restore")?.addEventListener("click", () => {
-    if (!options.isOn("constituencies")) {
-      votingChip.setAttribute("aria-pressed", "true");
-      options.setOn("constituencies", true);
-      refreshStatus();
-    }
-    options.onRestore?.();
-  });
+  votingBox.textContent = "Explore 2024 results and seat projections on the map.";
   voting.details.append(votingBox);
 
   // Grouped sections, collapsed by default with counts.
@@ -183,28 +164,6 @@ export function mountPanel(
   });
 
   body.append(filter, voting.details, ...groups, about);
-
-  void loadVotingBundle().then((bundle) => {
-    const vi = votingBox.querySelector<HTMLElement>("#national-vi");
-    const updated = votingBox.querySelector<HTMLElement>("#polls-updated");
-    for (const el of votingBox.querySelectorAll<HTMLElement>("[data-count]")) {
-      const n = bundle.endorsements.counts[el.dataset.count ?? ""];
-      el.textContent = typeof n === "number" ? String(n) : "–";
-    }
-    const avg = bundle.national?.rolling_average;
-    if (vi && avg) {
-      const rb = avg.rb != null ? ` · RB ${avg.rb}%` : " · RB –";
-      vi.textContent = `National VI (rolling ${avg.n}): Lab ${avg.lab ?? "–"}% · Con ${avg.con ?? "–"}% · Ref ${avg.ref ?? "–"}% · LD ${avg.ld ?? "–"}% · Grn ${avg.grn ?? "–"}%${rb}`;
-    } else if (vi) {
-      vi.textContent = "National VI unavailable";
-    }
-    if (updated) {
-      updated.textContent = formatPollsUpdated(bundle.endorsements.retrieved_at || bundle.national?.retrieved_at);
-    }
-  }).catch(() => {
-    const vi = votingBox.querySelector<HTMLElement>("#national-vi");
-    if (vi) vi.textContent = "National VI unavailable";
-  });
 
   const chips = () => [...body.querySelectorAll<HTMLButtonElement>(".chip")];
 

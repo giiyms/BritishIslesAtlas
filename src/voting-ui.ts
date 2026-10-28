@@ -11,21 +11,14 @@ export interface VotingLegend {
 
 export function mountVotingLegend(
   host: HTMLElement,
-  options: { reformColor: string; restoreColor: string; onRestore: () => void },
+  _options: { reformColor: string; restoreColor: string; onRestore: () => void },
 ): VotingLegend {
   const root = document.createElement("div");
   root.className = "vote-legend";
   root.hidden = true;
   root.setAttribute("role", "group");
   root.setAttribute("aria-label", "Endorsement legend");
-  root.innerHTML =
-    `<span class="vote-legend-item"><span class="vote-swatch" style="background:${options.reformColor};opacity:0.6"></span>` +
-    `Reform <span class="vote-count" data-count="reform">–</span></span>` +
-    `<span class="vote-legend-sep" aria-hidden="true">·</span>` +
-    `<button type="button" class="vote-legend-item vote-legend-restore" title="Fly to the Restore seat">` +
-    `<span class="vote-swatch" style="background:${options.restoreColor}"></span>` +
-    `Restore <span class="vote-count" data-count="restore">–</span></button>`;
-  root.querySelector("button")?.addEventListener("click", () => options.onRestore());
+  root.hidden = true;
   host.append(root);
   return {
     setCounts(counts) {
@@ -35,7 +28,7 @@ export function mountVotingLegend(
       }
     },
     setVisible(visible) {
-      root.hidden = !visible;
+      root.hidden = true;
       document.body.classList.toggle("voting-view", visible);
     },
   };

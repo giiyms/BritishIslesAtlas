@@ -16,17 +16,11 @@ setWorkerUrl(workerUrl);
 import { buildCollection } from "./geo";
 import { LAYERS, type LayerId, type MarkerKind } from "./layers";
 import {
-  enrichConstituencies,
-  fillColorExpression,
-  fillOpacityExpression,
-  loadVotingBundle,
-  constituencyPopupHtml,
-  restoreCallouts,
   labelPoint as labelPointOf,
   type FeatureCollection as VotingFeatureCollection,
-  type VotingBundle,
 } from "./voting";
 import { ENDORSE_COLORS } from "./endorse";
+import { loadElection, partyColour, partyName, seatHtml, type ElectionData } from "./election";
 import { singularLabel } from "./layer-groups";
 import { PLACES } from "./geo";
 import { mountVotingLegend, showVotingToast, hideVotingToast } from "./voting-ui";
@@ -406,7 +400,8 @@ export function createAtlas(container: HTMLElement): Atlas {
   }
 
   let loaded = false;
-  let votingBundle: VotingBundle | null = null;
+  let electionData: ElectionData | null = null;
+  let measure = "winner";
   let enrichedSeats: VotingFeatureCollection | null = null;
   /** User chose "Show" on the voting toast: keep context layers visible. */
   let showOthers = false;
@@ -557,7 +552,7 @@ export function createAtlas(container: HTMLElement): Atlas {
     if (!map.getSource(id)) {
       const sourceData =
         id === "constituencies"
-          ? "/data/constituencies-gb-2024.geojson"
+          ? "/data/constituencies-gb-2024-simplified.geojson"
           : DENSITY_ENABLED.has(id)
             // The renderer loads every-point data only when the chosen view needs dots.
             ? { type: "FeatureCollection" as const, features: [] }
@@ -586,9 +581,9 @@ export function createAtlas(container: HTMLElement): Atlas {
         layout,
         paint: {
           "fill-color": (isConstituencies
-            ? fillColorExpression()
+            ? ["coalesce", ["get", "electionColor"], "#b9bec4"]
             : layer.color) as ExpressionSpecification | string,
-          "fill-opacity": (isConstituencies ? fillOpacityExpression() : 0.16) as ExpressionSpecification | number,
+          "fill-opacity": (isConstituencies ? 0.78 : 0.16) as ExpressionSpecification | number,
         },
       }, before);
       if (!isConstituencies) {
@@ -607,20 +602,17 @@ export function createAtlas(container: HTMLElement): Atlas {
         addConstituencyOverlays(layout.visibility, before);
         void (async () => {
           try {
-            const [geo, bundle] = await Promise.all([
-              fetch("/data/constituencies-gb-2024.geojson").then((r) => r.json()),
-              loadVotingBundle(),
+            const [geo, data] = await Promise.all([
+              fetch("/data/constituencies-gb-2024-simplified.geojson").then((r) => r.json()),
+              loadElection(),
             ]);
-            votingBundle = bundle;
-            const enriched = enrichConstituencies(geo, bundle.endorsements.seats);
-            enrichedSeats = enriched;
-            const source = map.getSource("constituencies") as import("maplibre-gl").GeoJSONSource | undefined;
-            source?.setData(enriched as never);
-            const callouts = map.getSource("restore-callouts") as import("maplibre-gl").GeoJSONSource | undefined;
-            callouts?.setData(restoreCallouts(enriched) as never);
-            legend.setCounts(bundle.endorsements.counts);
+            electionData = data;
+            enrichedSeats = geo;
+            updateElectionColours();
+            const code = new URLSearchParams(location.search).get("seat");
+            if (code) void openSeat(code);
           } catch (err) {
-            console.warn("Failed to enrich constituencies with endorsements", err);
+            console.warn("Failed to load election data", err);
           }
         })();
       }
@@ -727,6 +719,19 @@ export function createAtlas(container: HTMLElement): Atlas {
   const seatFallbackHtml = (name: string, code: string) =>
     `<strong class="popup-title">${escapeHtml(name)}</strong>` +
     (code ? `<div class="popup-meta">${escapeHtml(code)}</div>` : "");
+  const updateElectionColours = () => {
+    if (!enrichedSeats || !electionData) return;
+    const byCode = new globalThis.Map(electionData.seats.map(seat => [seat.code, seat]));
+    for (const feature of enrichedSeats.features) {
+      const props = feature.properties ?? (feature.properties = {});
+      const seat = byCode.get(String(props.PCON24CD));
+      const result = seat?.result;
+      const party = measure === "projection" ? seat?.projections[0]?.row.projected_winner ?? "" : result ? partyName(electionData, result.winner_party) : "";
+      props.electionColor = measure === "majority" && result ? (result.majority_pct < 5 ? "#f7e3ac" : result.majority_pct < 10 ? "#e8b65d" : result.majority_pct < 20 ? "#d37d3f" : "#9f462c") : partyColour(party);
+    }
+    (map.getSource("constituencies") as import("maplibre-gl").GeoJSONSource | undefined)?.setData(enrichedSeats as never);
+  };
+  window.addEventListener("atlas:measure", (event) => { measure = (event as CustomEvent<string>).detail; updateElectionColours(); });
   const seatLngLat = (code: string): [number, number] | null => {
     const feature = enrichedSeats?.features.find((f) => f.properties?.PCON24CD === code);
     return feature ? labelPointOf(feature.geometry) : null;
@@ -736,18 +741,21 @@ export function createAtlas(container: HTMLElement): Atlas {
     // ≤520px: seat popups render as a bottom sheet (fix 7); nav/scale hide while it is open.
     popupIsSeat = true;
     try {
-      if (!votingBundle) votingBundle = await loadVotingBundle();
+      if (!electionData) electionData = await loadElection();
       const at = lngLat ?? seatLngLat(code);
       if (!at) return;
-      const seat = votingBundle.endorsements.seats[code];
+      if (!lngLat) map.flyTo({ center: at, zoom: 9, duration: motionDuration(800) });
+      const seat = electionData.seats.find(s => s.code === code);
       if (!seat) {
         popup.setLngLat(at).setHTML(seatFallbackHtml(fallbackName || code, code)).addTo(map);
-        setSelected(code);
         return;
       }
-      popup.setLngLat(at).setMaxWidth("320px").setHTML(
-        constituencyPopupHtml(seat, votingBundle.endorsements.retrieved_at),
-      ).addTo(map);
+      popup.setLngLat(at).setMaxWidth("380px").setHTML(seatHtml(seat, electionData)).addTo(map);
+      popup.getElement()?.querySelector<HTMLButtonElement>(".copy-seat")?.addEventListener("click", (event) => {
+        const url = new URL(location.href); url.searchParams.set("seat", code);
+        void navigator.clipboard.writeText(url.href).then(() => { (event.target as HTMLButtonElement).textContent = "Link copied"; });
+      });
+      const url = new URL(location.href); url.searchParams.set("seat", code); history.replaceState(null, "", url);
       setSelected(code);
     } catch {
       if (lngLat) popup.setLngLat(lngLat).setHTML(seatFallbackHtml(fallbackName || code, code)).addTo(map);
