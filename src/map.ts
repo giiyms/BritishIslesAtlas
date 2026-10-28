@@ -20,7 +20,7 @@ import {
   type FeatureCollection as VotingFeatureCollection,
 } from "./voting";
 import { ENDORSE_COLORS } from "./endorse";
-import { loadElection, partyColour, partyName, seatHtml, type ElectionData } from "./election";
+import { canonicalParty, loadElection, partyColour, partyName, seatHtml, type ElectionData } from "./election";
 import { singularLabel } from "./layer-groups";
 import { PLACES } from "./geo";
 import { mountVotingLegend, showVotingToast, hideVotingToast } from "./voting-ui";
@@ -726,7 +726,7 @@ export function createAtlas(container: HTMLElement): Atlas {
       const props = feature.properties ?? (feature.properties = {});
       const seat = byCode.get(String(props.PCON24CD));
       const result = seat?.result;
-      const party = measure === "projection" ? seat?.projections[0]?.row.projected_winner ?? "" : result ? partyName(electionData, result.winner_party) : "";
+      const party = measure === "projection" ? canonicalParty(seat?.projections[0]?.row.projected_winner ?? "", seat?.code) : result ? partyName(electionData, result.winner_party) : "";
       props.electionColor = measure === "majority" && result ? (result.majority_pct < 5 ? "#f7e3ac" : result.majority_pct < 10 ? "#e8b65d" : result.majority_pct < 20 ? "#d37d3f" : "#9f462c") : partyColour(party);
     }
     (map.getSource("constituencies") as import("maplibre-gl").GeoJSONSource | undefined)?.setData(enrichedSeats as never);
@@ -742,6 +742,11 @@ export function createAtlas(container: HTMLElement): Atlas {
     popupIsSeat = true;
     try {
       if (!electionData) electionData = await loadElection();
+      if (!enrichedSeats) {
+        const response = await fetch("/data/constituencies-gb-2024-simplified.geojson");
+        if (!response.ok) throw new Error("Boundary data unavailable");
+        enrichedSeats = await response.json() as VotingFeatureCollection;
+      }
       const at = lngLat ?? seatLngLat(code);
       if (!at) return;
       if (!lngLat) map.flyTo({ center: at, zoom: 9, duration: motionDuration(800) });
