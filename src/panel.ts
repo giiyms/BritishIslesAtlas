@@ -135,7 +135,7 @@ export function mountPanel(
   voting.grid.append(votingChip);
   const votingBox = document.createElement("div");
   votingBox.className = "voting-strip";
-  votingBox.textContent = "Explore 2024 results and seat projections on the map.";
+  votingBox.textContent = "Who to back to stop Labour in each seat, with projections and 2024 results.";
   voting.details.append(votingBox);
 
   // Grouped sections, collapsed by default with counts.

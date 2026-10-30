@@ -20,7 +20,7 @@ import {
   type FeatureCollection as VotingFeatureCollection,
 } from "./voting";
 import { ENDORSE_COLORS } from "./endorse";
-import { canonicalParty, loadElection, partyColour, partyName, seatHtml, type ElectionData } from "./election";
+import { DEFAULT_MEASURE, loadElection, seatColour, seatHtml, type ElectionData, type Measure } from "./election";
 import { singularLabel } from "./layer-groups";
 import { PLACES } from "./geo";
 import { mountVotingLegend, showVotingToast, hideVotingToast } from "./voting-ui";
@@ -28,6 +28,7 @@ import { DENSE_LAYERS, parseDensityStyle, serializeDensityStyle, type DensitySty
 import type { createDensityRenderer } from "./density-renderer";
 import { SLAB_SOURCES, SLAB_RELIEF_LAYERS, SLAB_SEA_LAYERS, SLAB_OUTSIDE, SLAB_WOOD, SLAB_LABEL_LAYERS, SLAB_PLACE_LABELS, SLAB_CREAM, SLAB_SEA, TERRAIN_SOURCE } from "./slab";
 const DENSITY_ENABLED = new Set<LayerId>(DENSE_LAYERS);
+const ELECTION_OPACITY: ExpressionSpecification = ["coalesce", ["get", "electionOpacity"], 0.78];
 
 export const HOME_BOUNDS: [[number, number], [number, number]] = [
   [-10.6, 49.85],
@@ -401,7 +402,7 @@ export function createAtlas(container: HTMLElement): Atlas {
 
   let loaded = false;
   let electionData: ElectionData | null = null;
-  let measure = "winner";
+  let measure: Measure = DEFAULT_MEASURE;
   let enrichedSeats: VotingFeatureCollection | null = null;
   /** User chose "Show" on the voting toast: keep context layers visible. */
   let showOthers = false;
@@ -552,7 +553,7 @@ export function createAtlas(container: HTMLElement): Atlas {
     if (!map.getSource(id)) {
       const sourceData =
         id === "constituencies"
-          ? "/data/constituencies-gb-2024-simplified.geojson"
+          ? { type: "FeatureCollection" as const, features: [] }
           : DENSITY_ENABLED.has(id)
             // The renderer loads every-point data only when the chosen view needs dots.
             ? { type: "FeatureCollection" as const, features: [] }
@@ -583,7 +584,8 @@ export function createAtlas(container: HTMLElement): Atlas {
           "fill-color": (isConstituencies
             ? ["coalesce", ["get", "electionColor"], "#b9bec4"]
             : layer.color) as ExpressionSpecification | string,
-          "fill-opacity": (isConstituencies ? 0.78 : 0.16) as ExpressionSpecification | number,
+          // Tactical colouring shades by pick confidence (electionOpacity, set per feature).
+          "fill-opacity": isConstituencies ? ELECTION_OPACITY : 0.16,
         },
       }, before);
       if (!isConstituencies) {
@@ -602,12 +604,10 @@ export function createAtlas(container: HTMLElement): Atlas {
         addConstituencyOverlays(layout.visibility, before);
         void (async () => {
           try {
-            const [geo, data] = await Promise.all([
-              fetch("/data/constituencies-gb-2024-simplified.geojson").then((r) => r.json()),
-              loadElection(),
-            ]);
+            // One boundary download: loadElection() fetches it and the source is fed by setData.
+            const data = await loadElection();
             electionData = data;
-            enrichedSeats = geo;
+            enrichedSeats = data.geo as VotingFeatureCollection;
             updateElectionColours();
             const code = new URLSearchParams(location.search).get("seat");
             if (code) void openSeat(code);
@@ -724,14 +724,13 @@ export function createAtlas(container: HTMLElement): Atlas {
     const byCode = new globalThis.Map(electionData.seats.map(seat => [seat.code, seat]));
     for (const feature of enrichedSeats.features) {
       const props = feature.properties ?? (feature.properties = {});
-      const seat = byCode.get(String(props.PCON24CD));
-      const result = seat?.result;
-      const party = measure === "projection" ? canonicalParty(seat?.projections[0]?.row.projected_winner ?? "", seat?.code) : result ? partyName(electionData, result.winner_party) : "";
-      props.electionColor = measure === "majority" && result ? (result.majority_pct < 5 ? "#f7e3ac" : result.majority_pct < 10 ? "#e8b65d" : result.majority_pct < 20 ? "#d37d3f" : "#9f462c") : partyColour(party);
+      const { color, opacity } = seatColour(byCode.get(String(props.PCON24CD)), electionData, measure);
+      props.electionColor = color;
+      props.electionOpacity = opacity;
     }
     (map.getSource("constituencies") as import("maplibre-gl").GeoJSONSource | undefined)?.setData(enrichedSeats as never);
   };
-  window.addEventListener("atlas:measure", (event) => { measure = (event as CustomEvent<string>).detail; updateElectionColours(); });
+  window.addEventListener("atlas:measure", (event) => { measure = (event as CustomEvent<Measure>).detail; updateElectionColours(); });
   const seatLngLat = (code: string): [number, number] | null => {
     const feature = enrichedSeats?.features.find((f) => f.properties?.PCON24CD === code);
     return feature ? labelPointOf(feature.geometry) : null;
@@ -742,11 +741,7 @@ export function createAtlas(container: HTMLElement): Atlas {
     popupIsSeat = true;
     try {
       if (!electionData) electionData = await loadElection();
-      if (!enrichedSeats) {
-        const response = await fetch("/data/constituencies-gb-2024-simplified.geojson");
-        if (!response.ok) throw new Error("Boundary data unavailable");
-        enrichedSeats = await response.json() as VotingFeatureCollection;
-      }
+      if (!enrichedSeats) enrichedSeats = electionData.geo as VotingFeatureCollection;
       const at = lngLat ?? seatLngLat(code);
       if (!at) return;
       if (!lngLat) map.flyTo({ center: at, zoom: 9, duration: motionDuration(800) });

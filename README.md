@@ -49,7 +49,17 @@ Concept 1 is locked:
 
 ## Voting (editorial)
 
-GB Westminster seats can show an editorial **Reform / Restore Britain** endorsement layer (never Labour or Conservatives). Daniel per-seat overrides win first. If any trusted seat poll (Electoral Calculus or More in Common) has Restore's share strictly ahead of Reform's, the map picks **Restore** even when Democracy Club has no confirmed Restore candidate; otherwise Reform is the anti-split default. See `SOURCES.md` (Voting P1) and `src/endorse.ts`.
+The default map colouring is a transparent **tactical-voting pick: who to back to stop Labour** in each of the 632 GB seats. The picks reflect the site owner's tactical goal (Labour should not win seats). The voter decides. Other colourings: 2024 winner, 2024 majority, and the projected winner from each seat-projection provider.
+
+Pick rule (`src/tactical.ts`, tested in `src/tactical.test.ts`). There is no default party, and Labour is never picked:
+
+1. A site-owner override in `public/data/overrides.json` wins (`{ "pcon24cd", "party", "note", "at" }`).
+2. Seat projections (`polls-seats.json`: Electoral Calculus, More in Common). Each provider's pick is its projected winner if that is not Labour; otherwise its highest-projected non-Labour party. Both agree → high confidence. One provider only → medium. They disagree → the party with the higher mean projected share, at low confidence. Confidence also drops to low when combined others outpoll the named challenger.
+3. No projection → the 2024 result (`results-2024-gb.json`): the strongest non-Labour party. Medium confidence with a 10+ point lead over the next non-Labour party, otherwise low.
+
+The seat panel shows the pick, its confidence and reason, each provider's projection (shares, plus win probabilities where published), the 2024 result, the confirmed candidate where known (Reform UK and Restore Britain only), fieldwork and retrieval dates, and source links. The side panel shows the latest national polls, the 7-poll average, seat counts per provider and pick counts. The table view is sortable, filterable by pick and confidence, and exports CSV. Election JSON is fetched only when the constituency layer or a seat is opened.
+
+The earlier Reform/Restore endorsement engine (`src/endorse.ts`, `endorsements-gb.json`) is kept for reference but no longer drives the map.
 
 ## Credits
 

@@ -1,25 +1,151 @@
-import { canonicalParty, escapeHtml, loadElection, partyColour, partyName, type ElectionData, type ElectionSeat } from './election';
+import {
+  CONFIDENCE_LABEL, CONFIDENCE_OPACITY, DEFAULT_MEASURE, MAJORITY_BANDS, OWNER_NOTE,
+  candidateFor, escapeHtml, loadElection, partyColour, partyName, seatColour, seatProjectedWinner,
+  type ElectionData, type ElectionSeat, type Measure, type NationalPoll,
+} from './election';
+import { CLEAR_2024_MARGIN, CONFIDENCE_RANK } from './tactical';
+
+const NATIONAL_PARTIES: [string, string][] = [['lab', 'Labour'], ['con', 'Conservative'], ['ref', 'Reform UK'], ['ld', 'Liberal Democrat'], ['grn', 'Green'], ['rb', 'Restore Britain'], ['snp', 'SNP'], ['pc', 'Plaid Cymru']];
+const SHORT: Record<string, string> = { lab: 'Lab', con: 'Con', ref: 'Ref', ld: 'LD', grn: 'Grn', rb: 'RB', snp: 'SNP', pc: 'PC' };
+const EXT = ' target="_blank" rel="noopener noreferrer"';
+const num = (v: unknown) => typeof v === 'number' && Number.isFinite(v) ? v : null;
+
+export function countBy(values: string[]): [string, number][] {
+  return Object.entries(values.reduce<Record<string, number>>((acc, p) => { acc[p] = (acc[p] ?? 0) + 1; return acc; }, {})).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+}
+
+function bars(rows: [string, number][], unit: string): string {
+  const max = Math.max(1, ...rows.map(([, v]) => v));
+  return `<ul class="share-bars">${rows.map(([p, v]) => `<li><span>${escapeHtml(p)}</span><b><i style="width:${(v / max * 100).toFixed(1)}%;background:${partyColour(p)}"></i></b><em>${v}${unit}</em></li>`).join('')}</ul>`;
+}
+
+function nationalHtml(d: ElectionData): string {
+  const avg = d.national.rolling_average;
+  const span = avg?.fieldwork_span;
+  const average = avg ? bars(NATIONAL_PARTIES.flatMap(([k, p]) => { const v = num(avg[k]); return v === null ? [] : [[p, v] as [string, number]]; }).sort((a, b) => b[1] - a[1]), '%') : '<p>No poll average available.</p>';
+  const polls: NationalPoll[] = (d.national.polls ?? []).slice(0, avg?.n ?? 7);
+  const table = polls.length ? `<div class="mini-scroll"><table class="mini-table"><thead><tr><th>Pollster</th><th>Fieldwork</th>${NATIONAL_PARTIES.slice(0, 6).map(([k]) => `<th>${SHORT[k]}</th>`).join('')}</tr></thead><tbody>${polls.map(p => `<tr><td>${escapeHtml(p.pollster)}</td><td>${escapeHtml(p.fieldwork)}</td>${NATIONAL_PARTIES.slice(0, 6).map(([k]) => { const v = num(p[k]); return `<td>${v === null ? '–' : v}</td>`; }).join('')}</tr>`).join('')}</tbody></table></div>` : '';
+  return `<p class="summary-head">${avg?.n ?? 0}-poll average · fieldwork ${escapeHtml(span?.oldest ?? '?')} to ${escapeHtml(span?.newest ?? '?')}</p>${average}` +
+    `<p class="summary-head">Latest polls (GB, %)</p>${table}` +
+    `<p class="seat-small">${escapeHtml(avg?.method ?? '')} Source: <a href="${escapeHtml(d.national.source_url)}"${EXT}>${escapeHtml(d.national.source ?? 'opinion polling table')}</a> · retrieved ${escapeHtml(d.national.retrieved_at.slice(0, 10))}. National polls are shown for context and do not change seat picks.</p>`;
+}
+
+function seatCountsHtml(d: ElectionData): string {
+  const providers = Object.entries(d.projections.providers);
+  const columns: [string, Map<string, number>][] = [
+    ['2024', new Map(countBy(d.seats.map(s => s.result ? partyName(d, s.result.winner_party) : 'Unavailable')))],
+    ...providers.map(([key, p]) => [p.provider, new Map(countBy(d.seats.map(s => seatProjectedWinner(s, key) || 'Unavailable')))] as [string, Map<string, number>]),
+    ['Tactical picks', new Map(countBy(d.seats.map(s => s.pick.party ?? 'No pick')))],
+  ];
+  const parties = [...new Set(columns.flatMap(([, m]) => [...m.keys()]))].sort((a, b) => Math.max(...columns.map(([, m]) => m.get(b) ?? 0)) - Math.max(...columns.map(([, m]) => m.get(a) ?? 0)));
+  return `<div class="mini-scroll"><table class="mini-table counts"><thead><tr><th>Party</th>${columns.map(([h]) => `<th>${escapeHtml(h)}</th>`).join('')}</tr></thead><tbody>${parties.map(p => `<tr><td><i class="swatch" style="background:${partyColour(p)}"></i>${escapeHtml(p)}</td>${columns.map(([, m]) => `<td>${m.get(p) ?? '–'}</td>`).join('')}</tr>`).join('')}</tbody></table></div>` +
+    `<p class="seat-small">Seats each provider projects each party to win, from ${providers.map(([, p]) => `<a href="${escapeHtml(p.url)}"${EXT}>${escapeHtml(p.provider)}</a> (fieldwork ${escapeHtml(p.fieldwork ?? 'not stated')})`).join(' and ')}. Tactical picks never include Labour.</p>`;
+}
+
+const HOW_IT_WORKS = `<ol class="how">
+<li><strong>Owner override.</strong> If the site owner has set a pick for a seat in <code>overrides.json</code>, that pick is used, and the panel still shows what the data says.</li>
+<li><strong>Seat projections.</strong> For each provider (Electoral Calculus and More in Common): if it projects a non-Labour winner, that party is its pick. If it projects Labour to win, its pick is the non-Labour party with the highest projected share (the challenger).</li>
+<li><strong>Agreement.</strong> Both providers name the same party: <em>high</em> confidence. Only one provider: <em>medium</em>. They disagree: the party with the higher average projected share across providers, at <em>low</em> confidence. Confidence also drops to low if the combined others/independents vote is bigger than the named challenger.</li>
+<li><strong>No projection.</strong> Use the 2024 result: the strongest non-Labour party. That is <em>medium</em> confidence with a lead of ${CLEAR_2024_MARGIN}+ points over the next non-Labour party, otherwise <em>low</em>.</li>
+</ol><p>Any party can be the pick, including Conservative, Reform UK, Restore Britain, Liberal Democrat, Green, SNP, Plaid Cymru or an independent. There is no default party. Labour is never picked. On the map, a stronger fill means higher confidence.</p>
+<p>Projections are model estimates, not results. Candidate names are confirmed only for Reform UK and Restore Britain (Democracy Club). For other parties check <a href="https://whocanivotefor.co.uk/"${EXT}>Who can I vote for?</a>. ${escapeHtml(OWNER_NOTE)} This is civic information, not Electoral Commission advice.</p>`;
+
+type Column = { key: string; label: string; value: (s: ElectionSeat) => string; sort?: (s: ElectionSeat) => number };
 
 export function mountElectionUI(openSeat: (code: string) => void): void {
- const root = document.createElement('section'); root.className = 'election-controls';
- root.innerHTML = `<h1>GB election atlas</h1><p>2024 results and seat projections · Northern Ireland is outside this edition</p><label>Map colour <select aria-label="Map colour"><option value="winner">2024 winning party</option><option value="majority">2024 majority size</option><option value="projection">Projected leader</option></select></label><div class="election-legend">Loading election data…</div><details open><summary>National polling and seat totals</summary><div class="election-summary"></div></details><button type="button" class="open-table">List all 632 seats</button>`;
- document.body.append(root);
- const select=root.querySelector('select')!; select.addEventListener('change',()=> { window.dispatchEvent(new CustomEvent('atlas:measure',{detail:select.value})); void loadElection().then(updateLegend); });
- let data: ElectionData;
- const legend = root.querySelector<HTMLElement>('.election-legend')!;
- const counts=(values:string[])=>Object.entries(values.reduce<Record<string,number>>((acc,p)=>{acc[p]=(acc[p]??0)+1;return acc;},{})).sort((a,b)=>b[1]-a[1]);
- function updateLegend(d: ElectionData) {
-   const values=d.seats.map(s=>select.value==='projection' ? canonicalParty(s.projections[0]?.row.projected_winner ?? '', s.code) : s.result ? partyName(d,s.result.winner_party) : '');
-   legend.innerHTML=select.value==='majority' ? [['#f7e3ac','Under 5%'],['#e8b65d','5–10%'],['#d37d3f','10–20%'],['#9f462c','20% and over']].map(([c,l])=>`<span><i style="background:${c}"></i>${l}</span>`).join('') : counts(values).map(([p,n])=>`<span><i style="background:${partyColour(p)}"></i>${escapeHtml(p || 'Unavailable')} ${n}</span>`).join('');
- }
- const dialog=document.createElement('dialog'); dialog.className='election-table'; dialog.innerHTML=`<header><h2>All GB constituencies</h2><button class="close-table" aria-label="Close">×</button></header><div class="table-tools"><input type="search" placeholder="Search seats" aria-label="Search seats"><button class="csv">Export CSV</button></div><div class="table-scroll"><table><thead><tr><th><button data-sort="name">Seat</button></th><th><button data-sort="winner">2024 winner</button></th><th><button data-sort="majority">Majority</button></th><th><button data-sort="projection">Projected leader</button></th><th><button data-sort="candidates">Candidates</button></th></tr></thead><tbody></tbody></table></div>`; document.body.append(dialog);
- let sort='name', ascending=true; const input=dialog.querySelector<HTMLInputElement>('input')!;
- function cells(s: ElectionSeat): string[] {return [s.name,s.result ? `${s.result.winner_name} (${partyName(data,s.result.winner_party)})` : 'Unavailable',s.result ? String(s.result.majority) : '',canonicalParty(s.projections[0]?.row.projected_winner ?? '', s.code) || 'Unavailable',Object.values(s.candidates ?? {}).filter(c=>c?.standing==='yes' && c.name).map(c=>c!.name).join('; ') || 'Not confirmed in limited coverage'];}
- function filtered() {const q=input.value.toLowerCase(); return data.seats.filter(s=>cells(s).some(v=>v.toLowerCase().includes(q))).sort((a,b)=>{const i=({name:0,winner:1,majority:2,projection:3,candidates:4} as Record<string,number>)[sort];const x=cells(a)[i],y=cells(b)[i]; return (sort==='majority' ? Number(x)-Number(y) : x.localeCompare(y))* (ascending ? 1 : -1);});}
- function render() {dialog.querySelector('tbody')!.innerHTML=filtered().map(s=>`<tr><td><button data-seat="${escapeHtml(s.code)}">${escapeHtml(s.name)}</button></td>${cells(s).slice(1).map(v=>`<td>${escapeHtml(v)}</td>`).join('')}</tr>`).join('');}
- input.addEventListener('input',render); dialog.querySelectorAll<HTMLButtonElement>('[data-sort]').forEach(b=>b.addEventListener('click',()=>{ascending=sort===b.dataset.sort ? !ascending : true;sort=b.dataset.sort!;render();}));
- dialog.querySelector('tbody')!.addEventListener('click', e=>{const button=(e.target as HTMLElement).closest<HTMLButtonElement>('[data-seat]');if(button?.dataset.seat){dialog.close();openSeat(button.dataset.seat);}});
- dialog.querySelector('.close-table')!.addEventListener('click',()=>dialog.close()); root.querySelector('.open-table')!.addEventListener('click',()=>{if(data){render();dialog.showModal();}});
- dialog.querySelector('.csv')!.addEventListener('click',()=>{const rows=[['Seat','2024 winner','Majority','Projected leader','Candidates'],...filtered().map(cells)];const csv=rows.map(row=>row.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\r\n');const link=document.createElement('a');link.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));link.download='gb-constituencies.csv';link.click();URL.revokeObjectURL(link.href);});
- void loadElection().then(d=>{data=d; updateLegend(d); const resultCounts=counts(d.seats.map(s=>s.result ? partyName(d,s.result.winner_party) : 'Unavailable'));const projectedCounts=counts(d.seats.map(s=>canonicalParty(s.projections[0]?.row.projected_winner ?? '', s.code) || 'Unavailable')); const avg=d.national.rolling_average; root.querySelector('.election-summary')!.innerHTML=`<p><strong>2024 seats:</strong> ${resultCounts.map(([p,n])=>`${escapeHtml(p)} ${n}`).join(' · ')}</p><p><strong>Electoral Calculus projected leaders:</strong> ${projectedCounts.map(([p,n])=>`${escapeHtml(p)} ${n}`).join(' · ')}</p><p><strong>National poll average (${avg?.n ?? 0} polls, ${escapeHtml((avg?.fieldwork_span as {oldest?: string; newest?: string} | undefined)?.oldest ?? 'unknown')} to ${escapeHtml((avg?.fieldwork_span as {oldest?: string; newest?: string} | undefined)?.newest ?? 'unknown')}):</strong> ${avg ? ['lab','con','ref','ld','grn','snp','pc','rb'].filter(k=>typeof avg[k]==='number').map(k=>`${k.toUpperCase()} ${avg[k]}%`).join(' · ') : 'Unavailable'}</p><p>${escapeHtml(avg?.method ?? '')} <a href="${escapeHtml(d.national.source_url)}" target="_blank" rel="noopener noreferrer">Source</a> · retrieved ${escapeHtml(d.national.retrieved_at.slice(0,10))}</p>`;}).catch(()=>{legend.textContent='Election data unavailable';});
+  const root = document.createElement('section'); root.className = 'election-controls';
+  const wide = window.matchMedia('(min-width: 861px)').matches;
+  root.innerHTML = `<h1>Stop Labour: GB tactical vote atlas</h1><p class="lede">Who is best placed to beat Labour in each of 632 GB seats, with the evidence shown. Northern Ireland is not covered.</p>` +
+    `<p class="owner-note">${escapeHtml(OWNER_NOTE)}</p>` +
+    `<label>Map colour <select aria-label="Map colour"><option value="tactical">Who to back to stop Labour</option><option value="winner">2024 winning party</option><option value="majority">2024 majority size</option><option value="proj:electoral_calculus">Projected winner (Electoral Calculus)</option><option value="proj:more_in_common">Projected winner (More in Common)</option></select></label>` +
+    `<div class="election-legend" aria-live="polite">Loading election data…</div>` +
+    `<button type="button" class="open-table">Table of all 632 seats</button>` +
+    `<details${wide ? ' open' : ''}><summary>National polls</summary><div class="national-summary"></div></details>` +
+    `<details><summary>Seat counts by provider</summary><div class="seat-counts"></div></details>` +
+    `<details><summary>How this works</summary>${HOW_IT_WORKS}</details>`;
+  document.body.append(root);
+  const select = root.querySelector('select')!;
+  select.value = DEFAULT_MEASURE;
+  const legend = root.querySelector<HTMLElement>('.election-legend')!;
+  let data: ElectionData | undefined;
+  select.addEventListener('change', () => { window.dispatchEvent(new CustomEvent('atlas:measure', { detail: select.value })); if (data) updateLegend(data); });
+
+  function updateLegend(d: ElectionData) {
+    const measure = select.value as Measure;
+    if (measure === 'majority') {
+      legend.innerHTML = MAJORITY_BANDS.map(([, c, l]) => `<span><i style="background:${c}"></i>${l}</span>`).join('');
+      return;
+    }
+    const entries = countBy(d.seats.map(s => seatColour(s, d, measure).label));
+    legend.innerHTML = entries.map(([p, n]) => `<span><i style="background:${partyColour(p === 'No pick' || p === 'Unavailable' ? '' : p)}"></i>${escapeHtml(p)} ${n}</span>`).join('') +
+      (measure === 'tactical' ? `<div class="conf-key">${(['high', 'medium', 'low'] as const).map(c => `<span><i style="opacity:${CONFIDENCE_OPACITY[c]}"></i>${CONFIDENCE_LABEL[c]} ${d.seats.filter(s => s.pick.confidence === c).length}</span>`).join('')}</div>` : '');
+  }
+
+  // Table view.
+  const dialog = document.createElement('dialog'); dialog.className = 'election-table';
+  dialog.innerHTML = `<header><h2>All GB constituencies</h2><button class="close-table" aria-label="Close">×</button></header>` +
+    `<div class="table-tools"><input type="search" placeholder="Search seats or parties" aria-label="Search seats or parties"><select class="f-party" aria-label="Filter by tactical pick"><option value="">Any pick</option></select><select class="f-conf" aria-label="Filter by confidence"><option value="">Any confidence</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select><button class="csv">Export CSV</button></div>` +
+    `<p class="table-count"></p><div class="table-scroll"><table><thead></thead><tbody></tbody></table></div>`;
+  document.body.append(dialog);
+  const input = dialog.querySelector<HTMLInputElement>('input')!;
+  const partyFilter = dialog.querySelector<HTMLSelectElement>('.f-party')!;
+  const confFilter = dialog.querySelector<HTMLSelectElement>('.f-conf')!;
+  let columns: Column[] = [];
+  let sort = 'name', ascending = true;
+  const candidateText = (s: ElectionSeat) => candidateFor(s, s.pick.party)?.name ?? (s.pick.party ? 'Not yet confirmed' : '');
+
+  function buildColumns(d: ElectionData) {
+    columns = [
+      { key: 'name', label: 'Seat', value: s => s.name },
+      { key: 'winner', label: '2024 winner', value: s => s.result ? partyName(d, s.result.winner_party) : 'Unavailable' },
+      ...Object.entries(d.projections.providers).map(([key, p]) => ({ key, label: `Projected (${p.provider})`, value: (s: ElectionSeat) => seatProjectedWinner(s, key) || 'Unavailable' })),
+      { key: 'pick', label: 'Tactical pick', value: s => s.pick.party ?? 'No pick' },
+      { key: 'confidence', label: 'Confidence', value: s => s.pick.confidence, sort: s => CONFIDENCE_RANK[s.pick.confidence] },
+      { key: 'candidate', label: 'Candidate', value: candidateText },
+    ];
+    dialog.querySelector('thead')!.innerHTML = `<tr>${columns.map(c => `<th><button data-sort="${c.key}">${escapeHtml(c.label)}</button></th>`).join('')}</tr>`;
+    partyFilter.innerHTML = `<option value="">Any pick</option>${countBy(d.seats.map(s => s.pick.party ?? 'No pick')).map(([p, n]) => `<option value="${escapeHtml(p)}">${escapeHtml(p)} (${n})</option>`).join('')}`;
+  }
+  function filtered(d: ElectionData) {
+    const q = input.value.trim().toLowerCase();
+    const col = columns.find(c => c.key === sort) ?? columns[0];
+    return d.seats
+      .filter(s => (!partyFilter.value || (s.pick.party ?? 'No pick') === partyFilter.value) && (!confFilter.value || s.pick.confidence === confFilter.value))
+      .filter(s => !q || columns.some(c => c.value(s).toLowerCase().includes(q)))
+      .sort((a, b) => (col.sort ? col.sort(a) - col.sort(b) : col.value(a).localeCompare(col.value(b))) * (ascending ? 1 : -1) || a.name.localeCompare(b.name));
+  }
+  function render() {
+    if (!data) return;
+    const rows = filtered(data);
+    dialog.querySelector('.table-count')!.textContent = `${rows.length} of ${data.seats.length} seats`;
+    dialog.querySelector('tbody')!.innerHTML = rows.map(s => `<tr><td><button data-seat="${escapeHtml(s.code)}">${escapeHtml(s.name)}</button></td>${columns.slice(1).map(c => {
+      const v = c.value(s);
+      return c.key === 'pick' ? `<td><i class="swatch" style="background:${partyColour(s.pick.party ?? '')}"></i>${escapeHtml(v)}</td>` : c.key === 'confidence' ? `<td><span class="conf conf-${v}">${escapeHtml(v)}</span></td>` : `<td>${escapeHtml(v)}</td>`;
+    }).join('')}</tr>`).join('');
+  }
+  for (const el of [input, partyFilter, confFilter]) el.addEventListener('input', render);
+  dialog.querySelector('thead')!.addEventListener('click', e => {
+    const b = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-sort]');
+    if (!b?.dataset.sort) return;
+    ascending = sort === b.dataset.sort ? !ascending : true; sort = b.dataset.sort; render();
+  });
+  dialog.querySelector('tbody')!.addEventListener('click', e => { const button = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-seat]'); if (button?.dataset.seat) { dialog.close(); openSeat(button.dataset.seat); } });
+  dialog.querySelector('.close-table')!.addEventListener('click', () => dialog.close());
+  root.querySelector('.open-table')!.addEventListener('click', () => { if (data) { render(); dialog.showModal(); } });
+  dialog.querySelector('.csv')!.addEventListener('click', () => {
+    if (!data) return;
+    const rows = [['Code', ...columns.map(c => c.label), 'Reason', 'Sources'], ...filtered(data).map(s => [s.code, ...columns.map(c => c.value(s)), s.pick.reason, s.pick.sources.map(x => x.url).join(' ')])];
+    const csv = rows.map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\r\n');
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'gb-tactical-picks.csv'; a.click(); URL.revokeObjectURL(a.href);
+  });
+
+  void loadElection().then(d => {
+    data = d;
+    // Only offer provider colourings that exist in the data.
+    for (const option of [...select.options]) if (option.value.startsWith('proj:') && !d.projections.providers[option.value.slice(5)]) option.remove();
+    buildColumns(d);
+    updateLegend(d);
+    root.querySelector('.national-summary')!.innerHTML = nationalHtml(d);
+    root.querySelector('.seat-counts')!.innerHTML = seatCountsHtml(d);
+  }).catch(() => { legend.textContent = 'Election data unavailable'; });
 }
