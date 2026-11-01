@@ -39,15 +39,15 @@ function seatCountsHtml(d: ElectionData): string {
   ];
   const parties = [...new Set(columns.flatMap(([, m]) => [...m.keys()]))].sort((a, b) => Math.max(...columns.map(([, m]) => m.get(b) ?? 0)) - Math.max(...columns.map(([, m]) => m.get(a) ?? 0)));
   return `<div class="mini-scroll"><table class="mini-table counts"><thead><tr><th>Party</th>${columns.map(([h]) => `<th>${escapeHtml(h)}</th>`).join('')}</tr></thead><tbody>${parties.map(p => `<tr><td><i class="swatch" style="background:${partyColour(p)}"></i>${escapeHtml(p)}</td>${columns.map(([, m]) => `<td>${m.get(p) ?? '–'}</td>`).join('')}</tr>`).join('')}</tbody></table></div>` +
-    `<p class="seat-small">Seats each provider projects each party to win, from ${providers.map(([, p]) => `<a href="${escapeHtml(p.url)}"${EXT}>${escapeHtml(p.provider)}</a> (fieldwork ${escapeHtml(p.fieldwork ?? 'not stated')})`).join(' and ')}. Tactical picks never include Labour.</p>`;
+    `<p class="seat-small">Seats each provider projects each party to win, from ${providers.map(([, p]) => `<a href="${escapeHtml(p.url)}"${EXT}>${escapeHtml(p.provider)}</a> (fieldwork ${escapeHtml(p.fieldwork ?? 'not stated')})`).join(' and ')}. Tactical picks never include Labour or Green.</p>`;
 }
 
 const HOW_IT_WORKS = `<ol class="how">
 <li><strong>Owner override.</strong> If the site owner has set a pick for a seat in <code>overrides.json</code>, that pick is used, and the panel still shows what the data says.</li>
-<li><strong>Seat projections.</strong> For each provider (Electoral Calculus and More in Common): if it projects a non-Labour winner, that party is its pick. If it projects Labour to win, its pick is the non-Labour party with the highest projected share (the challenger).</li>
+<li><strong>Seat projections.</strong> For each provider (Electoral Calculus and More in Common): if it projects a winner other than Labour or Green, that party is its pick. If it projects Labour or Green to win, its pick is the other party (not Labour, not Green) with the highest projected share (the challenger).</li>
 <li><strong>Agreement.</strong> Both providers name the same party: <em>high</em> confidence. Only one provider: <em>medium</em>. They disagree: the party with the higher average projected share across providers, at <em>low</em> confidence. Confidence also drops to low if the combined others/independents vote is bigger than the named challenger.</li>
-<li><strong>No projection.</strong> Use the 2024 result: the strongest non-Labour party. That is <em>medium</em> confidence with a lead of ${CLEAR_2024_MARGIN}+ points over the next non-Labour party, otherwise <em>low</em>.</li>
-</ol><p>Any party can be the pick, including Conservative, Reform UK, Restore Britain, Liberal Democrat, Green, SNP, Plaid Cymru or an independent. There is no default party. Labour is never picked. On the map, a stronger fill means higher confidence.</p>
+<li><strong>No projection.</strong> Use the 2024 result: the strongest party other than Labour and Green. That is <em>medium</em> confidence with a lead of ${CLEAR_2024_MARGIN}+ points over the next eligible party, otherwise <em>low</em>.</li>
+</ol><p>Any party can be the pick, including Conservative, Reform UK, Restore Britain, Liberal Democrat, SNP, Plaid Cymru or an independent, except Labour and Green, which the site owner excludes. There is no default party. Labour and Green are never picked. On the map, a stronger fill means higher confidence.</p>
 <p>Projections are model estimates, not results. Candidate names are confirmed only for Reform UK and Restore Britain (Democracy Club). For other parties check <a href="https://whocanivotefor.co.uk/"${EXT}>Who can I vote for?</a>. ${escapeHtml(OWNER_NOTE)} This is civic information, not Electoral Commission advice.</p>`;
 
 type Column = { key: string; label: string; value: (s: ElectionSeat) => string; sort?: (s: ElectionSeat) => number };

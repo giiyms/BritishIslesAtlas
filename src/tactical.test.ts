@@ -12,9 +12,9 @@ describe('decideTacticalPick', () => {
     const pick = decideTacticalPick({
       code: E,
       projections: [ec({ projected_winner: 'Reform', reform_share: 35, lab_share: 30 }), mic({ projected_winner: 'Reform UK', reform_share: 33, lab_share: 30 })],
-      override: { party: 'Green', note: 'Local campaign' },
+      override: { party: 'Liberal Democrat', note: 'Local campaign' },
     });
-    expect(pick.party).toBe('Green');
+    expect(pick.party).toBe('Liberal Democrat');
     expect(pick.source).toBe('override');
     expect(pick.confidence).toBe('low');
     expect(pick.reason).toContain('Site owner override: Local campaign');
@@ -79,7 +79,7 @@ describe('decideTacticalPick', () => {
   });
 
   it('is medium confidence with one provider', () => {
-    expect(decideTacticalPick({ code: E, projections: [mic({ projected_winner: 'Green', green_share: 40, lab_share: 35 })] })).toMatchObject({ party: 'Green', confidence: 'medium' });
+    expect(decideTacticalPick({ code: E, projections: [mic({ projected_winner: 'Conservative', con_share: 40, lab_share: 35 })] })).toMatchObject({ party: 'Conservative', confidence: 'medium' });
   });
 
   it('maps the Nationalist column by nation', () => {
@@ -88,8 +88,8 @@ describe('decideTacticalPick', () => {
   });
 
   it('lowers confidence when combined others outpoll the named challenger', () => {
-    const pick = decideTacticalPick({ code: E, projections: [ec({ projected_winner: 'Labour', lab_share: 40, green_share: 12, oth_share: 30 }), mic({ projected_winner: 'Labour', lab_share: 42, green_share: 11, oth_share: 28 })] });
-    expect(pick).toMatchObject({ party: 'Green', confidence: 'low' });
+    const pick = decideTacticalPick({ code: E, projections: [ec({ projected_winner: 'Labour', lab_share: 40, con_share: 12, oth_share: 30 }), mic({ projected_winner: 'Labour', lab_share: 42, con_share: 11, oth_share: 28 })] });
+    expect(pick).toMatchObject({ party: 'Conservative', confidence: 'low' });
   });
 
   it('falls back to the strongest non-Labour 2024 party without projections', () => {
@@ -99,7 +99,15 @@ describe('decideTacticalPick', () => {
     expect(close).toMatchObject({ party: 'Reform UK', confidence: 'low', source: 'results-2024' });
   });
 
-  it('never picks Labour', () => {
+  it('skips Green: a projected Green winner gives the strongest other challenger, and a Green override is ignored', () => {
+    const pick = decideTacticalPick({ code: E, projections: [ec({ projected_winner: 'Green', green_share: 40, lab_share: 30, con_share: 15, reform_share: 10 })], override: { party: 'Green' } });
+    expect(pick.party).toBe('Conservative');
+    expect(pick.reason).toContain('override naming Green was ignored');
+    const fallback = decideTacticalPick({ code: E, projections: [], result2024: { winner: 'Green', shares: [['Green', 50], ['Labour', 30], ['Reform UK', 12]] } });
+    expect(fallback.party).toBe('Reform UK');
+  });
+
+  it('never picks Labour or Green', () => {
     expect(isLabour('Labour')).toBe(true);
     expect(isLabour('Labour and Co-operative Party')).toBe(true);
     expect(isLabour('Socialist Labour Party')).toBe(false);
@@ -118,6 +126,7 @@ describe('tactical picks on the shipped data', () => {
     for (const seat of seats) {
       expect(seat.pick.party, seat.name).toBeTruthy();
       expect(isLabour(seat.pick.party), seat.name).toBe(false);
+      expect(seat.pick.party, seat.name).not.toMatch(/green/i);
       expect(['high', 'medium', 'low']).toContain(seat.pick.confidence);
       expect(seat.pick.reason.length).toBeGreaterThan(20);
       expect(seat.pick.sources.length).toBeGreaterThan(0);

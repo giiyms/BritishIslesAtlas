@@ -10,7 +10,7 @@
  *     projected share, low confidence.
  *  3. No projection → 2024 result: strongest non-Labour party. Medium confidence
  *     with a clear (10+ point) lead over the next non-Labour party, else low.
- * Labour is never returned.
+ * Labour and Green are never returned (owner rule).
  */
 import { canonicalParty } from "./parties";
 
@@ -63,6 +63,16 @@ export function isLabour(party: string | null | undefined): boolean {
   return LABOUR_RE.test((party ?? "").trim());
 }
 
+const GREEN_RE = /^(?:(?:scottish|welsh) )?green(?: party)?$/i;
+export function isGreen(party: string | null | undefined): boolean {
+  return GREEN_RE.test((party ?? "").trim());
+}
+
+/** Parties the site owner never wants picked: Labour and Green (owner rule, 2026-10-31). */
+export function isExcluded(party: string | null | undefined): boolean {
+  return isLabour(party) || isGreen(party);
+}
+
 /** Seat-projection share columns → canonical party. `nat` is SNP in Scotland, Plaid in Wales. */
 function shareKey(party: string, code: string): string | null {
   switch (party) {
@@ -106,10 +116,10 @@ export function projectedWinner(row: SeatProjectionRow, code: string): string {
 export function providerPick(projection: ProjectionInput, code: string): ProviderPick | null {
   const winner = projectedWinner(projection.row, code);
   const winnerShare = winner ? projectedShare(projection.row, winner, code) : null;
-  if (winner && !isLabour(winner)) {
+  if (winner && !isExcluded(winner)) {
     return { provider: projection.provider, party: winner, basis: "winner", share: winnerShare, winner, winnerShare };
   }
-  const challenger = projectedShares(projection.row, code).find(([p, v]) => !isLabour(p) && v > 0);
+  const challenger = projectedShares(projection.row, code).find(([p, v]) => !isExcluded(p) && v > 0);
   if (!challenger) return null;
   return { provider: projection.provider, party: challenger[0], basis: "challenger", share: challenger[1], winner, winnerShare };
 }
@@ -119,7 +129,7 @@ const pct = (n: number | null) => n === null ? "n/a" : `${Number.isInteger(n) ? 
 function explain(p: ProviderPick): string {
   return p.basis === "winner"
     ? `${p.provider} projects ${p.party} to win (${pct(p.share)})`
-    : `${p.provider} projects Labour to win (${pct(p.winnerShare)}), with ${p.party} the strongest challenger (${pct(p.share)})`;
+    : `${p.provider} projects ${p.winner || "Labour"} to win (${pct(p.winnerShare)}), with ${p.party} the strongest challenger (${pct(p.share)})`;
 }
 
 function linksFor(projections: ProjectionInput[]): SourceLink[] {
@@ -164,12 +174,12 @@ function fromProjections(input: TacticalInput): TacticalPick | null {
 }
 
 function fromResults(result: Result2024Input): TacticalPick | null {
-  const ranked = result.shares.filter(([p]) => !isLabour(p) && p !== "Other").sort((a, b) => b[1] - a[1]);
+  const ranked = result.shares.filter(([p]) => !isExcluded(p) && p !== "Other").sort((a, b) => b[1] - a[1]);
   if (!ranked.length) return null;
   const [[party, share], next] = ranked;
   const margin = next ? share - next[1] : share;
   const confidence: Confidence = margin >= CLEAR_2024_MARGIN ? "medium" : "low";
-  const reason = `No seat projection is available, so this uses the 2024 result: ${party} was the strongest non-Labour party on ${pct(share)}` +
+  const reason = `No seat projection is available, so this uses the 2024 result: ${party} was the strongest party other than Labour and Green on ${pct(share)}` +
     (next ? `, ${pct(Math.round(margin * 10) / 10)} ahead of ${next[0]}.` : ".");
   return { party, confidence, source: "results-2024", reason, sources: result.url ? [{ label: "2024 results (House of Commons Library)", url: result.url }] : [], providerPicks: [] };
 }
@@ -186,14 +196,14 @@ export function overrideParty(override: OverrideInput): string | null {
 export function decideTacticalPick(input: TacticalInput): TacticalPick {
   const automatic: TacticalPick = fromProjections(input) ?? (input.result2024 ? fromResults(input.result2024) : null) ?? {
     party: null, confidence: "low", source: "none",
-    reason: "No projection or 2024 result data names a non-Labour party here.", sources: [], providerPicks: [],
+    reason: "No projection or 2024 result data names a party other than Labour or Green here.", sources: [], providerPicks: [],
   };
   const override = input.override;
   if (!override) return automatic;
   const party = overrideParty(override);
   if (!party) return automatic;
-  if (isLabour(party)) {
-    return { ...automatic, reason: `${automatic.reason} (An override naming Labour was ignored.)` };
+  if (isExcluded(party)) {
+    return { ...automatic, reason: `${automatic.reason} (An override naming ${isGreen(party) ? "Green" : "Labour"} was ignored.)` };
   }
   const agrees = automatic.party === party;
   const note = override.note?.trim();
