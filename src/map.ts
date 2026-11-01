@@ -702,7 +702,8 @@ export function createAtlas(container: HTMLElement): Atlas {
     }
     if (!on) setSelected(null);
   };
-  const popup = new Popup({ closeButton: true, maxWidth: "260px", className: "atlas-popup", offset: 10 });
+  // closeOnClick is off: the built-in handler runs after ours and closed the popup we had just re-opened for the newly tapped seat (second tap needed).
+  const popup = new Popup({ closeButton: true, closeOnClick: false, maxWidth: "260px", className: "atlas-popup", offset: 10 });
   popup.on("close", () => {
     setSelected(null);
     document.body.classList.remove("seat-sheet-open");
@@ -815,7 +816,7 @@ export function createAtlas(container: HTMLElement): Atlas {
   };
   map.on("click", async (event) => {
     const feature = topFeature(event.point);
-    if (!feature) return;
+    if (!feature) { popup.remove(); return; }
     const properties = feature.properties as Record<string, unknown>;
     const layerId = String(properties.layer ?? feature.source ?? "");
     const layer = LAYERS.find((item) => item.id === layerId);
