@@ -9,6 +9,11 @@ import { mountScale } from "./scale";
 import { mountSearch } from "./search";
 import { mountElectionUI } from "./election-ui";
 
+// Safari ignores user-scalable=no; block its page pinch-zoom gestures (the map handles its own pinch).
+for (const type of ["gesturestart", "gesturechange", "gestureend"]) {
+  document.addEventListener(type, (event) => event.preventDefault());
+}
+
 const mapNode = document.querySelector<HTMLElement>("#map");
 const panel = document.querySelector<HTMLElement>("#layers");
 const search = document.querySelector<HTMLFormElement>("#search");
