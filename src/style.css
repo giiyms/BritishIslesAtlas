@@ -553,6 +553,10 @@ button { cursor: pointer; }
     border-radius: 99px;
     background: #d7dbe2;
   }
+  .atlas-popup.is-seat { translate: 0 var(--sheet-dy, 0px); transition: translate .2s ease; }
+  .atlas-popup.is-seat.sheet-dragging { transition: none; }
+  .atlas-popup.is-seat .maplibregl-popup-content { transition: max-height .2s ease; touch-action: pan-y; }
+  .atlas-popup.is-seat.sheet-peek .maplibregl-popup-content { max-height: 84px; overflow: hidden; }
   .atlas-popup.is-seat .vote-popup { min-width: 0; }
   body.seat-sheet-open .nav,
   body.seat-sheet-open .scale,

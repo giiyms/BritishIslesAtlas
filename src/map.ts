@@ -711,8 +711,47 @@ export function createAtlas(container: HTMLElement): Atlas {
   let popupIsSeat = false;
   popup.on("open", () => {
     popup.getElement()?.classList.toggle("is-seat", popupIsSeat);
+    popup.getElement()?.classList.remove("sheet-peek");
     document.body.classList.toggle("seat-sheet-open", popupIsSeat);
   });
+  // Bottom-sheet gestures (<=520px): drag down to peek, further to dismiss; drag up to expand.
+  {
+    let startY = 0, dy = 0, dragging = false, sheet: HTMLElement | null = null, content: HTMLElement | null = null, wasPeek = false;
+    const sheetFrom = (target: EventTarget | null) => {
+      if (!window.matchMedia("(max-width: 520px)").matches || !(target instanceof Element)) return null;
+      return target.closest<HTMLElement>(".atlas-popup.is-seat");
+    };
+    document.addEventListener("touchstart", (event) => {
+      sheet = sheetFrom(event.target);
+      if (!sheet || event.touches.length !== 1) { sheet = null; return; }
+      content = sheet.querySelector<HTMLElement>(".maplibregl-popup-content");
+      startY = event.touches[0].clientY; dy = 0; dragging = false; wasPeek = sheet.classList.contains("sheet-peek");
+    }, { passive: true });
+    document.addEventListener("touchmove", (event) => {
+      if (!sheet || !content) return;
+      dy = event.touches[0].clientY - startY;
+      if (!dragging) {
+        const onHandle = (event.target as Element).closest(".maplibregl-popup-close-button") === null &&
+          startY - content.getBoundingClientRect().top < 36;
+        const canDrag = onHandle || wasPeek || content.scrollTop <= 0 && dy > 0 || (wasPeek && dy < 0);
+        if (Math.abs(dy) < 6 || !canDrag) return;
+        dragging = true; sheet.classList.add("sheet-dragging");
+      }
+      event.preventDefault();
+      sheet.style.setProperty("--sheet-dy", `${Math.max(dy, wasPeek ? -60 : -20)}px`);
+    }, { passive: false });
+    const end = () => {
+      if (!sheet) return;
+      const el = sheet; sheet = null;
+      if (!dragging) return;
+      el.classList.remove("sheet-dragging"); el.style.removeProperty("--sheet-dy");
+      if (dy > 140 || (wasPeek && dy > 40)) popup.remove();
+      else if (dy > 50) el.classList.add("sheet-peek");
+      else if (dy < -30) el.classList.remove("sheet-peek");
+    };
+    document.addEventListener("touchend", end);
+    document.addEventListener("touchcancel", end);
+  }
   const NON_INTERACTIVE = new Set<string>(CONSTITUENCY_LAYERS.filter((id) =>
     id !== "constituencies" && id !== "restore-callout-dot"));
   const interactiveIds = () => ordered.flatMap((layer) => layerIds(layer.id))
