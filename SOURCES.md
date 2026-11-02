@@ -1515,6 +1515,19 @@ Jersey; downloaded 2026-11-01) via `scripts/extract_pbf.py`. Licence: **ODbL 1.0
   OSM id).
 - Replaces the straight-line preview corridors that were capped at z7.
 
+## Cemeteries
+
+`public/data/cemeteries.geojson` (27,964 sites) is built by `scripts/build_pbf_layers.py cemeteries`
+from the same Geofabrik OpenStreetMap extracts (downloaded 2026-11-01) via `scripts/extract_pbf.py`.
+Licence: **ODbL 1.0**.
+
+- Every `landuse=cemetery` and `amenity=grave_yard` node or area, one point per site (areas at their
+  centre), marked disused or abandoned sites dropped.
+- Card: kind (cemetery vs churchyard or graveyard), surveyed area in hectares when the site is an
+  area, then the live OSM tags (religion, denomination, operator, website) like every OSM layer.
+- About three quarters of churchyards carry no name in OSM; those cards read "Churchyard".
+- Replaces the five-point preview.
+
 ## Remaining honest caveats
 
 - Constituencies layer is ONS BGC GB-only (632); NI deferred; no endorse/polling UI yet.

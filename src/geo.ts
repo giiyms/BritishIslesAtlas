@@ -208,13 +208,6 @@ st-peter-port|St Peter Port|Crown dependency|-2.537|49.455|19000
 `;
 
 const NAMED_POINTS: Record<string, string> = {
-  cemeteries: `
-Highgate Cemetery|London|-0.147|51.567
-Glasnevin Cemetery|Dublin|-6.277|53.372
-Brompton Cemetery|London|-0.191|51.485
-Glasgow Necropolis|Glasgow|-4.231|55.862
-Arnos Vale Cemetery|Bristol|-2.565|51.443
-`,
   immigration: `
 Heathrow preview|London|-0.454|51.470
 Gatwick preview|Crawley|-0.182|51.153
@@ -425,7 +418,7 @@ const builders: Record<LayerId, () => Feature[]> = {
   census: () => [],
   petrol: () => [],
   ev: () => [],
-  cemeteries: () => namedLayer("cemeteries", "Preview cemetery"),
+  cemeteries: () => [],
   immigration: () => namedLayer("immigration", "Preview checkpoint"),
   crime: () => namedLayer("crime", "Preview only, not an offence record"),
   health: () => namedLayer("health", "Preview health marker"),

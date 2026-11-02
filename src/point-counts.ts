@@ -12,6 +12,7 @@ export const POINT_COUNTS: Readonly<Record<string, number>> = {
   "camp-sites": 4155,
   "caravan-sites": 5017,
   "castles": 2265,
+  "cemeteries": 27964,
   "census": 392,
   "churches": 40381,
   "cinemas": 924,

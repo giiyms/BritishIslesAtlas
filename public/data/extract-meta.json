@@ -1812,5 +1812,13 @@
     "source": "OpenStreetMap via Geofabrik extracts",
     "url": "https://download.geofabrik.de/europe.html",
     "filter": "highway=motorway|trunk, merged per ref, simplified ~25 m"
+  },
+  "cemeteries": {
+    "extracted_at": "2026-11-01",
+    "method": "Geofabrik PBF extracts (great-britain, ireland-and-northern-ireland, isle-of-man, guernsey-jersey) via scripts/extract_pbf.py",
+    "license": "ODbL 1.0",
+    "layer": "cemeteries",
+    "count": 27964,
+    "filter": "landuse=cemetery or amenity=grave_yard (nodes and areas, area centre points)"
   }
 }

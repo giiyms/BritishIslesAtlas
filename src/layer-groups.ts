@@ -41,7 +41,7 @@ export const LAYER_SECTIONS: readonly LayerSection[] = [
   {
     id: "faith",
     label: "Faith & community",
-    layers: ["places-of-worship", "churches", "mosques", "other-religious", "community-centres", "pubs", "population"],
+    layers: ["cemeteries", "places-of-worship", "churches", "mosques", "other-religious", "community-centres", "pubs", "population"],
   },
   {
     id: "services",
