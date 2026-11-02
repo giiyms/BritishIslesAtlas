@@ -1441,6 +1441,31 @@ Licence: **CC BY 4.0**, "Contains data from GeoNames (geonames.org)".
   as separate places (e.g. Worcester Park) still sit inside London's disc.
 - The old sample-driven "density glow" heatmap that sat under the map is removed.
 
+## Census
+
+`public/data/census.geojson` (392 councils) is built by `scripts/build_census.py`, one square marker
+per local authority, from the latest census in each jurisdiction (downloaded 2026-11-01):
+
+- **England & Wales**: ONS Census 2021 via Nomis (TS001 usual residents, TS004 country of birth,
+  TS007B age), 318 local authorities as of April 2023. Licence: **Open Government Licence v3**.
+- **Scotland**: Scotland's Census 2022 (National Records of Scotland) output-area tables UV101b and
+  UV204b, summed to the 32 council areas with NRS's 2022 output-area centroid lookup
+  (maps.gov.scot `NRS/Census2022` layer 2). **OGL v3**. NRS perturbs small cells, so these sums can
+  differ from NRS's own council totals by a fraction of a percent (Glasgow: 620,870 here vs
+  622,820 published).
+- **Northern Ireland**: NISRA Census 2021 flexible table builder (LGD14 by country of birth, LGD14
+  by 5-year age band), 11 councils. **OGL v3**.
+- **Ireland**: CSO Census 2022 PxStat tables SAP2022T1T1ACTY (age) and SAP2022T2T1CTY
+  (birthplace), 31 local authorities. Licence: **CC BY 4.0**.
+- Positions: ONS Local Authority Districts (December 2023) BGC `LAT`/`LONG` for the UK (OGL);
+  for Ireland, the centroid of the largest part of each Tailte Éireann 2024 local authority
+  boundary (CC BY 4.0).
+- Card: usual residents, share born outside the UK (UK councils) or outside Ireland (Irish
+  councils), share aged 65 and over, census year, nation, and a link to the publisher's page
+  (ONS Explore Local Statistics for England and Wales).
+- Not covered: the Isle of Man (2021 census) and Jersey (2021) and Guernsey (no census; population
+  register) have no council marker yet.
+
 ## Remaining honest caveats
 
 - Constituencies layer is ONS BGC GB-only (632); NI deferred; no endorse/polling UI yet.

@@ -715,7 +715,7 @@ export const LAYERS = [
     color: "#8792a0",
     kind: "square",
     defaultOn: false,
-    blurb: "Preview census markers",
+    blurb: "One marker per council: usual residents, share born abroad and share aged 65+ from the latest censuses (ONS, NRS, NISRA, CSO)",
     icon: ICONS.census,
   },
   {

@@ -548,16 +548,6 @@ function namedLayer(id: string, note: string): Feature[] {
     });
 }
 
-function censusLayer(): Feature[] {
-  return PLACES.filter((place) => place.pop >= 20000).map((place) =>
-    point(place.lon, place.lat, {
-      name: `${place.name} census`,
-      layer: "census",
-      note: `Preview census marker · ${place.region}`,
-    }),
-  );
-}
-
 function roadLayer(): Feature[] {
   return ROADS.map((road) => ({
     type: "Feature" as const,
@@ -624,7 +614,7 @@ const builders: Record<LayerId, () => Feature[]> = {
   mosques: () => [],
   population: () => [],
   "other-religious": () => [],
-  census: censusLayer,
+  census: () => [],
   petrol: () => [],
   ev: () => [],
   cemeteries: () => namedLayer("cemeteries", "Preview cemetery"),

@@ -13,6 +13,7 @@ const count: Fmt = (v) => Number(v).toLocaleString("en-GB");
 
 const degrees: Fmt = (v) => `${Number(v).toFixed(1)} °C`;
 const mm: Fmt = (v) => `${Number(v).toLocaleString("en-GB")} mm`;
+const pct: Fmt = (v) => `${Number(v).toFixed(1)}%`;
 const hours: Fmt = (v) => `${Number(v).toLocaleString("en-GB")} h`;
 
 export const FACT_ROWS: Readonly<Record<string, Array<[key: string, label: string, fmt: Fmt]>>> = {
@@ -23,6 +24,14 @@ export const FACT_ROWS: Readonly<Record<string, Array<[key: string, label: strin
     ["lists", "On the lists", text],
     ["county", "County", text],
     ["summit_feature", "Summit", text],
+  ],
+  census: [
+    ["residents", "Usual residents", count],
+    ["born_outside_uk_pct", "Born outside the UK", pct],
+    ["born_outside_ie_pct", "Born outside Ireland", pct],
+    ["over65_pct", "Aged 65 and over", pct],
+    ["census_year", "Census", text],
+    ["nation", "Nation", text],
   ],
   population: [
     ["pop", "Population", count],

@@ -1788,5 +1788,13 @@
     "source": "GeoNames cities1000",
     "url": "https://download.geonames.org/export/dump/",
     "filter": "population >= 10,000, not PPLX"
+  },
+  "census": {
+    "layer": "census",
+    "count": 392,
+    "license": "OGL v3 (ONS, NRS, NISRA); CC BY 4.0 (CSO, Tailte Éireann)",
+    "source": "Census 2021 (E&W, NI), Census 2022 (Scotland, Ireland)",
+    "url": "https://www.nomisweb.co.uk/sources/census_2021",
+    "filter": "one marker per local authority"
   }
 }
