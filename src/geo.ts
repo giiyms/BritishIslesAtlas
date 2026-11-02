@@ -230,16 +230,6 @@ Crime preview|Belfast|-5.93|54.60
 Crime preview|Dublin|-6.26|53.35
 Crime preview|Edinburgh|-3.19|55.95
 `,
-  health: `
-Health preview|Leeds|-1.55|53.80
-Health preview|Bristol|-2.59|51.45
-Health preview|Liverpool|-2.99|53.41
-Health preview|Newcastle|-1.61|54.98
-Health preview|Aberdeen|-2.09|57.15
-Health preview|Cork|-8.47|51.90
-Health preview|Galway|-9.05|53.27
-Health preview|Southampton|-1.40|50.91
-`,
   power: `
 Drax|Drax|-0.996|53.737
 Ratcliffe|Ratcliffe-on-Soar|-1.255|52.866
@@ -399,7 +389,7 @@ const builders: Record<LayerId, () => Feature[]> = {
   cemeteries: () => [],
   immigration: () => namedLayer("immigration", "Preview checkpoint"),
   crime: () => namedLayer("crime", "Preview only, not an offence record"),
-  health: () => namedLayer("health", "Preview health marker"),
+  health: () => [],
   weather: () => [],
   power: () => [],
   wind: () => [],

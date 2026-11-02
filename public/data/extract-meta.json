@@ -1836,5 +1836,12 @@
     "layer": "legends",
     "count": 1681,
     "filter": "holy wells (place_of_worship/historic/amenity/man_made/natural=holy_well, or a named holy/saint's spring well) and natural or historic features whose name invokes a legend (fairy, giant's, devil's, King Arthur, Merlin, Fionn, Cú Chulainn, Robin Hood, ...); pubs, shops and houses dropped"
+  },
+  "health": {
+    "extracted_at": "2026-11-01",
+    "layer": "health",
+    "count": 10099,
+    "method": "NHS ODS epraccur + PHS + BSO registers geocoded by postcode; HSE Service Directory (Ireland, May 2022); OSM amenity=doctors for the Isle of Man and Channel Islands",
+    "license": "OGL v3 (UK registers, CQC, ONSPD); CC BY 4.0 (HSE); ODbL 1.0 (OSM part)"
   }
 }

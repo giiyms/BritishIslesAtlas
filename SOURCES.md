@@ -1558,6 +1558,29 @@ the Geofabrik OpenStreetMap extracts (downloaded 2026-11-01). Licence: **ODbL 1.
   isles (the National Folklore Collection's Dúchas places are per-parish and CC BY-NC).
 - Replaces the eight-point preview.
 
+## Health (GP practices)
+
+`public/data/health.geojson` (10,099 practices) is built by `scripts/build_health.py` from each
+nation's official register, geocoded by postcode with postcodes.io (ONS Postcode Directory, OGL v3.0).
+
+| Nation | Practices | Source | Licence |
+|---|---|---|---|
+| England | 6,157 | NHS England ODS `epraccur` (active GP practices, role RO76), via the ODS Data Search and Export report | OGL v3.0 |
+| Wales | 398 | Same register (W-prefixed codes) | OGL v3.0 |
+| Scotland | 876 | Public Health Scotland, GP practice contact details and list sizes, 1 Oct 2026 | OGL v3.0 |
+| Northern Ireland | 299 | BSO GP Practice Reference File, July 2026, via OpenDataNI | OGL v3.0 |
+| Ireland | 2,343 | HSE Service Directory "Family Practice (GP) Sites", May 2022 (coordinates as published) | CC BY 4.0 |
+| Isle of Man, Channel Islands | 26 | OpenStreetMap `amenity=doctors` with a name | ODbL 1.0 |
+
+- England's practices carry the CQC overall rating and its publication date (5,902 matched on ODS
+  code from the CQC "Latest ratings" file, 1 Oct 2026); the card links the CQC report.
+- Scotland and Northern Ireland carry registered list sizes; Northern Ireland also names the partners.
+- The HSE file was published on data.gov.ie in May 2022 and has since been withdrawn there; it is
+  read from the Internet Archive copy. It is the only open, georeferenced GP list for Ireland, so
+  practices opened or closed since 2022 are not reflected.
+- 9 UK practices whose postcode does not geocode are omitted.
+- Replaces the eight-point preview.
+
 ## Remaining honest caveats
 
 - Constituencies layer is ONS BGC GB-only (632); NI deferred; no endorse/polling UI yet.

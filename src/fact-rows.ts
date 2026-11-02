@@ -63,6 +63,16 @@ export const FACT_ROWS: Readonly<Record<string, Array<[key: string, label: strin
     ["legend_kind", "Kind", text],
     ["feature", "Feature", text],
   ],
+  health: [
+    ["nation", "Nation", text],
+    ["code", "Practice code", text],
+    ["patients", "Registered patients", count],
+    ["partners", "Partners", text],
+    ["address", "Address", text],
+    ["cqc_rating", "CQC rating", text],
+    ["cqc_date", "Rating published", text],
+    ["updated", "Register entry updated", text],
+  ],
   roads: [
     ["road_class", "Class", text],
     ["nation", "Nation", text],
@@ -98,6 +108,17 @@ export const FACT_ROWS: Readonly<Record<string, Array<[key: string, label: strin
 
 /** Layers whose files carry an id instead of a per-feature source/url (keeps default-on files small). */
 const DERIVED_SOURCE: Readonly<Record<string, (p: Record<string, unknown>) => [source: string, url: string] | null>> = {
+  health: (p) => {
+    if (typeof p.cqc_id === "string" && /^[\w-]+$/.test(p.cqc_id)) return ["CQC report (NHS ODS + CQC)", `https://www.cqc.org.uk/location/${p.cqc_id}`];
+    if (p.nation === "England" || p.nation === "Wales")
+      return ["NHS ODS GP practice register", "https://www.odsdatasearchandexport.nhs.uk/?search=" + encodeURIComponent(String(p.code ?? ""))];
+    if (p.nation === "Scotland") return ["Public Health Scotland GP practices", "https://www.opendata.nhs.scot/dataset/gp-practice-contact-details-and-list-sizes"];
+    if (p.nation === "Northern Ireland") return ["BSO GP practice reference file (OpenDataNI)", "https://www.opendatani.gov.uk/dataset/gp-practice-list-sizes"];
+    if (p.nation === "Ireland") return ["HSE Service Directory, May 2022", "https://www2.hse.ie/services/find-a-gp/"];
+    return typeof p.osm_id === "string" && /^(node|way|relation)\/\d+$/.test(p.osm_id)
+      ? ["OpenStreetMap", `https://www.openstreetmap.org/${p.osm_id}`]
+      : null;
+  },
   roads: (p) => ["OpenStreetMap (highway=motorway/trunk)",
     `https://www.openstreetmap.org/search?query=${encodeURIComponent(`${String(p.name ?? "")} ${String(p.nation ?? "")}`.trim())}`],
   schools: (p) => {
