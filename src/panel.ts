@@ -7,9 +7,10 @@ const DATA_CREDITS: Array<[string, string]> = [
   ["Hillshade", "© Esri, USGS, NOAA (World Hillshade)"],
   ["Points of interest", "© OpenStreetMap contributors (ODbL 1.0): petrol, EV, power, hospitals, emergency services, heritage, culture, leisure, faith, services and post offices"],
   ["Constituencies", "ONS July 2024 BGC boundaries. Contains OS data © Crown copyright and database right 2024; contains National Statistics data © Crown copyright and database right 2024 (OGL v3.0)"],
+  ["Wind turbines", "© OpenStreetMap contributors (ODbL 1.0); farm cross-check: DESNZ Renewable Energy Planning Database, July 2026, contains public sector information licensed under the Open Government Licence v3.0"],
   ["Candidates", "© Democracy Club (CC-BY-SA)"],
   ["Polls", "Wikipedia national polling, Electoral Calculus and More in Common seat projections. Projections are projections."],
-  ["Sample layers", "Roads, schools, churches, mosques, population, census and the Upcoming layers use sample geometry, not real data. Pubs are a real OpenStreetMap layer."],
+  ["Sample layers", "Roads, schools, churches, mosques, population, census and the remaining Upcoming layers use sample geometry, not real data. Pubs are a real OpenStreetMap layer."],
 ];
 
 function chipButton(layer: LayerDef, on: boolean): HTMLButtonElement {

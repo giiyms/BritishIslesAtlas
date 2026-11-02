@@ -401,17 +401,6 @@ Croagh Patrick|Mayo|-9.659|53.760
 `,
 };
 
-const WIND_FARMS: Array<[string, number, number]> = [
-  ["London Array", 1.52, 51.62],
-  ["Hornsea", 1.65, 53.88],
-  ["Walney", -3.58, 54.07],
-  ["Gwynt y Môr", -3.62, 53.49],
-  ["Beatrice", -2.95, 58.12],
-  ["Robin Rigg", -3.72, 54.76],
-  ["Arklow Bank", -5.95, 52.79],
-  ["Moray East", -2.55, 58.18],
-];
-
 function loadPlaces(table: string): Place[] {
   const places: Place[] = [];
   for (const line of table.trim().split("\n")) {
@@ -602,29 +591,6 @@ function namedLayer(id: string, note: string): Feature[] {
     });
 }
 
-function windLayer(): Feature[] {
-  const features: Feature[] = [];
-  for (const [name, lon, lat] of WIND_FARMS) {
-    const rand = mulberry32(seedFrom(name));
-    for (let index = 0; index < 4; index += 1) {
-      const angle = rand() * Math.PI * 2;
-      const distance = Math.sqrt(rand()) * 0.08;
-      features.push(
-        point(
-          lon + (distance * Math.cos(angle)) / Math.cos((lat * Math.PI) / 180),
-          lat + distance * Math.sin(angle),
-          {
-            name: `${name} turbine`,
-            layer: "wind",
-            note: "Preview stub · wind area",
-          },
-        ),
-      );
-    }
-  }
-  return features;
-}
-
 function populationLayer(): Feature[] {
   return PLACES.map((place) =>
     point(place.lon, place.lat, {
@@ -722,7 +688,7 @@ const builders: Record<LayerId, () => Feature[]> = {
   health: () => namedLayer("health", "Preview health marker"),
   weather: () => namedLayer("weather", "Preview weather station"),
   power: () => [],
-  wind: windLayer,
+  wind: () => [],
   nuclear: () => namedLayer("nuclear", "Preview nuclear site"),
   castles: () => [],
   historic: () => namedLayer("historic", "Preview historic site"),

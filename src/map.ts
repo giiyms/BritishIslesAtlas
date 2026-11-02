@@ -1,3 +1,4 @@
+import { turbineRows } from "./turbine";
 import { BASEMAP_BUILDINGS, BASEMAP_GROUND, BASEMAP_LABELS, BASEMAP_ROADS, BASEMAP_WATERWAYS } from "./basemap";
 import {
   AttributionControl,
@@ -471,7 +472,7 @@ export function createAtlas(container: HTMLElement): Atlas {
     });
   }
   const ordered = [...LAYERS].sort((a, b) => a.z - b.z);
-  const OSM_STATIC = new Set<LayerId>(["petrol", "ev", "power", "hospitals", "fire-stations", "police", "castles", "libraries", "universities", "museums", "railway-stations", "aerodromes", "ferry-terminals", "marinas", "zoos", "theatres", "battlefields", "cinemas", "stadiums", "theme-parks", "viewpoints", "arts-centres", "aquariums", "piers", "ruins", "golf-courses", "galleries", "marketplaces", "nature-reserves", "camp-sites", "memorials", "sports-centres", "caravan-sites", "fitness-centres", "community-centres", "playgrounds", "post-offices", "beaches", "swimming-pools", "pharmacies", "townhalls", "places-of-worship", "lighthouses", "courthouses", "nightclubs", "windmills", "prisons", "clinics", "dentists", "pubs"]);
+  const OSM_STATIC = new Set<LayerId>(["petrol", "ev", "power", "hospitals", "fire-stations", "police", "castles", "libraries", "universities", "museums", "railway-stations", "aerodromes", "ferry-terminals", "marinas", "zoos", "theatres", "battlefields", "cinemas", "stadiums", "theme-parks", "viewpoints", "arts-centres", "aquariums", "piers", "ruins", "golf-courses", "galleries", "marketplaces", "nature-reserves", "camp-sites", "memorials", "sports-centres", "caravan-sites", "fitness-centres", "community-centres", "playgrounds", "post-offices", "beaches", "swimming-pools", "pharmacies", "townhalls", "places-of-worship", "lighthouses", "courthouses", "nightclubs", "windmills", "prisons", "clinics", "dentists", "pubs", "wind"]);
   const hasIcon = (layer: { kind: MarkerKind }) =>
     layer.kind === "dot" || layer.kind === "ring" || SYMBOL_KINDS.has(layer.kind);
   /** Every point layer: heat plus every point at every zoom (see point-style.ts). */
@@ -859,6 +860,7 @@ export function createAtlas(container: HTMLElement): Atlas {
       `<strong class="popup-title popup-title-poi">${escapeHtml(name)}</strong>` +
       `<div class="popup-meta">${escapeHtml(typeBits.join(" · "))}</div>` +
       (isSample ? `<div class="popup-sample">Sample data</div>` : "") +
+      turbineRows(properties) +
       (osmUrl
         ? `<a class="popup-link" href="${escapeHtml(osmUrl)}" target="_blank" rel="noopener noreferrer">View on OpenStreetMap<span class="ext" aria-hidden="true">↗</span></a>`
         : ""),

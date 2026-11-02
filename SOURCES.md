@@ -1189,6 +1189,22 @@ Pipeline `note` repeats brand or operator on 79 of 1182.
 
 
 
+
+## Wind turbines (`wind`)
+
+| | |
+|---|---|
+| **File** | `public/data/wind.geojson` (built by `scripts/extract_wind_turbines.py`) |
+| **Features** | 18471 individual turbines, 3712 offshore. One point per OSM turbine node; this replaced the old 32-point preview stub. |
+| **Source (turbines)** | [OpenStreetMap](https://www.openstreetmap.org/) via Overpass: `node[power=generator][generator:source=wind]` in 49.8–61.2°N, 11.0°W–3.2°E (`out body`), endpoint `overpass.openstreetmap.fr`, OSM base 2026-08-10T00:10:23Z. Offshore turbines come from the same OSM data. |
+| **Source (farms)** | OSM `power=plant` + `plant:source=wind` ways and relations (`out geom`): turbine membership first, then point-in-plant-area. 14425 turbines have a farm name. Where OSM has neither, the nearest operational or under-construction REPD wind site within 4 km (onshore) or 25 km (offshore) supplies the name; the popup labels it "Nearest REPD site". |
+| **Cross-check** | DESNZ [Renewable Energy Planning Database](https://www.gov.uk/government/publications/renewable-energy-planning-database-quarterly-extract), July 2026 (Q2) CSV, OGL v3. BNG coordinates are converted with pyproj (EPSG:27700→4326). A REPD site counts as covered when at least one kept turbine lies within 4 km (onshore) or 25 km (offshore). Offshore operational: 49/49 covered. Onshore operational: 763/785. Under construction: offshore 7/8, onshore 34/37. Largest uncovered operational REPD sites (missing in OSM, or REPD point >4 km from the turbines): Bhlaraidh (previously Balmacaan) (Wind Onshore, 110 MW, Scotland); Brechfa Forest West (Wind Onshore, 57.4 MW, Wales); Causeymire (Wind Onshore, 48.3 MW, Scotland); Hill of Towie (Drummuir) (Wind Onshore, 48 MW, Scotland); Dalquhandy Windfarm (Wind Onshore, 42 MW, Scotland); Ewe Hill (extension) (Wind Onshore, 36.8 MW, Scotland); Drumderg (Wind Onshore, 36.8 MW, Scotland); Minsca (Wind Onshore, 36.8 MW, Scotland); Airies Farm (Wind Onshore, 35 MW, Scotland); Calliachar (Wind Onshore, 32.2 MW, Scotland). REPD covers the UK only (≥150 kW, 1 MW before 2021), so Irish turbines are OSM-only. |
+| **Fields** | `name`, `farm`, `farm_from_repd`, `operator`, `capacity_mw` (9434 have it), `rotor_m` (2092), `hub_m` (963), `height_m`, `manufacturer`, `model`, `status` (Operational / Under construction / Disused from OSM lifecycle tags), `offshore`, `start_date`, `ref`, `repd_ref`, `repd_status`, `osm_id`, `osm_url`. Empty values are omitted. |
+| **Clipping** | Turbines on land are kept when inside Natural Earth 10m GBR/IRL/IMN/GGY/JEY (+~1 km). Turbines on other land are dropped (France 1211, Belgium 53). Offshore turbines must lie inside a UK/Irish-waters fence (north of 50.1°N; east limit 1.3°E south of 51.2°N, 2.2°E to 51.75°N, then 3.0°E), which drops 629 Dutch, Belgian and French offshore turbines. |
+| **Not used** | Crown Estate and EMODnet offshore layers were not added: OSM already places all 49 operational REPD offshore farms. |
+| **License** | ODbL 1.0 © OpenStreetMap contributors; REPD: contains public sector information licensed under the Open Government Licence v3.0; Natural Earth: public domain. |
+| **Separate from** | Historic windmills (`windmills`, `man_made=windmill`) remain their own layer. |
+
 ## Windmills (`windmills`)
 
 | | |
