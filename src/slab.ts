@@ -194,11 +194,11 @@ export const TERRAIN_SOURCE: SourceSpecification = {
 
 export const SLAB_RELIEF_LAYERS: LayerSpecification[] = [
   { id: "dem-color-relief", type: "color-relief", source: "terrain",
-    paint: { "color-relief-color": SLAB_RELIEF, "color-relief-opacity": 1 } } as LayerSpecification,
+    paint: { "color-relief-color": SLAB_RELIEF, "color-relief-opacity": ["interpolate", ["linear"], ["zoom"], 10.5, 1, 14, 0] } } as LayerSpecification,
   { id: "dem-hillshade", type: "hillshade", source: "terrain",
     paint: {
       "hillshade-illumination-direction": 315, "hillshade-illumination-anchor": "map",
-      "hillshade-exaggeration": 0.5, "hillshade-method": "multidirectional",
+      "hillshade-exaggeration": ["interpolate", ["linear"], ["zoom"], 10, 0.5, 14, 0.18], "hillshade-method": "multidirectional",
       "hillshade-shadow-color": "rgba(60,70,40,0.36)", "hillshade-highlight-color": "rgba(255,255,240,0.35)",
       "hillshade-accent-color": "rgba(90,80,50,0.18)",
     } } as LayerSpecification,

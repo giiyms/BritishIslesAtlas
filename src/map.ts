@@ -1,3 +1,4 @@
+import { BASEMAP_BUILDINGS, BASEMAP_GROUND, BASEMAP_LABELS, BASEMAP_ROADS, BASEMAP_WATERWAYS } from "./basemap";
 import {
   AttributionControl,
   Map,
@@ -105,6 +106,7 @@ const STYLE: StyleSpecification = {
     ...SLAB_RELIEF_LAYERS,
     SLAB_WOOD,
     SLAB_OUTSIDE,
+    ...BASEMAP_GROUND,
     {
       id: "non-gb-land",
       type: "fill",
@@ -118,9 +120,12 @@ const STYLE: StyleSpecification = {
       source: "openmaptiles",
       "source-layer": "water",
       filter: ["!=", ["get", "class"], "swimming_pool"],
-      paint: { "fill-color": SLAB_SEA },
+      paint: { "fill-color": ["interpolate", ["linear"], ["zoom"], 9, SLAB_SEA, 13, "#9ccbef"] as unknown as ExpressionSpecification },
     },
     ...SLAB_SEA_LAYERS,
+    ...BASEMAP_WATERWAYS,
+    ...BASEMAP_BUILDINGS,
+    ...BASEMAP_ROADS,
     {
       id: "non-gb-label",
       type: "symbol",
@@ -137,6 +142,7 @@ const STYLE: StyleSpecification = {
     },
     ...SLAB_LABEL_LAYERS,
     SLAB_PLACE_LABELS,
+    ...BASEMAP_LABELS,
   ],
 };
 
@@ -585,7 +591,8 @@ export function createAtlas(container: HTMLElement): Atlas {
             ? ["coalesce", ["get", "electionColor"], "#b9bec4"]
             : layer.color) as ExpressionSpecification | string,
           // Tactical colouring shades by pick confidence (electionOpacity, set per feature).
-          "fill-opacity": isConstituencies ? ELECTION_OPACITY : 0.16,
+          // Seat colours thin out at street zoom so the Apple-style basemap underneath reads clearly.
+          "fill-opacity": isConstituencies ? ["interpolate", ["linear"], ["zoom"], 10.5, ELECTION_OPACITY, 13.5, ["*", 0.22, ELECTION_OPACITY]] as unknown as ExpressionSpecification : 0.16,
         },
       }, before);
       if (!isConstituencies) {
