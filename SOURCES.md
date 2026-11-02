@@ -1386,6 +1386,16 @@ The rich place card has no data of its own. When a place is opened, it fetches t
 
 Every point layer shares one radius ramp (about 2.5 px at z6 to 5.5 px at z16), 80% fill opacity and a thin white keyline. Draw order is by feature count, densest at the bottom (pubs, places of worship), rarest on top, so a rare feature is never hidden under a dense one. Points that share exactly the same coordinates (349 positions, mostly castle+museum and memorial+church pairs) are moved 2 m apart by `scripts/nudge_coincident_points.py`; the original coordinates are kept in `true_lon`/`true_lat` and used by the place card. No data values change.
 
+## Churches, mosques and other religious sites (f)
+
+Source: the OpenStreetMap places-of-worship extract already used by the Places of worship layer (`public/data/places-of-worship.geojson`, `amenity=place_of_worship`, Geofabrik GB/IE extract, © OpenStreetMap contributors, ODbL 1.0). No copy of the data is shipped: the three layers read that one file and filter it in the browser on the OSM `religion` tag (`src/religion-views.ts`).
+
+- Churches: `religion=christian`, 40,381 sites.
+- Mosques: `religion=muslim`, 1,367 sites.
+- Other religious: everything else, 1,284 sites (Jewish 202, Sikh 201, Hindu 162, Buddhist 130, Spiritualist 112, multifaith 78, smaller faiths, and 348 with no or `none` religion tag).
+
+Caveats: OSM coverage of places of worship is very good for churches and uneven for house mosques, small gurdwaras and temples in rented rooms; a site missing a `religion` tag lands in Other religious. Check: `src/religion-views.test.ts` verifies every place of worship falls in exactly one view and the counts match.
+
 ## Remaining honest caveats
 
 - Constituencies layer is ONS BGC GB-only (632); NI deferred; no endorse/polling UI yet.

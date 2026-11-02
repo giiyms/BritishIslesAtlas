@@ -650,7 +650,7 @@ export const LAYERS = [
     color: "#8d74d4",
     kind: "dot",
     defaultOn: true,
-    blurb: "Preview churches",
+    blurb: "Christian places of worship from OpenStreetMap (ODbL)",
     icon: ICONS.churches,
   },
   {
@@ -676,7 +676,7 @@ export const LAYERS = [
     color: "#c49a45",
     kind: "diamond",
     defaultOn: false,
-    blurb: "Preview mosques",
+    blurb: "Mosques and other Muslim places of worship from OpenStreetMap (ODbL)",
     icon: ICONS.mosques,
   },
   {
@@ -702,7 +702,7 @@ export const LAYERS = [
     color: "#8b919c",
     kind: "ring",
     defaultOn: false,
-    blurb: "Preview other religious sites",
+    blurb: "Synagogues, gurdwaras, temples and other non-Christian, non-Muslim places of worship from OpenStreetMap (ODbL)",
     icon: ICONS.religious,
   },
   {

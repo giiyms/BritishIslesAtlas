@@ -27,10 +27,13 @@ import { attachResultHistory, attachSeatHistory } from "./poll-trend";
 import { singularLabel } from "./layer-groups";
 import { PLACES } from "./geo";
 import { mountVotingLegend, showVotingToast, hideVotingToast } from "./voting-ui";
+import { RELIGION_VIEWS } from "./religion-views";
 import { HEAT_MAXZOOM, ICON_FADE, heatmapPaint, iconDiscScale, markerScale, pointDrawOrder, pointOpacity, pointRadius, pointStroke } from "./point-style";
 import { SLAB_SOURCES, SLAB_RELIEF_LAYERS, SLAB_SEA_LAYERS, SLAB_OUTSIDE, SLAB_WOOD, SLAB_PARKS, SLAB_BORDERS, SLAB_NATIONAL_ROADS, SLAB_COUNTRY_LABELS, SLAB_LABEL_LAYERS, SLAB_PLACE_LABELS, SLAB_LAND, SLAB_SEA, TERRAIN_SOURCE } from "./slab";
 /** ~43k points each: plain points and heat only, no chip icons (they would pile up at z11). */
-const DENSE_LAYERS: ReadonlySet<LayerId> = new Set<LayerId>(["places-of-worship", "pubs"]);
+const DENSE_LAYERS: ReadonlySet<LayerId> = new Set<LayerId>(["places-of-worship", "pubs", "churches"]);
+const sourceOf = (id: LayerId): LayerId => (id in RELIGION_VIEWS ? "places-of-worship" : id);
+const viewFilter = (id: LayerId) => (RELIGION_VIEWS[id] ? { filter: RELIGION_VIEWS[id]! } : {});
 const ELECTION_OPACITY: ExpressionSpecification = ["coalesce", ["get", "electionOpacity"], 0.78];
 
 export const HOME_BOUNDS: [[number, number], [number, number]] = [
@@ -471,7 +474,7 @@ export function createAtlas(container: HTMLElement): Atlas {
       paint: { "text-color": ENDORSE_COLORS.restore.fill, "text-halo-color": "#ffffff", "text-halo-width": 1.5 },
     });
   }
-  const OSM_STATIC = new Set<LayerId>(["petrol", "ev", "power", "hospitals", "fire-stations", "police", "castles", "libraries", "universities", "museums", "railway-stations", "aerodromes", "ferry-terminals", "marinas", "zoos", "theatres", "battlefields", "cinemas", "stadiums", "theme-parks", "viewpoints", "arts-centres", "aquariums", "piers", "ruins", "golf-courses", "galleries", "marketplaces", "nature-reserves", "camp-sites", "memorials", "sports-centres", "caravan-sites", "fitness-centres", "community-centres", "playgrounds", "post-offices", "beaches", "swimming-pools", "pharmacies", "townhalls", "places-of-worship", "lighthouses", "courthouses", "nightclubs", "windmills", "prisons", "clinics", "dentists", "pubs", "wind"]);
+  const OSM_STATIC = new Set<LayerId>(["petrol", "ev", "power", "hospitals", "fire-stations", "police", "castles", "libraries", "universities", "museums", "railway-stations", "aerodromes", "ferry-terminals", "marinas", "zoos", "theatres", "battlefields", "cinemas", "stadiums", "theme-parks", "viewpoints", "arts-centres", "aquariums", "piers", "ruins", "golf-courses", "galleries", "marketplaces", "nature-reserves", "camp-sites", "memorials", "sports-centres", "caravan-sites", "fitness-centres", "community-centres", "playgrounds", "post-offices", "beaches", "swimming-pools", "pharmacies", "townhalls", "places-of-worship", "lighthouses", "courthouses", "nightclubs", "windmills", "prisons", "clinics", "dentists", "pubs", "wind", "churches", "mosques", "other-religious"]);
   const hasIcon = (layer: { kind: MarkerKind }) =>
     layer.kind === "dot" || layer.kind === "ring" || SYMBOL_KINDS.has(layer.kind);
   /** Every point layer: heat plus every point at every zoom (see point-style.ts). */
@@ -505,11 +508,11 @@ export function createAtlas(container: HTMLElement): Atlas {
     const layer = LAYERS.find((item) => item.id === id)!;
     const imageId = `${id}-icon`;
     const place = () => {
-      if (map.getLayer(imageId) || !map.getSource(id)) return;
+      if (map.getLayer(imageId) || !map.getSource(sourceOf(id))) return;
       const shown = state[id] && !paused(id);
       map.addLayer({
-        id: imageId, type: "symbol", source: id, minzoom: ICON_MINZOOM,
-        ...(filter ? { filter } : {}),
+        id: imageId, type: "symbol", source: sourceOf(id), minzoom: ICON_MINZOOM,
+        ...(filter ? { filter } : viewFilter(id)),
         layout: {
           visibility: shown ? "visible" : "none",
           "icon-image": imageId,
@@ -532,15 +535,15 @@ export function createAtlas(container: HTMLElement): Atlas {
   const add = (id: LayerId) => {
     if (map.getLayer(id)) return;
     const layer = LAYERS.find((item) => item.id === id)!;
-    if (!map.getSource(id)) {
+    if (!map.getSource(sourceOf(id))) {
       const sourceData =
         id === "constituencies"
           ? { type: "FeatureCollection" as const, features: [] }
           : OSM_STATIC.has(id)
-              ? `/data/${id}.geojson`
+              ? `/data/${sourceOf(id)}.geojson`
               : buildCollection(id);
       // Source credits live in the single ATTRIBUTION line (fix 10), not per source.
-      map.addSource(id, {
+      map.addSource(sourceOf(id), {
         type: "geojson",
         data: sourceData,
         ...(id === "constituencies" ? { promoteId: "PCON24CD" } : {}),
@@ -551,7 +554,7 @@ export function createAtlas(container: HTMLElement): Atlas {
     const layout = { visibility: visible } as const;
     if (isPoint(layer)) {
       // Heat under the points, gone by HEAT_MAXZOOM; fades out as the points fade in.
-      map.addLayer({ id: `${id}-heat`, type: "heatmap", source: id, maxzoom: HEAT_MAXZOOM, layout,
+      map.addLayer({ id: `${id}-heat`, type: "heatmap", source: sourceOf(id), ...viewFilter(id), maxzoom: HEAT_MAXZOOM, layout,
         paint: heatmapPaint(id, layer.color, layer.accent) }, before);
     }
     if (layer.kind === "fill") {
@@ -627,13 +630,13 @@ export function createAtlas(container: HTMLElement): Atlas {
         "circle-stroke-color": "#ffffff", "circle-stroke-opacity": pointOpacity(),
       };
       // No minzoom/maxzoom: the same points are drawn at every zoom.
-      map.addLayer({ id, type: "circle", source: id, layout, paint }, before);
+      map.addLayer({ id, type: "circle", source: sourceOf(id), ...viewFilter(id), layout, paint }, before);
     } else if (SYMBOL_KINDS.has(layer.kind)) {
       if (!map.hasImage(`${id}-mark`)) {
         map.addImage(`${id}-mark`, markerImage(layer.kind, layer.color), { pixelRatio: 2 });
       }
       // Every marker at every zoom: overlap allowed, nothing culled by collision.
-      map.addLayer({ id, type: "symbol", source: id, layout: {
+      map.addLayer({ id, type: "symbol", source: sourceOf(id), ...viewFilter(id), layout: {
         ...layout, "icon-image": `${id}-mark`, "icon-size": markerScale(),
         "icon-allow-overlap": true, "icon-ignore-placement": true,
       }, paint: { "icon-opacity": pointOpacity() } }, before);
@@ -862,7 +865,9 @@ export function createAtlas(container: HTMLElement): Atlas {
     const feature = topFeature(event.point);
     if (!feature) { popup.remove(); return; }
     const properties = feature.properties as Record<string, unknown>;
-    const layerId = String(properties.layer ?? feature.source ?? "");
+    // Style layer id first: religion views share the places-of-worship source and its `layer` tag.
+    const styleId = feature.layer.id.replace(/-icon$/, "");
+    const layerId = LAYERS.some((item) => item.id === styleId) ? styleId : String(properties.layer ?? feature.source ?? "");
     const layer = LAYERS.find((item) => item.id === layerId);
     const name = String(properties.name ?? layer?.label ?? "Place");
     if (feature.layer.id === "restore-callout-dot") {
