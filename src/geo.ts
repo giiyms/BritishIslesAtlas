@@ -1,5 +1,3 @@
-import type { LayerId } from "./layers";
-
 export type Region =
   | "England"
   | "Scotland"
@@ -15,19 +13,6 @@ export interface Place {
   lon: number;
   lat: number;
   pop: number;
-}
-
-interface Feature {
-  type: "Feature";
-  geometry:
-    | { type: "Point"; coordinates: [number, number] }
-    | { type: "LineString"; coordinates: [number, number][] };
-  properties: Record<string, string | number | boolean>;
-}
-
-export interface FeatureCollection {
-  type: "FeatureCollection";
-  features: Feature[];
 }
 
 const PLACE_TABLE = `
@@ -232,85 +217,6 @@ function loadPlaces(table: string): Place[] {
 }
 
 export const PLACES: Place[] = loadPlaces(PLACE_TABLE);
-
-function collection(features: Feature[]): FeatureCollection {
-  return { type: "FeatureCollection", features };
-}
-
-const builders: Record<LayerId, () => Feature[]> = {
-  roads: () => [],
-  pubs: () => [],
-  schools: () => [],
-  libraries: () => [],
-  universities: () => [],
-  museums: () => [],
-  "railway-stations": () => [],
-  aerodromes: () => [],
-  "ferry-terminals": () => [],
-  marinas: () => [],
-  zoos: () => [],
-  theatres: () => [],
-  battlefields: () => [],
-  cinemas: () => [],
-  stadiums: () => [],
-  "theme-parks": () => [],
-  viewpoints: () => [],
-  "arts-centres": () => [],
-  aquariums: () => [],
-  piers: () => [],
-  ruins: () => [],
-  "golf-courses": () => [],
-  galleries: () => [],
-  marketplaces: () => [],
-  "nature-reserves": () => [],
-  "camp-sites": () => [],
-  memorials: () => [],
-  "sports-centres": () => [],
-  "caravan-sites": () => [],
-  "fitness-centres": () => [],
-  "community-centres": () => [],
-  "playgrounds": () => [],
-  "beaches": () => [],
-  "swimming-pools": () => [],
-  pharmacies: () => [],
-  townhalls: () => [],
-  "places-of-worship": () => [],
-  lighthouses: () => [],
-  courthouses: () => [],
-  nightclubs: () => [],
-  windmills: () => [],
-  prisons: () => [],
-  clinics: () => [],
-  dentists: () => [],
-  constituencies: () => [],
-  hospitals: () => [],
-  "fire-stations": () => [],
-  police: () => [],
-  churches: () => [],
-  "post-offices": () => [],
-  mosques: () => [],
-  population: () => [],
-  "other-religious": () => [],
-  census: () => [],
-  petrol: () => [],
-  ev: () => [],
-  cemeteries: () => [],
-  immigration: () => [],
-  crime: () => [],
-  health: () => [],
-  weather: () => [],
-  power: () => [],
-  wind: () => [],
-  nuclear: () => [],
-  castles: () => [],
-  historic: () => [],
-  legends: () => [],
-  mountains: () => [],
-};
-
-export function buildCollection(id: LayerId): FeatureCollection {
-  return collection(builders[id]());
-}
 
 export function searchPlaces(query: string): Place[] {
   const q = query.trim().toLowerCase();

@@ -27,7 +27,7 @@ from the Census 2021 MSOAs inside that district's 2018 boundary: residents summe
 station when OSM has it by name; otherwise on the OSM or GeoNames village of that name (Irish names via an
 explicit English-name table), snapped to an unnamed OSM police station within 1.5 km when there is one.
 
-Usage: python3 scripts/build_crime.py /workspace/osm/src/crime
+Usage: python3 scripts/build_crime.py <downloads>/crime
 """
 from __future__ import annotations
 

@@ -15,7 +15,6 @@ import {
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 
 setWorkerUrl(workerUrl);
-import { buildCollection } from "./geo";
 import { LAYERS, type LayerId, type MarkerKind } from "./layers";
 import {
   labelPoint as labelPointOf,
@@ -471,7 +470,6 @@ export function createAtlas(container: HTMLElement): Atlas {
       paint: { "text-color": ENDORSE_COLORS.restore.fill, "text-halo-color": "#ffffff", "text-halo-width": 1.5 },
     });
   }
-  const OSM_STATIC = new Set<LayerId>(["petrol", "ev", "power", "hospitals", "fire-stations", "police", "castles", "libraries", "universities", "museums", "railway-stations", "aerodromes", "ferry-terminals", "marinas", "zoos", "theatres", "battlefields", "cinemas", "stadiums", "theme-parks", "viewpoints", "arts-centres", "aquariums", "piers", "ruins", "golf-courses", "galleries", "marketplaces", "nature-reserves", "camp-sites", "memorials", "sports-centres", "caravan-sites", "fitness-centres", "community-centres", "playgrounds", "post-offices", "beaches", "swimming-pools", "pharmacies", "townhalls", "places-of-worship", "lighthouses", "courthouses", "nightclubs", "windmills", "prisons", "clinics", "dentists", "pubs", "wind", "churches", "mosques", "other-religious", "mountains", "weather", "population", "census", "schools", "roads", "cemeteries", "historic", "legends", "health", "nuclear", "immigration", "crime"]);
   const hasIcon = (layer: { kind: MarkerKind }) =>
     layer.kind === "dot" || layer.kind === "ring" || SYMBOL_KINDS.has(layer.kind);
   /** Every point layer: heat plus every point at every zoom (see point-style.ts). */
@@ -536,9 +534,7 @@ export function createAtlas(container: HTMLElement): Atlas {
       const sourceData =
         id === "constituencies"
           ? { type: "FeatureCollection" as const, features: [] }
-          : OSM_STATIC.has(id)
-              ? `/data/${sourceOf(id)}.geojson`
-              : buildCollection(id);
+          : `/data/${sourceOf(id)}.geojson`;
       // Source credits live in the single ATTRIBUTION line (fix 10), not per source.
       map.addSource(sourceOf(id), {
         type: "geojson",
@@ -881,7 +877,6 @@ export function createAtlas(container: HTMLElement): Atlas {
     }
     // Generic POI popup (fix 10): name, singular type + context, one source link.
     const brand = properties.brand ? String(properties.brand) : "";
-    const isSample = !OSM_STATIC.has(layerId as LayerId);
     // Coincident points are drawn 2 m apart (scripts/nudge_coincident_points.py); the card shows the true spot.
     const point = feature.geometry.type === "Point"
       ? (typeof properties.true_lon === "number" ? [properties.true_lon, properties.true_lat] : feature.geometry.coordinates) as [number, number]
@@ -892,7 +887,7 @@ export function createAtlas(container: HTMLElement): Atlas {
     popupIsPoi = true;
     nextPopupLayer = layer?.id ?? null;
     const card = {
-      layerId, name, typeLine: [...typeBits, isSample ? "Sample data" : ""].filter(Boolean).join(" · "),
+      layerId, name, typeLine: typeBits.join(" · "),
       accent: layer?.accent ?? "#0f6e5f", tint: layer?.tint ?? "#e7f3f0", icon: layer?.icon ?? "",
       props: properties, lngLat: point ?? [event.lngLat.lng, event.lngLat.lat] as [number, number],
     };

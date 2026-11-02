@@ -11,7 +11,7 @@ Inputs (downloaded into SRC, not committed):
 Coordinates: Wikidata P625 by ICAO code (airports) or QID; an OSM element for a named ferry or cruise terminal
 where the port's Wikidata point is the harbour, not the terminal; postcodes.io for a gov.uk address.
 
-Usage: python3 scripts/build_immigration.py /workspace/osm/src/immigration
+Usage: python3 scripts/build_immigration.py <downloads>/immigration
 """
 from __future__ import annotations
 
