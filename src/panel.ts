@@ -26,16 +26,21 @@ function chipButton(layer: LayerDef, on: boolean): HTMLButtonElement {
   return button;
 }
 
-function section(label: string, count: number, open = false, extraClass = ""): {
+function section(label: string, layers: LayerDef[], open = false, extraClass = ""): {
   details: HTMLDetailsElement;
   grid: HTMLDivElement;
 } {
   const details = document.createElement("details");
   details.className = `group${extraClass ? ` ${extraClass}` : ""}`;
   details.open = open;
+  // The section's own colour: its first layer's concept-1 accent.
+  if (layers[0]) details.style.setProperty("--group-accent", layers[0].accent);
   const summary = document.createElement("summary");
   summary.className = "group-label";
-  summary.innerHTML = `<span class="group-name"></span><span class="group-count">${count}</span>`;
+  // Folded state still says what is on: coloured dots of the enabled layers plus an "N on" badge.
+  summary.innerHTML =
+    `<span class="group-caret" aria-hidden="true"></span><span class="group-name"></span>` +
+    `<span class="group-dots" aria-hidden="true"></span><span class="group-count"></span>`;
   summary.querySelector(".group-name")!.textContent = label;
   const grid = document.createElement("div");
   grid.className = "chip-grid";
@@ -43,6 +48,29 @@ function section(label: string, count: number, open = false, extraClass = ""): {
   grid.setAttribute("aria-label", `${label} layers`);
   details.append(summary, grid);
   return { details, grid };
+}
+
+const MAX_DOTS = 4;
+/** Updates one section's summary from the chips it holds. */
+function refreshGroup(details: HTMLDetailsElement): void {
+  const chips = [...details.querySelectorAll<HTMLButtonElement>(".chip")];
+  const on = chips.filter((chip) => chip.getAttribute("aria-pressed") === "true");
+  const count = details.querySelector<HTMLElement>(".group-count");
+  const dots = details.querySelector<HTMLElement>(".group-dots");
+  details.classList.toggle("has-on", on.length > 0);
+  if (count) {
+    count.textContent = on.length ? `${on.length} on` : String(chips.length);
+    // Spoken with the section name, e.g. "Health & emergency, 2 of 8 layers on".
+    count.setAttribute("aria-label", on.length ? `, ${on.length} of ${chips.length} layers on` : `, ${chips.length} layers`);
+  }
+  if (dots) {
+    dots.replaceChildren(...on.slice(0, MAX_DOTS).map((chip) => {
+      const dot = document.createElement("i");
+      dot.style.setProperty("--accent", chip.style.getPropertyValue("--accent"));
+      return dot;
+    }));
+    if (on.length > MAX_DOTS) dots.append(Object.assign(document.createElement("b"), { textContent: `+${on.length - MAX_DOTS}` }));
+  }
 }
 
 function aboutDialog(): HTMLDialogElement {
@@ -74,7 +102,7 @@ export function mountPanel(
       <span class="panel-title">${ICONS.layers}<span>Layers</span></span>
       <span class="chevron">${ICONS.chevron}</span>
     </button>
-    <p class="panel-sub" id="layer-status"><span class="status-count"></span><button type="button" class="status-clear">Clear</button></p>
+    <p class="panel-sub" id="layer-status"><span class="status-count" role="status"></span><button type="button" class="status-clear">Clear</button></p>
     <div class="panel-body" id="layer-body"></div>
   `;
 
@@ -101,8 +129,9 @@ export function mountPanel(
 
   // Pinned Voting section, expanded by default.
   const constituencies = LAYERS.find((layer) => layer.id === "constituencies")!;
-  const voting = section("Voting", 1, true, "group-voting");
+  const voting = section("Voting", [constituencies], true, "group-voting");
   voting.details.querySelector(".group-count")?.remove();
+  voting.details.querySelector(".group-dots")?.remove();
   const votingChip = chipButton(constituencies, options.isOn("constituencies"));
   votingChip.classList.add("chip-wide");
   voting.grid.append(votingChip);
@@ -115,13 +144,13 @@ export function mountPanel(
   const groups: HTMLDetailsElement[] = [];
   for (const def of LAYER_SECTIONS) {
     const layers = def.layers.map((id) => LAYERS.find((layer) => layer.id === id)!).filter(Boolean);
-    const group = section(def.label, layers.length);
+    const group = section(def.label, layers);
     group.details.dataset.section = def.id;
     for (const layer of layers) group.grid.append(chipButton(layer, options.isOn(layer.id)));
     groups.push(group.details);
   }
   const upcomingLayers = LAYERS.filter((layer) => layer.group === "upcoming");
-  const upcoming = section("Upcoming", upcomingLayers.length, false, "group-upcoming");
+  const upcoming = section("Upcoming", upcomingLayers, false, "group-upcoming");
   for (const layer of upcomingLayers) upcoming.grid.append(chipButton(layer, options.isOn(layer.id)));
   groups.push(upcoming.details);
 
@@ -136,7 +165,11 @@ export function mountPanel(
     dialog.showModal();
   });
 
-  body.append(filter, voting.details, ...groups, about);
+  // Filter stays put while the sections scroll under it.
+  const head = document.createElement("div");
+  head.className = "panel-sticky";
+  head.append(filter);
+  body.append(head, voting.details, ...groups, about);
 
   const chips = () => [...body.querySelectorAll<HTMLButtonElement>(".chip")];
 
@@ -146,6 +179,7 @@ export function mountPanel(
     count.textContent = `${n} layer${n === 1 ? "" : "s"} on`;
     clear.hidden = n === 0;
     count.classList.toggle("is-off", n === 0);
+    for (const details of groups) refreshGroup(details);
   };
   refreshStatus();
 
