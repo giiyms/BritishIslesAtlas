@@ -25,11 +25,11 @@ describe('poll trend', () => {
     const html = trendHtml(national.polls);
     expect(html).toContain('<polyline');
     for (const n of ['Labour', 'Reform UK', 'Conservative']) expect(html).toContain(n);
-    expect(html).not.toContain('share-bars');
+    expect(html).not.toMatch(/width:\s*[\d.]+%/);
   });
 });
 
-import { buildSeatSeries, ONE_POINT_NOTE, seatTrendHtml, type SeatHistory, type SeatHistoryPoint } from './poll-trend';
+import { buildSeatSeries, ONE_POINT_NOTE, seatTrendHtml, type ResultsHistory, type SeatHistory, type SeatHistoryPoint } from './poll-trend';
 
 const PARTIES = ['con', 'lab', 'ld', 'ref', 'grn', 'snp', 'pc', 'rb', 'oth'];
 describe('seat projection history', () => {
@@ -76,7 +76,7 @@ describe('seat projection history', () => {
         }
       }
     }
-    expect(seatTrendHtml(h.seats.E14001063.electoral_calculus, h.parties, h.providers.electoral_calculus.editions)).toContain('<polyline');
+    expect(seatTrendHtml(h.seats.E14001063.electoral_calculus, h.parties)).toContain('<polyline');
   });
   it('ends each provider history on the edition shown as the latest seat projection', () => {
     const h = JSON.parse(readFileSync('public/data/polls-seats-history.json', 'utf8')) as SeatHistory;
@@ -86,5 +86,29 @@ describe('seat projection history', () => {
     expect(last.slice(1, 6)).toEqual([ec.con_share, ec.lab_share, ec.ld_share, ec.reform_share, ec.green_share]);
     const mic = live.providers.more_in_common.seats.E14001063;
     expect(h.seats.E14001063.more_in_common.at(-1)!.slice(1, 5)).toEqual([mic.con_share, mic.lab_share, mic.ld_share, mic.reform_share]);
+  });
+});
+
+describe('seat past general-election results', () => {
+  const h = JSON.parse(readFileSync('public/data/results-history-gb.json', 'utf8')) as ResultsHistory;
+  it('ships the 2019 notional and 2024 actual results for all 632 seats', () => {
+    expect(h.elections.map(e => [e.date, e.notional])).toEqual([['2019-12-12', true], ['2024-07-04', false]]);
+    expect(Object.keys(h.seats)).toHaveLength(632);
+    for (const pts of Object.values(h.seats)) {
+      expect(pts.map(p => p[0])).toEqual(['2019-12-12', '2024-07-04']);
+      const total = (pts[1].slice(1) as (number | null)[]).reduce<number>((a, v) => a + (v ?? 0), 0);
+      expect(total).toBeGreaterThan(99.4); expect(total).toBeLessThan(100.6);
+    }
+  });
+  it('matches the 2024 results file the seat card uses', () => {
+    const r = JSON.parse(readFileSync('public/data/results-2024-gb.json', 'utf8'));
+    const lab = r.seats.E14001063.shares.find((s: [string, number]) => s[0] === 'Lab')[1];
+    expect(h.seats.E14001063[1][1 + h.parties.indexOf('lab')]).toBe(lab);
+  });
+  it('draws two elections as a line with dots and names them', () => {
+    const html = seatTrendHtml(h.seats.E14001063, h.parties, h.elections.map(e => ({ date: e.date, label: e.label })), 'election');
+    expect(html).toContain('<polyline');
+    expect(html).toContain('2 elections on today’s boundaries: 2019 notional and 2024');
+    expect(html).toContain('r="2.2"');
   });
 });

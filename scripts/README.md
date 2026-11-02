@@ -853,6 +853,18 @@ layers load artifacts, and each style loads only its required files. Hex,
 column, contour and spike bands load near their zoom window; points and
 heatmap need no density artifacts. One legend describes the selected mode.
 
+## `build_results_history.py`
+
+Builds `public/data/results-history-gb.json`: each GB seat's vote share at the
+2019 general election (notional, on the 2024 boundaries) and the 2024 general
+election, from the UK Parliament election results CSVs (Open Parliament Licence).
+The seat panel draws it as the "Past results" line chart. Downloads into
+`data-raw/` on first run; `--refresh` re-downloads.
+
+```bash
+python3 scripts/build_results_history.py
+```
+
 ## `build_seat_history.py`
 
 Backfills `public/data/polls-seats-history.json`: per-seat projected vote share

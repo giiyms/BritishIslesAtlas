@@ -74,12 +74,12 @@ function chartHtml({ series, lineOf, dotClass, dotR, aria, legend, read, snaps, 
     .map(v => `<line x1="${L}" x2="${W - R}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}" class="tr-grid"/><text x="${L - 4}" y="${(y(v) + 3).toFixed(1)}" class="tr-tick" text-anchor="end">${v}</text>`).join('');
   const months: string[] = [];
   const spanMonths = (t1 - t0) / (30.4 * DAY);
-  const every = spanMonths > 12 ? 3 : spanMonths > 6 ? 2 : 1; // keep month labels from colliding on long histories
+  const every = spanMonths > 30 ? 12 : spanMonths > 12 ? 3 : spanMonths > 6 ? 2 : 1; // keep month labels from colliding on long histories
   const cursor = new Date(t0); cursor.setUTCDate(1); cursor.setUTCHours(12);
   for (cursor.setUTCMonth(cursor.getUTCMonth() + 1); cursor.getTime() <= t1; cursor.setUTCMonth(cursor.getUTCMonth() + 1)) {
     const m = cursor.getUTCMonth();
     if (m % every) continue;
-    const label = every > 1 && m === 0 ? `${MONTH[m]} ’${String(cursor.getUTCFullYear()).slice(2)}` : MONTH[m];
+    const label = every === 12 ? String(cursor.getUTCFullYear()) : every > 1 && m === 0 ? `${MONTH[m]} ’${String(cursor.getUTCFullYear()).slice(2)}` : MONTH[m];
     months.push(`<text x="${x(cursor.getTime()).toFixed(1)}" y="${H - 6}" class="tr-tick" text-anchor="middle">${label}</text>`);
   }
   const dots = series.map(s => `<g fill="${partyColour(s.name)}" class="${dotClass}">${s.raw.map(p => `<circle cx="${x(p.t).toFixed(1)}" cy="${y(p.v).toFixed(1)}" r="${dotR}"/>`).join('')}</g>`).join('');
@@ -119,8 +119,14 @@ export type SeatHistory = {
   providers: Record<string, { provider: string; editions: SeatHistoryEdition[]; skipped?: string[] }>;
   seats: Record<string, Record<string, SeatHistoryPoint[]>>;
 };
+export type ResultsHistory = {
+  source: string; license: string; license_url: string; notes?: string[];
+  parties: string[];
+  elections: { date: string; label: string; notional: boolean; note: string; source_url: string; data_url: string }[];
+  seats: Record<string, SeatHistoryPoint[]>;
+};
 const SEAT_PARTY_NAMES: Record<string, string> = {
-  con: 'Conservative', lab: 'Labour', ld: 'Liberal Democrat', ref: 'Reform UK', grn: 'Green', snp: 'SNP', pc: 'Plaid Cymru', rb: 'Restore Britain', oth: 'Other',
+  con: 'Conservative', lab: 'Labour', ld: 'Liberal Democrat', ref: 'Reform UK', grn: 'Green', snp: 'SNP', pc: 'Plaid Cymru', rb: 'Restore Britain', spk: 'Speaker', oth: 'Other',
 };
 export const SEAT_MIN_SHARE = 1; // parties never reaching this share in any edition are left off the chart
 export const ONE_POINT_NOTE = 'Only one projection published';
@@ -135,27 +141,41 @@ export function buildSeatSeries(points: SeatHistoryPoint[], parties: string[]): 
     .sort((a, b) => b.raw[b.raw.length - 1].v - a.raw[a.raw.length - 1].v);
 }
 
-export function seatTrendHtml(points: SeatHistoryPoint[], parties: string[], editions: SeatHistoryEdition[] = []): string {
+export type SeatTrendKind = 'projection' | 'election';
+const KIND_TEXT = {
+  projection: { noun: 'projections', one: ONE_POINT_NOTE, aria: 'Projected vote share', hint: 'an edition' },
+  election: { noun: 'elections', one: 'Only one election on these boundaries', aria: 'Vote share at past general elections', hint: 'an election' },
+} as const;
+
+/**
+ * Unsmoothed line chart of a seat's vote share across dated points (projection editions or elections).
+ * `snaps` labels each date in the hover readout (fieldwork for projections, election name for results).
+ */
+export function seatTrendHtml(points: SeatHistoryPoint[], parties: string[], snaps: { date: string; label: string }[] = [], kind: SeatTrendKind = 'projection'): string {
   const series = buildSeatSeries(points, parties);
   if (!series.length) return '';
+  const k = KIND_TEXT[kind];
   const dates = [...new Set(points.map(p => p[0]))].sort();
   const single = dates.length === 1;
   const prevT = single ? null : toTime(dates[dates.length - 2]);
   const legend = series.map(s => {
     const last = s.raw[s.raw.length - 1];
     const before = prevT === null ? null : s.raw.find(p => p.t === prevT)?.v ?? null;
-    const delta = before === null ? null : last.v - before;
+    const delta = before === null || last.t !== toTime(dates[dates.length - 1]) ? null : last.v - before;
     const dtxt = delta === null ? '' : ` <small>${Math.abs(delta) < 0.05 ? 'no change' : `${delta > 0 ? '+' : '−'}${Math.abs(delta).toFixed(1)}`} vs previous</small>`;
     return `<li><i class="swatch" style="background:${partyColour(s.name)}"></i>${escapeHtml(s.name)} <b>${fmt1(last.v)}%</b>${dtxt}</li>`;
   }).join('');
-  const byDate = new Map(editions.map(e => [e.date, e]));
-  const snaps = dates.map(d => ({ t: toTime(d), label: byDate.get(d)?.fieldwork ? `fieldwork ${byDate.get(d)!.fieldwork}` : '' }));
+  const byDate = new Map(snaps.map(e => [e.date, e.label]));
+  const snapPts = dates.map(d => ({ t: toTime(d), label: byDate.get(d) ?? '' }));
   const latest = escapeHtml(fmtDate(toTime(dates[dates.length - 1])));
+  const named = kind === 'election' && dates.every(d => byDate.get(d)) ? dates.map(d => escapeHtml(byDate.get(d)!)).join(' and ') : '';
+  const read = single ? `${k.one} (${latest}).`
+    : kind === 'election' && named ? `${dates.length} elections on today’s boundaries: ${named}. Touch or hover the chart to read ${k.hint}.`
+      : `${dates.length} ${k.noun}, latest ${latest}. Touch or hover the chart to read ${k.hint}.`;
   return chartHtml({
     series, lineOf: s => s.raw, dotClass: 'tr-pts', dotR: single ? 4 : 2.2,
-    aria: single ? `Projected vote share, ${ONE_POINT_NOTE.toLowerCase()}` : `Projected vote share across ${dates.length} published projections, one line per party`,
-    legend, snaps, note: single ? ONE_POINT_NOTE : undefined,
-    read: single ? `${ONE_POINT_NOTE} (${latest}).` : `${dates.length} projections, latest ${latest}. Touch or hover the chart to read an edition.`,
+    aria: single ? `${k.aria}, ${k.one.toLowerCase()}` : `${k.aria} across ${dates.length} ${k.noun}, one line per party`,
+    legend, snaps: snapPts, note: single ? k.one : undefined, read,
   });
 }
 
@@ -167,7 +187,8 @@ export function attachSeatHistory(root: ParentNode, code: string, history: SeatH
     const key = el.dataset.provider ?? '';
     const points = seat[key];
     if (!points?.length || el.dataset.history) return;
-    const html = seatTrendHtml(points, history.parties, history.providers[key]?.editions);
+    const snaps = (history.providers[key]?.editions ?? []).map(e => ({ date: e.date, label: e.fieldwork ? `fieldwork ${e.fieldwork}` : '' }));
+    const html = seatTrendHtml(points, history.parties, snaps);
     if (!html) return;
     el.dataset.history = '1';
     el.innerHTML = `<p class="proj-hist-cap">Projected vote share (%), one point per published projection</p>${html}`;
@@ -197,4 +218,22 @@ export function attachTrend(root: ParentNode): void {
     svg.addEventListener('pointerdown', e => show(e.clientX));
     svg.style.touchAction = 'pan-y';
   });
+}
+
+/** Replace the seat's past-result text list with a line chart of every general election on today's boundaries. */
+export function attachResultHistory(root: ParentNode, code: string, history: ResultsHistory): void {
+  const el = root.querySelector<HTMLElement>('.result-history');
+  const points = history.seats[code];
+  if (!el || el.dataset.history || !points?.length) return;
+  const html = seatTrendHtml(points, history.parties, history.elections.map(e => ({ date: e.date, label: e.label })), 'election');
+  if (!html) return;
+  el.dataset.history = '1';
+  const notional = history.elections.filter(e => e.notional && points.some(p => p[0] === e.date));
+  const notes = [
+    ...notional.map(e => e.note),
+    ...(notional.length ? ['Reform UK in 2019 is the Brexit Party (renamed Reform UK in 2021).'] : []),
+  ];
+  el.innerHTML = `<p class="proj-hist-cap">Vote share (%) at each general election, on today’s boundaries</p>${html}` +
+    (notes.length ? `<p class="proj-meta">${notes.map(escapeHtml).join(' ')}</p>` : '');
+  attachTrend(root);
 }

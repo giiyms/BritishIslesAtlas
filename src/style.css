@@ -524,13 +524,13 @@ button { cursor: pointer; }
   .search kbd { display: none; }
   .scale { width: clamp(240px, 66vw, 300px); }
 
-  /* Seat popups become a bottom sheet (fix 7). */
+  /* Seat popups become a bottom sheet (fix 7), flush with the bottom edge of the screen. */
   .atlas-popup.is-seat {
     position: fixed !important;
     top: auto !important;
-    left: 8px !important;
-    right: 8px !important;
-    bottom: 8px !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
     max-width: none !important;
     transform: none !important;
     z-index: 5;
@@ -538,11 +538,14 @@ button { cursor: pointer; }
   .atlas-popup.is-seat .maplibregl-popup-tip { display: none; }
   .atlas-popup.is-seat .maplibregl-popup-content {
     width: 100%;
-    max-height: 55vh;
+    box-sizing: border-box;
+    /* dvh tracks Safari's collapsing toolbar; vh is the fallback for older browsers. */
+    max-height: 60vh;
+    max-height: 60dvh;
     overflow: auto;
     overscroll-behavior: contain;
-    padding: 8px 16px 14px;
-    border-radius: 16px 16px 12px 12px;
+    padding: 8px 16px calc(24px + env(safe-area-inset-bottom, 0px));
+    border-radius: 16px 16px 0 0;
   }
   .atlas-popup.is-seat .maplibregl-popup-content::before {
     content: "";
@@ -843,13 +846,6 @@ button { cursor: pointer; }
 .conf-key i { background:#3a4a5c; }
 .summary-head { font-weight:600; margin:8px 0 4px !important; }
 .seat-small { color:#5a6570; font-size:11px; }
-.share-bars { list-style:none; margin:4px 0; padding:0 !important; }
-.share-bars li { display:grid; grid-template-columns:minmax(78px, 38%) 1fr 42px; align-items:center; gap:6px; margin:2px 0; font-size:11px; }
-.share-bars li.is-pick span { font-weight:600; }
-.share-bars span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.share-bars b { display:block; height:8px; background:#edf0f2; border-radius:4px; overflow:hidden; }
-.share-bars i { display:block; height:100%; border-radius:0 4px 4px 0; }
-.share-bars em { font-style:normal; text-align:right; font-variant-numeric:tabular-nums; color:#25323d; }
 .mini-scroll { overflow-x:auto; }
 .mini-table { border-collapse:collapse; width:100%; font-size:11px; font-variant-numeric:tabular-nums; }
 .mini-table th, .mini-table td { padding:3px 4px; border-bottom:1px solid #e4e8eb; text-align:right; white-space:nowrap; }
@@ -866,6 +862,10 @@ button { cursor: pointer; }
 .pick-candidate, .pick-why { font-size:12px; }
 .pick-flag { display:inline-block; padding:1px 6px; border-radius:4px; background:#efe3ea; color:#7a3558; font-size:11px; font-weight:600; }
 .proj-grid { display:grid; gap:8px; }
+.share-list { display:flex; flex-wrap:wrap; gap:2px 10px; margin:4px 0 !important; font-size:12px; }
+.share-list span { white-space:nowrap; }
+.share-list .is-pick { font-weight:600; }
+.share-list b { font-variant-numeric:tabular-nums; }
 .proj-card { padding:8px 10px; border:1px solid #e1e6ea; border-radius:8px; }
 .proj-head strong { box-shadow:inset 0 -3px 0 var(--party); }
 .proj-chances, .proj-meta { font-size:11px; color:#4a5762; }
@@ -904,15 +904,17 @@ html, body { touch-action: manipulation; }
 .proj-shares .poll-trend { margin:2px 0 4px; }
 .proj-hist-cap { font-size:11px; color:#4a5762; margin:6px 0 0 !important; }
 
-/* Desktop: the seat details dock as a side panel on the right instead of a popup floating over the map. */
-@media (min-width: 861px) {
+/* Wider than a phone: the seat details dock as a full-height side panel on the right instead of a popup over the map. */
+@media (min-width: 521px) {
   .atlas-popup.is-seat {
     position: fixed !important;
-    top: 16px !important;
-    right: 16px !important;
-    bottom: 16px !important;
+    top: 12px !important;
+    right: 12px !important;
+    bottom: 0 !important;
     left: auto !important;
-    width: 380px;
+    width: min(380px, calc(100vw - 120px));
+    max-height: calc(100vh - 12px);
+    max-height: calc(100dvh - 12px);
     max-width: none !important;
     transform: none !important;
     z-index: 4;
@@ -924,11 +926,18 @@ html, body { touch-action: manipulation; }
     box-sizing: border-box;
     overflow: auto;
     overscroll-behavior: contain;
-    padding: 16px 40px 16px 16px;
-    border-radius: 14px;
+    padding: 16px 40px calc(28px + env(safe-area-inset-bottom, 0px)) 16px;
+    border-radius: 14px 14px 0 0;
     box-shadow: 0 4px 22px #26354533;
   }
   .atlas-popup.is-seat .vote-popup { min-width: 0; }
   .atlas-popup.is-seat .maplibregl-popup-close-button { font-size: 22px; width: 32px; height: 32px; }
-  body.seat-sheet-open .election-controls { right: 412px; }
+  body.seat-sheet-open .election-controls { right: 404px; }
 }
+@media (min-width: 521px) and (max-width: 860px) {
+  body.seat-sheet-open .nav,
+  body.seat-sheet-open .scale,
+  body.seat-sheet-open .vote-legend { display: none; }
+}
+/* The panel itself is the only scroller: no nested height cap on the seat article. */
+.atlas-popup.is-seat .election-seat { max-height: none; overflow: visible; }

@@ -2015,6 +2015,19 @@ Democracy Club is **sparse** — most seats are presumed Reform under locked ant
 | **More in Common** | Each published MRP edition (XLSX/CSV under moreincommon.org.uk uploads) that parses cleanly, dated by publication date. Non-vote-share MRPs (e.g. leader ratings) are skipped. |
 | **Scripts** | `scripts/build_seat_history.py` (one-off backfill; re-runnable), `scripts/fetch_polls_seats.py` (daily refresh appends a point for a new edition date, replaces a same-date point, never deletes history). |
 
+### Past general-election results (`results-history-gb`)
+
+| Field | Value |
+|---|---|
+| **File** | `public/data/results-history-gb.json` (fetched only when a seat panel opens; drawn as a line chart, one line per party) |
+| **Shape** | `seats[code] = [[date, con, lab, ld, ref, grn, snp, pc, spk, oth], …]`, % of valid votes, 0.1 dp, `null` = no candidate. GB only, 2024 boundaries. |
+| **2019-12-12 (notional)** | UK Parliament election results, [general election 5](https://electionresults.parliament.uk/general-elections/5) ([`candidacies.csv`](https://electionresults.parliament.uk/general-elections/5/candidacies.csv)): notional 2019 results on the 2024 boundaries by Rallings & Thrasher (Prof David Denver for Scotland) for BBC, ITV News, Sky News and PA, published by the House of Commons Library. Estimates, not votes cast. |
+| **2024-07-04 (actual)** | Same site, [general election 6](https://electionresults.parliament.uk/general-elections/6) ([`candidacies.csv`](https://electionresults.parliament.uk/general-elections/6/candidacies.csv)); matches `results-2024-gb.json`. |
+| **Licence** | [Open Parliament Licence v3.0](https://www.parliament.uk/site-information/copyright-parliament/open-parliament-licence/) |
+| **Mapping** | 2019 Brexit Party (BRX) is plotted on the Reform UK line: same registered party, renamed January 2021 (said on screen). Speaker is its own series; minor parties and independents are `oth`. |
+| **Gaps** | No official notional results on the 2024 boundaries exist for 2017 or earlier, so only two elections are shown. |
+| **Script** | `scripts/build_results_history.py` (`--refresh` re-downloads both CSVs into `data-raw/`). |
+
 ### Overrides (`overrides`)
 
 | Field | Value |

@@ -45,7 +45,10 @@ describe('election data joins', () => {
     expect(html.indexOf('Who to back to stop Labour')).toBeLessThan(html.indexOf('Seat projections'));
     expect(html).toContain('Electoral Calculus');
     expect(html).toContain('More in Common');
-    expect(html).toContain('2024 result');
+    expect(html).toContain('Past results');
+    expect(html).toContain('class="result-history"');
+    // No bar charts anywhere in the seat panel: values are text until the time-series charts load.
+    expect(html).not.toMatch(/class="[^"]*bar|width:\s*[\d.]+%|<meter|<progress/);
     expect(html).toContain('confidence');
     expect(html).toMatch(/candidate not yet confirmed|Candidate: /);
   });

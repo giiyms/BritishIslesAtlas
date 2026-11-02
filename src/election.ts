@@ -54,6 +54,11 @@ let seatHistory: Promise<import('./poll-trend').SeatHistory> | undefined;
 export function loadSeatHistory(): Promise<import('./poll-trend').SeatHistory> {
   return seatHistory ??= getJson('polls-seats-history.json').catch((err: unknown) => { seatHistory = undefined; throw err; });
 }
+let resultsHistory: Promise<import('./poll-trend').ResultsHistory> | undefined;
+/** Past general elections on today's boundaries (2019 notional + 2024): fetched when a seat panel first opens. */
+export function loadResultsHistory(): Promise<import('./poll-trend').ResultsHistory> {
+  return resultsHistory ??= getJson('results-history-gb.json').catch((err: unknown) => { resultsHistory = undefined; throw err; });
+}
 export function escapeHtml(value: unknown): string { return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c] ?? c)); }
 export function partyName(data: Pick<ElectionData, 'results'>, code: string): string { return canonicalParty(data.results.parties[code] ?? code); }
 
@@ -97,9 +102,9 @@ const CHANCE_LABEL: Record<string, string> = { con: 'Conservative', lab: 'Labour
 
 export const OWNER_NOTE = 'Picks reflect this site owner’s tactical goal: stopping Labour winning seats. Check the evidence and make your own choice; you decide how to vote.';
 
-function shareBars(shares: [string, number][], pick: string | null): string {
-  const max = Math.max(1, ...shares.map(([, v]) => v));
-  return `<ul class="share-bars">${shares.map(([p, v]) => `<li${p === pick ? ' class="is-pick"' : ''}><span>${escapeHtml(p)}</span><b><i style="width:${(v / max * 100).toFixed(1)}%;background:${partyColour(p)}"></i></b><em>${fmt(v)}</em></li>`).join('')}</ul>`;
+/** Plain text values (latest shares), shown until the time-series chart loads or when no history exists. */
+function shareList(shares: [string, number][], pick: string | null): string {
+  return `<p class="share-list">${shares.map(([p, v]) => `<span${p === pick ? ' class="is-pick"' : ''}><i class="swatch" style="background:${partyColour(p)}"></i>${escapeHtml(p)} <b>${fmt(v)}</b></span>`).join(' ')}</p>`;
 }
 
 function projectionHtml(seat: ElectionSeat, { key, provider, row }: SeatProjection): string {
@@ -111,7 +116,7 @@ function projectionHtml(seat: ElectionSeat, { key, provider, row }: SeatProjecti
     ? Object.entries(row.chances).filter(([, v]) => typeof v === 'number').sort((a, b) => b[1] - a[1]).map(([k, v]) => `${escapeHtml(canonicalParty(CHANCE_LABEL[k] ?? k, seat.code))} ${Math.round(v * 100)}%`).join(' · ')
     : '';
   return `<div class="proj-card"><div class="proj-head">${link(provider.url, provider.provider)} projects <strong style="--party:${partyColour(winner)}">${escapeHtml(winner)}</strong></div>` +
-    `<div class="proj-shares" data-provider="${escapeHtml(key)}">${shareBars(shares, seat.pick.party)}</div>` +
+    `<div class="proj-shares" data-provider="${escapeHtml(key)}">${shareList(shares, seat.pick.party)}</div>` +
     (chances ? `<p class="proj-chances">Win probability: ${chances}</p>` : '') +
     `<p class="proj-meta">Fieldwork ${escapeHtml(provider.fieldwork ?? 'not stated')} · retrieved ${escapeHtml(provider.retrieved_at.slice(0, 10))}${provider.status !== 'loaded' ? ` · ${escapeHtml(provider.status)}` : ''}</p></div>`;
 }
@@ -134,11 +139,11 @@ export function seatHtml(seat: ElectionSeat, data: ElectionData): string {
     (pick.source === 'override' ? `<p class="pick-flag">Site owner override</p>` : '') +
     `<p class="pick-note">${escapeHtml(OWNER_NOTE)}</p></section>`;
   const projections = seat.projections.length ? `<div class="proj-grid">${seat.projections.map(p => projectionHtml(seat, p)).join('')}</div>` : '<p>No seat projection available.</p>';
-  const result = r ? `<p><strong>${escapeHtml(partyName(data, r.winner_party))}</strong> won (${escapeHtml(r.winner_name)}) · majority ${r.majority.toLocaleString()} (${r.majority_pct}%)</p>${shareBars(resultParties(data.results, r), pick.party)}` : '<p>Result unavailable</p>';
+  const result = r ? `<p><strong>${escapeHtml(partyName(data, r.winner_party))}</strong> won (${escapeHtml(r.winner_name)}) · majority ${r.majority.toLocaleString()} (${r.majority_pct}%)</p><div class="result-history" data-seat="${escapeHtml(seat.code)}">${shareList(resultParties(data.results, r), pick.party)}</div>` : '<p>Result unavailable</p>';
   return `<article class="election-seat"><h2>${escapeHtml(seat.name)}</h2><p class="seat-meta">${escapeHtml(r?.country ?? 'Nation unavailable')} · ${escapeHtml(seat.code)}</p>` +
     pickBox +
     `<h3>Seat projections</h3>${projections}` +
-    `<h3>2024 result</h3>${result}` +
+    `<h3>Past results</h3>${result}` +
     `<h3>Sources</h3><p class="seat-sources">${sourceLinks.join(' · ')}</p>` +
     `<p class="seat-small">Candidate data covers Reform UK and Restore Britain only (Democracy Club, retrieved ${escapeHtml(data.candidates.retrieved_at.slice(0, 10))}). 2024 results retrieved ${escapeHtml(data.results.retrieved_at.slice(0, 10))}, Open Parliament Licence v3.0. Projections are estimates, not results.</p>` +
     `<button type="button" class="copy-seat" data-seat="${escapeHtml(seat.code)}">Copy seat link</button></article>`;
