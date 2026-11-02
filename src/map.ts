@@ -26,10 +26,10 @@ import { attachResultHistory, attachSeatHistory } from "./poll-trend";
 import { singularLabel } from "./layer-groups";
 import { PLACES } from "./geo";
 import { mountVotingLegend, showVotingToast, hideVotingToast } from "./voting-ui";
-import { DENSE_LAYERS, parseDensityStyle, serializeDensityStyle, type DensityStyle } from "./density-styles";
-import type { createDensityRenderer } from "./density-renderer";
+import { HEAT_MAXZOOM, ICON_FADE, heatmapPaint, iconScale, pointOpacity, pointRadius, pointStroke } from "./point-style";
 import { SLAB_SOURCES, SLAB_RELIEF_LAYERS, SLAB_SEA_LAYERS, SLAB_OUTSIDE, SLAB_WOOD, SLAB_LABEL_LAYERS, SLAB_PLACE_LABELS, SLAB_CREAM, SLAB_SEA, TERRAIN_SOURCE } from "./slab";
-const DENSITY_ENABLED = new Set<LayerId>(DENSE_LAYERS);
+/** ~43k points each: plain points and heat only, no chip icons (they would pile up at z11). */
+const DENSE_LAYERS: ReadonlySet<LayerId> = new Set<LayerId>(["places-of-worship", "pubs"]);
 const ELECTION_OPACITY: ExpressionSpecification = ["coalesce", ["get", "electionOpacity"], 0.78];
 
 export const HOME_BOUNDS: [[number, number], [number, number]] = [
@@ -290,38 +290,6 @@ function markerImage(kind: MarkerKind, color: string): ImageData {
   return context.getImageData(0, 0, canvas.width, canvas.height);
 }
 
-function zoomRadius(scale: number): ExpressionSpecification {
-  return [
-    "interpolate",
-    ["linear"],
-    ["zoom"],
-    4,
-    2.15 * scale,
-    5.4,
-    3.15 * scale,
-    8,
-    4.8 * scale,
-    12,
-    7.2 * scale,
-  ];
-}
-
-function iconSize(scale: number): ExpressionSpecification {
-  return [
-    "interpolate",
-    ["linear"],
-    ["zoom"],
-    4,
-    0.4 * scale,
-    5.4,
-    0.54 * scale,
-    8,
-    0.74 * scale,
-    12,
-    1 * scale,
-  ];
-}
-
 function motionDuration(ms: number): number {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : ms;
 }
@@ -329,8 +297,6 @@ function motionDuration(ms: number): number {
 export interface Atlas {
   map: MapLibreMap;
   isOn: (id: LayerId) => boolean;
-  getDensityStyle: () => DensityStyle;
-  setDensityStyle: (style: DensityStyle) => void;
   setLayer: (id: LayerId, on: boolean) => void;
   zoomIn: () => void;
   zoomOut: () => void;
@@ -411,9 +377,6 @@ export function createAtlas(container: HTMLElement): Atlas {
   let enrichedSeats: VotingFeatureCollection | null = null;
   /** User chose "Show" on the voting toast: keep context layers visible. */
   let showOthers = false;
-  let densityStyle = parseDensityStyle(window.location.search);
-  let densityRenderer: ReturnType<typeof createDensityRenderer> | undefined;
-  let densityLoading: Promise<void> | undefined;
   let selected: string | null = null;
   function setSelected(code: string | null) {
     selected = code;
@@ -505,20 +468,17 @@ export function createAtlas(container: HTMLElement): Atlas {
   }
   const ordered = [...LAYERS].sort((a, b) => a.z - b.z);
   const OSM_STATIC = new Set<LayerId>(["petrol", "ev", "power", "hospitals", "fire-stations", "police", "castles", "libraries", "universities", "museums", "railway-stations", "aerodromes", "ferry-terminals", "marinas", "zoos", "theatres", "battlefields", "cinemas", "stadiums", "theme-parks", "viewpoints", "arts-centres", "aquariums", "piers", "ruins", "golf-courses", "galleries", "marketplaces", "nature-reserves", "camp-sites", "memorials", "sports-centres", "caravan-sites", "fitness-centres", "community-centres", "playgrounds", "post-offices", "beaches", "swimming-pools", "pharmacies", "townhalls", "places-of-worship", "lighthouses", "courthouses", "nightclubs", "windmills", "prisons", "clinics", "dentists", "pubs"]);
-  const minZoom = (id: LayerId) => {
-    if (DENSITY_ENABLED.has(id)) return 0;
-    if (id === "post-offices") return 7;
-    return ["schools", "churches", "other-religious", "mosques", "petrol", "ev", "libraries", "universities", "museums", "railway-stations", "aerodromes", "ferry-terminals", "marinas", "zoos", "theatres", "battlefields", "cinemas", "stadiums", "theme-parks", "viewpoints", "arts-centres", "aquariums", "piers", "ruins", "golf-courses", "galleries", "marketplaces", "nature-reserves", "camp-sites", "memorials", "sports-centres", "caravan-sites", "fitness-centres", "community-centres", "playgrounds", "beaches", "swimming-pools", "pharmacies", "townhalls", "places-of-worship", "lighthouses", "courthouses", "nightclubs", "windmills", "prisons", "clinics", "dentists"].includes(id) ? 6 : 0;
-  };
   const hasIcon = (layer: { kind: MarkerKind }) =>
     layer.kind === "dot" || layer.kind === "ring" || SYMBOL_KINDS.has(layer.kind);
+  /** Every point layer: heat plus every point at every zoom (see point-style.ts). */
+  const isPoint = hasIcon;
   const layerIds = (id: LayerId): string[] => {
     if (id === "roads") return [id, "roads-hit"];
     if (id === "constituencies") return [...CONSTITUENCY_LAYERS];
     const layer = LAYERS.find((item) => item.id === id)!;
     const ids: string[] = [id];
-    if (id === "hospitals") ids.push("hospitals-hi");
-    if (hasIcon(layer) && !DENSITY_ENABLED.has(id)) ids.push(`${id}-icon`);
+    if (isPoint(layer)) ids.push(`${id}-heat`);
+    if (hasIcon(layer) && !DENSE_LAYERS.has(id)) ids.push(`${id}-icon`);
     return ids;
   };
   const beforeFor = (z: number): string | undefined => {
@@ -539,9 +499,11 @@ export function createAtlas(container: HTMLElement): Atlas {
           visibility: shown ? "visible" : "none",
           "icon-image": imageId,
           "icon-size": ["interpolate", ["linear"], ["zoom"], ICON_MINZOOM, 0.85, 14, 1],
-          "icon-allow-overlap": id === "hospitals",
-          "icon-padding": 1,
+          // Every feature keeps its icon: no collision culling that adds icons as you zoom in.
+          "icon-allow-overlap": true,
+          "icon-ignore-placement": true,
         },
+        paint: { "icon-opacity": ["interpolate", ["linear"], ["zoom"], ...ICON_FADE.flat()] as ExpressionSpecification },
       }, beforeFor(layer.z));
     };
     if (map.hasImage(imageId)) { place(); return; }
@@ -559,10 +521,7 @@ export function createAtlas(container: HTMLElement): Atlas {
       const sourceData =
         id === "constituencies"
           ? { type: "FeatureCollection" as const, features: [] }
-          : DENSITY_ENABLED.has(id)
-            // The renderer loads every-point data only when the chosen view needs dots.
-            ? { type: "FeatureCollection" as const, features: [] }
-            : OSM_STATIC.has(id)
+          : OSM_STATIC.has(id)
               ? `/data/${id}.geojson`
               : buildCollection(id);
       // Source credits live in the single ATTRIBUTION line (fix 10), not per source.
@@ -575,10 +534,12 @@ export function createAtlas(container: HTMLElement): Atlas {
     const before = beforeFor(layer.z);
     const visible = state[id] ? "visible" : "none";
     const layout = { visibility: visible } as const;
-    if (DENSITY_ENABLED.has(id)) {
-      map.addLayer({ id, type: "circle", source: id, layout,
-        paint: { "circle-color": layer.color, "circle-radius": 1, "circle-opacity": 0 } }, before);
-    } else if (layer.kind === "fill") {
+    if (isPoint(layer)) {
+      // Heat under the points, gone by HEAT_MAXZOOM; fades out as the points fade in.
+      map.addLayer({ id: `${id}-heat`, type: "heatmap", source: id, maxzoom: HEAT_MAXZOOM, layout,
+        paint: heatmapPaint(id, layer.color, layer.accent) }, before);
+    }
+    if (layer.kind === "fill") {
       const isConstituencies = id === "constituencies";
       map.addLayer({
         id,
@@ -642,33 +603,27 @@ export function createAtlas(container: HTMLElement): Atlas {
         "circle-color": layer.color, "circle-opacity": 0.28,
         "circle-stroke-width": 1, "circle-stroke-color": layer.accent, "circle-stroke-opacity": 0.7,
       } : layer.kind === "ring" ? {
-        "circle-radius": zoomRadius(layer.pointScale * 1.15),
-        "circle-color": "rgba(255,255,255,0.2)", "circle-stroke-width": 1.8,
-        "circle-stroke-color": layer.color,
+        "circle-radius": pointRadius(layer.pointScale * 1.15),
+        "circle-color": "rgba(255,255,255,0.2)", "circle-stroke-width": ["interpolate", ["linear"], ["zoom"], 5, 0.8, 9, 1.8],
+        "circle-stroke-color": layer.color, "circle-stroke-opacity": pointOpacity(),
       } : {
-        "circle-radius": zoomRadius(layer.pointScale), "circle-color": layer.color,
-        "circle-opacity": 0.95, "circle-stroke-width": 0.8,
-        "circle-stroke-color": "rgba(255,255,255,0.92)",
+        "circle-radius": pointRadius(layer.pointScale), "circle-color": layer.color,
+        "circle-opacity": pointOpacity(), "circle-stroke-width": pointStroke(),
+        "circle-stroke-color": "rgba(255,255,255,0.92)", "circle-stroke-opacity": pointOpacity(),
       };
-      map.addLayer({ id, type: "circle", source: id, layout,         minzoom: minZoom(id), ...(hasIcon(layer) ? { maxzoom: ICON_MINZOOM } : {}), paint }, before);
+      // No minzoom/maxzoom: the same points are drawn at every zoom.
+      map.addLayer({ id, type: "circle", source: id, layout, paint }, before);
     } else if (SYMBOL_KINDS.has(layer.kind)) {
       if (!map.hasImage(`${id}-mark`)) {
         map.addImage(`${id}-mark`, markerImage(layer.kind, layer.color), { pixelRatio: 2 });
       }
-      // Hospitals no longer blanket the Midlands: no forced overlap below z10 (fix 8).
-      const isHospitals = id === "hospitals";
+      // Every marker at every zoom: overlap allowed, nothing culled by collision.
       map.addLayer({ id, type: "symbol", source: id, layout: {
-        ...layout, "icon-image": `${id}-mark`, "icon-size": iconSize(layer.pointScale),
-        "icon-allow-overlap": false,
-      }, minzoom: minZoom(id), maxzoom: isHospitals ? 10 : ICON_MINZOOM }, before);
-      if (isHospitals) {
-        map.addLayer({ id: "hospitals-hi", type: "symbol", source: id, layout: {
-          ...layout, "icon-image": `${id}-mark`, "icon-size": iconSize(layer.pointScale),
-          "icon-allow-overlap": true, "icon-ignore-placement": true,
-        }, minzoom: 10, maxzoom: ICON_MINZOOM }, before);
-      }
+        ...layout, "icon-image": `${id}-mark`, "icon-size": iconScale(layer.pointScale),
+        "icon-allow-overlap": true, "icon-ignore-placement": true,
+      }, paint: { "icon-opacity": pointOpacity() } }, before);
     }
-    if (hasIcon(layer) && !DENSITY_ENABLED.has(id)) addIconLayer(id, undefined);
+    if (hasIcon(layer) && !DENSE_LAYERS.has(id)) addIconLayer(id, undefined);
   };
   const votingOn = () => state.constituencies;
   const paused = (id: LayerId) => votingOn() && !showOthers && VOTING_MUTED.has(id);
@@ -679,7 +634,6 @@ export function createAtlas(container: HTMLElement): Atlas {
     for (const layerId of layerIds(id)) {
       if (map.getLayer(layerId)) map.setLayoutProperty(layerId, "visibility", visibility);
     }
-    refreshDensity();
   };
   /** Voting view: pause context layers, cap relief, mask non-GB land, show legend (fix 2). */
   const applyVotingMode = (announce: boolean) => {
@@ -761,7 +715,7 @@ export function createAtlas(container: HTMLElement): Atlas {
   const NON_INTERACTIVE = new Set<string>(CONSTITUENCY_LAYERS.filter((id) =>
     id !== "constituencies" && id !== "restore-callout-dot"));
   const interactiveIds = () => ordered.flatMap((layer) => layerIds(layer.id))
-    .filter((id) => id !== "roads" && !NON_INTERACTIVE.has(id) && !!map.getLayer(id));
+    .filter((id) => id !== "roads" && !id.endsWith("-heat") && !NON_INTERACTIVE.has(id) && !!map.getLayer(id));
   const seatFallbackHtml = (name: string, code: string) =>
     `<strong class="popup-title">${escapeHtml(name)}</strong>` +
     (code ? `<div class="popup-meta">${escapeHtml(code)}</div>` : "");
@@ -847,20 +801,6 @@ export function createAtlas(container: HTMLElement): Atlas {
     reformColor: ENDORSE_COLORS.reform.fill,
     onRestore: flyToRestore,
   });
-  const refreshDensity = () => {
-    if (!loaded) return;
-    const active = DENSE_LAYERS.filter(id => state[id] && !paused(id));
-    window.dispatchEvent(new CustomEvent("atlas:density-layers", { detail: active }));
-    if (densityRenderer) { densityRenderer.update(densityStyle, active); return; }
-    if (!active.length || densityLoading) return;
-    densityLoading = import("./density-renderer").then(({ createDensityRenderer }) => {
-      densityRenderer = createDensityRenderer(map, container.parentElement ?? document.body, message => {
-        console.warn(message);
-        showVotingToast("Density data could not load", "Retry", refreshDensity);
-      });
-      refreshDensity();
-    }).finally(() => { densityLoading = undefined; });
-  };
   let hovered: string | null = null;
   const setHovered = (code: string | null) => {
     if (hovered === code || !map.getSource("constituencies")) return;
@@ -934,22 +874,13 @@ export function createAtlas(container: HTMLElement): Atlas {
     }, "population");
     for (const layer of ordered) if (state[layer.id] && !paused(layer.id)) add(layer.id);
     applyVotingMode(false);
-    map.on("zoom", refreshDensity);
-    map.on("zoomend", refreshDensity);
 
-    map.once("idle", () => { document.body.dataset.mapReady = "true"; refreshDensity(); });
+    map.once("idle", () => { document.body.dataset.mapReady = "true"; });
   });
 
   return {
     map,
     isOn: (id) => state[id],
-    getDensityStyle: () => densityStyle,
-    setDensityStyle: style => {
-      densityStyle = style;
-      window.history.replaceState(window.history.state, "", serializeDensityStyle(window.location.href, style));
-      refreshDensity();
-      window.dispatchEvent(new CustomEvent("atlas:density-style", { detail: style }));
-    },
     setLayer: (id, on) => {
       const was = state[id];
       state[id] = on;

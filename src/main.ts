@@ -28,7 +28,7 @@ if (!mapNode || !panel || !search || !scale || !zoomIn || !zoomOut || !home) {
 
 const atlas = createAtlas(mapNode);
 mountElectionUI((code) => atlas.openSeat(code));
-mountPanel(panel, { isOn: atlas.isOn, setOn: atlas.setLayer, onRestore: atlas.flyToRestore, getDensityStyle: atlas.getDensityStyle, setDensityStyle: atlas.setDensityStyle });
+mountPanel(panel, { isOn: atlas.isOn, setOn: atlas.setLayer, onRestore: atlas.flyToRestore });
 mountScale(scale, atlas.map);
 mountSearch(search, (hit) => {
   // "What do I vote here?": a postcode hit opens its seat popup once the camera lands.

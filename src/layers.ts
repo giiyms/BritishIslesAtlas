@@ -55,7 +55,7 @@ export const LAYERS = [
     color: "#d9822b",
     kind: "dot",
     defaultOn: true,
-    blurb: "OpenStreetMap pubs (amenity=pub) with density extrusion",
+    blurb: "OpenStreetMap pubs (amenity=pub), every pub as a point with a heatmap at national zoom",
     pointScale: 1.15,
     icon: ICONS.pubs,
   },

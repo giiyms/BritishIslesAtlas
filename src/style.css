@@ -807,43 +807,6 @@ button { cursor: pointer; }
   .vote-toast { top: auto; bottom: 104px; }
 }
 
-.density-legend {
-  position: absolute;
-  /* Keep the key clear of the zoom buttons and centre scale. */
-  right: 12px;
-  max-width: min(330px, calc(100vw - 80px));
-  bottom: 52px;
-  z-index: 4;
-  min-width: 132px;
-  padding: 8px 10px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 1px 4px rgba(29, 35, 44, 0.18);
-  font: 500 11px/1.3 Inter, system-ui, sans-serif;
-  color: #1d232c;
-  pointer-events: none;
-}
-.density-legend-title { font-weight: 600; margin-bottom: 4px; }
-.density-legend-ramp {
-  height: 8px;
-  border-radius: 4px;
-  margin: 2px 0 4px;
-}
-.density-legend-labels {
-  display: flex;
-  justify-content: space-between;
-  font-size: 10px;
-  color: #5a6570;
-}
-@media (max-width: 860px) {
-  .density-legend { right: 8px; bottom: 64px; min-width: 110px; padding: 6px 8px; }
-}
-
-.density-picker { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 8px 12px; font-size: 12px; }
-.density-picker[hidden], .density-legend[hidden] { display: none; }
-.density-picker select { max-width: 170px; min-height: 30px; border: 1px solid #aab4bd; border-radius: 6px; padding: 3px 6px; background: #fff; color: #263442; font: inherit; }
-.density-picker select:focus-visible { outline: 2px solid #247b91; outline-offset: 2px; }
-.panel.collapsed .density-picker { display: none; }
 .election-controls { position:absolute; z-index:3; top:var(--rail-top); right:var(--edge); width:var(--rail-w); max-height:calc(100vh - var(--rail-top) - var(--rail-bottom)); max-height:calc(100dvh - var(--rail-top) - var(--rail-bottom)); overflow:auto; overscroll-behavior:contain; padding:16px; border-radius:18px; background:rgba(255,255,255,0.96); border:1px solid rgba(255,255,255,0.72); box-shadow:var(--shadow); color:#25323d; font-size:12px; }
 .election-controls h1 { font-size:20px; margin:0 0 4px; }.election-controls p { margin:5px 0 10px; line-height:1.4; }.election-controls select { display:block; width:100%; margin:5px 0 10px; padding:7px; }.election-controls button,.election-seat button,.table-tools button { cursor:pointer; padding:8px; border:1px solid #c8d2d9; border-radius:6px; background:#f5f8fa; }.election-legend { display:flex; flex-wrap:wrap; gap:6px 10px; margin:8px 0; }.election-legend span { white-space:nowrap; }.election-legend i { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:4px; }.election-controls details { margin:10px 0; }.election-controls summary { cursor:pointer; font-weight:600; }.election-seat { font-size:12px; line-height:1.4; max-height:65vh; overflow:auto; }.election-seat h2 { font-size:18px; margin:0 22px 5px 0; }.election-seat h3 { font-size:13px; margin:12px 0 4px; }.election-seat p,.election-seat ul { margin:4px 0; }.election-seat ul { padding-left:18px; }.election-table { width:min(1000px,95vw); max-height:85vh; border:0; border-radius:12px; padding:18px; }.election-table::backdrop { background:#17253377; }.election-table header,.table-tools { display:flex; justify-content:space-between; gap:12px; align-items:center; }.election-table header h2 { margin:0 0 12px; }.close-table { font-size:24px; border:0; background:none; cursor:pointer; }.table-tools input { padding:9px; flex:1; }.table-scroll { overflow:auto; max-height:65vh; }.election-table table { border-collapse:collapse; width:100%; font-size:13px; text-align:left; }.election-table th,.election-table td { padding:10px; border-bottom:1px solid #e4e8eb; }.election-table th button,.election-table td button { background:none; border:0; text-align:left; cursor:pointer; color:#245e87; }.election-table th button { font-weight:bold; }
 @media(max-width:860px) { .election-controls { top:auto; bottom:12px; right:12px; left:12px; width:auto; max-height:35vh; padding:10px 12px; }.election-controls h1 { font-size:16px; }.election-controls p { margin:3px 0; }.election-controls select { margin:3px 0; }.election-controls details { margin:4px 0; }.election-seat { max-height:60vh; } }
@@ -955,11 +918,10 @@ body.seat-sheet-open .election-controls { display: none; }
 @media (max-width: 860px) {
   :root { --edge: 12px; --rail-top: 132px; }
 }
-/* Desktop: keep the attribution and density key clear of whichever panel holds the right rail. */
+/* Desktop: keep the attribution clear of whichever panel holds the right rail. */
 @media (min-width: 861px) {
   body:has(.election-controls:not([hidden])), body.seat-sheet-open { --rail-clear: calc(var(--rail-w) + var(--edge) + 12px); }
   .maplibregl-ctrl-bottom-right { right: var(--rail-clear); }
-  .density-legend { right: calc(12px + var(--rail-clear)); }
   /* Centre the scale bar in the map area left of the rail, so the ⓘ credit never lands on it. */
   .scale { left: calc((100vw - var(--rail-clear)) / 2); }
   /* Leave room for the zoom stack (20px + 130px) and a 12px gap on short screens. */
