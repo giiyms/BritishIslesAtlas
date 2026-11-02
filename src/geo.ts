@@ -279,16 +279,6 @@ Eilean Donan|Dornie|-5.516|57.274
 Bunratty Castle|Bunratty|-8.812|52.697
 Dunluce Castle|Dunluce|-6.578|55.211
 `,
-  legends: `
-Glastonbury|Glastonbury|-2.714|51.147
-Loch Ness|Drumnadrochit|-4.424|57.322
-Tintagel legend|Tintagel|-4.750|50.668
-Giant's Causeway|Bushmills|-6.511|55.240
-Newgrange|Boyne Valley|-6.475|53.694
-Arthur's Seat|Edinburgh|-3.162|55.944
-Croagh Patrick|Murrisk|-9.659|53.760
-The Burren|Ballyvaughan|-9.150|53.050
-`,
 };
 
 function loadPlaces(table: string): Place[] {
@@ -416,7 +406,7 @@ const builders: Record<LayerId, () => Feature[]> = {
   nuclear: () => namedLayer("nuclear", "Preview nuclear site"),
   castles: () => [],
   historic: () => [],
-  legends: () => namedLayer("legends", "Preview legend"),
+  legends: () => [],
   mountains: () => [],
 };
 

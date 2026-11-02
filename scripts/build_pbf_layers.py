@@ -34,16 +34,34 @@ def cemetery(t: dict, rec: dict) -> dict | None:
 LEGEND_SKIP = re.compile(r"^(pub|bar|restaurant|cafe|fast_food|hotel|guest_house|shop)$")
 
 
+# Gaelic "fionn" means white/fair: a bare Fionn Loch or Coire Fionn is not Fionn mac Cumhaill.
+FOLK_NAME = re.compile(
+    r"\b(fairy|fairies|faerie|giant'?s'?|devil'?s|witch'?s|wishing well|king arthur|arthur'?s|merlin'?s|fionn mac|mac ?cumhaill"
+    r"|finn mac|finn mc ?cool|cu ?chulainn|cuchulain|robin hood'?s|piskie|pixie'?s|boggart|druid'?s|dragon'?s)", re.I)
+NOT_FOLKLORE = re.compile(r"\b(hostel|hotel|sweets|scouts|clg|gaa|house|farm|barn|cottage|transformer|apple|ltd|shop|cafe|school|club|lodge|inn|stores?|takeaway|trail|library|champs|memorial|hike|garden|teeth|ww2|wwii|pillbox|tank)\b", re.I)
+
+
+def holy_well(t: dict) -> bool:
+    return "holy_well" in (t.get("place_of_worship", ""), t.get("historic", ""), t.get("amenity", ""), t.get("man_made", ""), t.get("natural", ""))
+
+
 def legend(t: dict, rec: dict) -> dict | None:
+    if t.get("leisure") == "playground" or t.get("tourism") == "information" or t.get("amenity") or t.get("historic") == "memorial":
+        if not holy_well(t):
+            return None
+    if any(t.get(k) for k in ("power", "office", "craft", "club", "sport", "landuse", "building")) and not t.get("historic"):
+        return None
     if any(LEGEND_SKIP.match(t.get(k, "")) for k in ("amenity", "tourism", "shop")) or t.get("shop") or t.get("highway") \
             or t.get("building") in ("house", "residential", "yes") and not t.get("historic"):
         return None
-    holy = "holy_well" in (t.get("place_of_worship", ""), t.get("historic", ""), t.get("amenity", ""), t.get("man_made", ""), t.get("natural", ""))
+    holy = holy_well(t)
     name = t.get("name", "")
     if holy or (t.get("natural") == "spring" and "well" in name.lower()):
         kind = "Holy well"
-    else:
+    elif FOLK_NAME.search(name) and not NOT_FOLKLORE.search(name):
         kind = "Place named in folklore"
+    else:
+        return None
     feature = t.get("historic") or t.get("natural") or t.get("man_made") or t.get("tourism") or t.get("leisure") or ""
     out = {"legend_kind": kind}
     if feature and feature not in ("yes", "holy_well"):

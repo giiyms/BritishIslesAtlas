@@ -59,6 +59,10 @@ export const FACT_ROWS: Readonly<Record<string, Array<[key: string, label: strin
     ["fortification_type", "Fortification", text],
     ["civilization", "Period", text],
   ],
+  legends: [
+    ["legend_kind", "Kind", text],
+    ["feature", "Feature", text],
+  ],
   roads: [
     ["road_class", "Class", text],
     ["nation", "Nation", text],

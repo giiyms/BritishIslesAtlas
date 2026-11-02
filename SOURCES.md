@@ -1542,6 +1542,22 @@ the Geofabrik OpenStreetMap extracts (downloaded 2026-11-01). Licence: **ODbL 1.
   tagged `historic=archaeological_site` in the extract, so only its surrounding barrows appear.
 - Replaces the ten-point preview.
 
+## Legends (holy wells and folklore places)
+
+`public/data/legends.geojson` (1,681 places) is built by `scripts/build_pbf_layers.py legends` from
+the Geofabrik OpenStreetMap extracts (downloaded 2026-11-01). Licence: **ODbL 1.0**.
+
+- Holy wells: anything tagged `holy_well` (place of worship, historic, amenity, man_made or natural),
+  plus springs named as a saint's, Our Lady's, holy, tobar or ffynnon well.
+- Places named in folklore: natural and historic features whose name invokes a legend (fairy,
+  giant's, devil's, witch's, wishing well, King Arthur, Merlin, Fionn mac Cumhaill / Finn McCool,
+  Cú Chulainn, Robin Hood, pixies, boggarts, druids, dragons). Bare Gaelic "fionn" (white) is not
+  matched; pubs, shops, houses, farms, hostels, playgrounds, trails and memorials are dropped.
+- This is a name-based selection, not a folklore gazetteer: it shows where the legend is written
+  on the map, not every place with a story. No open, georeferenced folklore dataset covers the
+  isles (the National Folklore Collection's Dúchas places are per-parish and CC BY-NC).
+- Replaces the eight-point preview.
+
 ## Remaining honest caveats
 
 - Constituencies layer is ONS BGC GB-only (632); NI deferred; no endorse/polling UI yet.

@@ -1828,5 +1828,13 @@
     "layer": "historic",
     "count": 40871,
     "filter": "historic=archaeological_site (nodes and areas)"
+  },
+  "legends": {
+    "extracted_at": "2026-11-01",
+    "method": "Geofabrik PBF extracts (great-britain, ireland-and-northern-ireland, isle-of-man, guernsey-jersey) via scripts/extract_pbf.py",
+    "license": "ODbL 1.0",
+    "layer": "legends",
+    "count": 1681,
+    "filter": "holy wells (place_of_worship/historic/amenity/man_made/natural=holy_well, or a named holy/saint's spring well) and natural or historic features whose name invokes a legend (fairy, giant's, devil's, King Arthur, Merlin, Fionn, Cú Chulainn, Robin Hood, ...); pubs, shops and houses dropped"
   }
 }
