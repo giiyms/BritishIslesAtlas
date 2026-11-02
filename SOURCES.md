@@ -1465,6 +1465,7 @@ per local authority, from the latest census in each jurisdiction (downloaded 202
   (ONS Explore Local Statistics for England and Wales).
 - Not covered: the Isle of Man (2021 census) and Jersey (2021) and Guernsey (no census; population
   register) have no council marker yet.
+- Links: https://www.nomisweb.co.uk/sources/census_2021, https://www.scotlandscensus.gov.uk/search-the-census, https://build.nisra.gov.uk/en/custom/data?d=PEOPLE&v=LGD14&v=COB_BASIC, https://data.cso.ie/table/SAP2022T2T1CTY
 
 ## Schools
 
@@ -1497,6 +1498,7 @@ per local authority, from the latest census in each jurisdiction (downloaded 202
   schools; Wales and Scotland near complete for state schools). The ONS country outline is
   generalised, so a school within a few hundred metres of the English border can land on either
   side.
+- Links: https://get-information-schools.service.gov.uk/Downloads, https://www.gov.uk/government/statistical-data-sets/monthly-management-information-ofsteds-school-inspections-outcomes, https://download.geofabrik.de/europe.html, https://www.openstreetmap.org/copyright
 
 ## Roads
 
@@ -1514,6 +1516,7 @@ Jersey; downloaded 2026-11-01) via `scripts/extract_pbf.py`. Licence: **ODbL 1.0
 - Card: road number, class, nation, with an OpenStreetMap search link (a merged road has no single
   OSM id).
 - Replaces the straight-line preview corridors that were capped at z7.
+- Links: https://download.geofabrik.de/europe.html, https://www.openstreetmap.org/copyright
 
 ## Cemeteries
 
@@ -1527,6 +1530,7 @@ Licence: **ODbL 1.0**.
   area, then the live OSM tags (religion, denomination, operator, website) like every OSM layer.
 - About three quarters of churchyards carry no name in OSM; those cards read "Churchyard".
 - Replaces the five-point preview.
+- Links: https://download.geofabrik.de/europe.html, https://www.openstreetmap.org/copyright
 
 ## Historic (archaeological sites)
 
@@ -1541,6 +1545,7 @@ the Geofabrik OpenStreetMap extracts (downloaded 2026-11-01). Licence: **ODbL 1.
 - Castles, battlefields and memorials stay in their own layers. The Stonehenge stone circle itself is not
   tagged `historic=archaeological_site` in the extract, so only its surrounding barrows appear.
 - Replaces the ten-point preview.
+- Links: https://download.geofabrik.de/europe.html, https://www.openstreetmap.org/copyright
 
 ## Legends (holy wells and folklore places)
 
@@ -1557,6 +1562,7 @@ the Geofabrik OpenStreetMap extracts (downloaded 2026-11-01). Licence: **ODbL 1.
   on the map, not every place with a story. No open, georeferenced folklore dataset covers the
   isles (the National Folklore Collection's Dúchas places are per-parish and CC BY-NC).
 - Replaces the eight-point preview.
+- Links: https://download.geofabrik.de/europe.html, https://www.openstreetmap.org/copyright
 
 ## Health (GP practices)
 
@@ -1580,6 +1586,7 @@ nation's official register, geocoded by postcode with postcodes.io (ONS Postcode
   practices opened or closed since 2022 are not reflected.
 - 9 UK practices whose postcode does not geocode are omitted.
 - Replaces the eight-point preview.
+- Links: https://digital.nhs.uk/services/organisation-data-service/data-search-and-export, https://www.opendata.nhs.scot/dataset/gp-practice-contact-details-and-list-sizes, https://www.opendatani.gov.uk/dataset/gp-practice-list-sizes, https://www.cqc.org.uk/about-us/transparency/using-cqc-data, https://web.archive.org/ (HSE GP sites, data.gov.ie May 2022), https://postcodes.io/
 
 ## Immigration
 
@@ -1605,6 +1612,7 @@ nation's official register, geocoded by postcode with postcodes.io (ONS Postcode
 - Under the Common Travel Area there is no routine passport control between the UK, Ireland, the
   Isle of Man and the Channel Islands, so passenger counts are traffic, not immigration checks.
 - Replaces the ten-point preview.
+- Links: https://www.caa.co.uk/data-and-analysis/uk-aviation-market/airports/uk-airport-data/uk-airport-data-2025/annual-2025/, https://data.cso.ie/table/TAA05, https://data.cso.ie/table/TBA12, https://www.gov.uk/government/statistical-data-sets/sea-passenger-statistics-spas, https://www.gov.uk/government/statistical-data-sets/immigration-system-statistics-data-tables
 
 ## Crime
 
@@ -1639,6 +1647,7 @@ the police publish recorded-crime counts for, with the total, the main offence g
     their English forms (logainm.ie), and same-named villages are kept to their Garda division.
 - Placed on the census layer's council markers (ONS LAD BGC centroids) where an area is one council.
 - Replaces the preview markers.
+- Links: https://www.gov.uk/government/statistical-data-sets/police-recorded-crime-and-outcomes-open-data-tables, https://www.gov.scot/publications/recorded-crime-scotland-2025-26/, https://www.psni.police.uk/about-us/our-publications-and-reports/official-statistics/police-recorded-crime-statistics, https://data.cso.ie/table/CJA07
 
 ## Nuclear
 
@@ -1658,6 +1667,7 @@ the police publish recorded-crime counts for, with the total, the main offence g
   of a licence number. Wikidata places Loch Goil and Loch Ewe at the loch, not the berth.
 - Ireland, the Isle of Man and the Channel Islands have no nuclear installations.
 - Replaces the nine-point preview.
+- Links: https://www.onr.org.uk/register-of-nuclear-site-licences, https://www.onr.org.uk/our-work/map-of-sites-and-facilities, https://www.wikidata.org/
 
 ## Remaining honest caveats
 
