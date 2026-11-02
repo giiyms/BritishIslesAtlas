@@ -627,8 +627,13 @@ export function createAtlas(container: HTMLElement): Atlas {
   };
   const votingOn = () => state.constituencies;
   const paused = (id: LayerId) => votingOn() && !showOthers && VOTING_MUTED.has(id);
+  /** Layer whose feature the open popup describes; hiding that layer closes it. */
+  let popupLayer: LayerId | null = null;
+  /** Set before addTo(); addTo() on an open popup fires "close" first, so it is copied on "open". */
+  let nextPopupLayer: LayerId | null = null;
   const apply = (id: LayerId) => {
     const shown = state[id] && !paused(id);
+    if (!shown && popupLayer === id) popup.remove();
     if (shown && loaded) add(id);
     const visibility = shown ? "visible" : "none";
     for (const layerId of layerIds(id)) {
@@ -665,11 +670,13 @@ export function createAtlas(container: HTMLElement): Atlas {
   // closeOnClick is off: the built-in handler runs after ours and closed the popup we had just re-opened for the newly tapped seat (second tap needed).
   const popup = new Popup({ closeButton: true, closeOnClick: false, maxWidth: "260px", className: "atlas-popup", offset: 10 });
   popup.on("close", () => {
+    popupLayer = null;
     setSelected(null);
     document.body.classList.remove("seat-sheet-open");
   });
   let popupIsSeat = false;
   popup.on("open", () => {
+    popupLayer = nextPopupLayer;
     popup.getElement()?.classList.toggle("is-seat", popupIsSeat);
     popup.getElement()?.classList.remove("sheet-peek");
     document.body.classList.toggle("seat-sheet-open", popupIsSeat);
@@ -739,6 +746,7 @@ export function createAtlas(container: HTMLElement): Atlas {
     setSelected(code);
     // ≤520px: seat popups render as a bottom sheet (fix 7); nav/scale hide while it is open.
     popupIsSeat = true;
+    nextPopupLayer = "constituencies";
     try {
       if (!electionData) electionData = await loadElection();
       if (!enrichedSeats) enrichedSeats = electionData.geo as VotingFeatureCollection;
@@ -842,6 +850,7 @@ export function createAtlas(container: HTMLElement): Atlas {
     const context = brand && brand !== name ? brand : point ? nearestPlace(point[0], point[1]) : "";
     const typeBits = [layer ? singularLabel(layer.label) : "Place", context].filter(Boolean);
     popupIsSeat = false;
+    nextPopupLayer = layer?.id ?? null;
     popup.setLngLat(event.lngLat).setMaxWidth("260px").setHTML(
       `<strong class="popup-title popup-title-poi">${escapeHtml(name)}</strong>` +
       `<div class="popup-meta">${escapeHtml(typeBits.join(" · "))}</div>` +
