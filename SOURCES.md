@@ -1382,6 +1382,10 @@ The rich place card has no data of its own. When a place is opened, it fetches t
 | Petrol stations | DESNZ Fuel Finder (Motor Fuel Price (Open Data) Regulations 2025) | — | **Not available**: the API needs GOV.UK One Login plus OAuth client credentials, and the open CSV page returns 403 to automated access. No fuel prices are shown. |
 | Photo | Wikimedia Commons (`wikimedia_commons=*`, `image=` Commons file, Wikidata P18, Wikipedia page image), Geograph Britain and Ireland (oEmbed) | Per image, shown on the card (author + licence from Commons extmetadata / Geograph oEmbed, usually CC BY-SA) | Lazy-loaded behind a skeleton. Arbitrary `image=` URLs are never loaded. With no photo the card says "No open-licence photo linked yet". No placeholder or generated images are used. |
 
+## Point styling and coincident points (t254u)
+
+Every point layer shares one radius ramp (about 2.5 px at z6 to 5.5 px at z16), 80% fill opacity and a thin white keyline. Draw order is by feature count, densest at the bottom (pubs, places of worship), rarest on top, so a rare feature is never hidden under a dense one. Points that share exactly the same coordinates (349 positions, mostly castle+museum and memorial+church pairs) are moved 2 m apart by `scripts/nudge_coincident_points.py`; the original coordinates are kept in `true_lon`/`true_lat` and used by the place card. No data values change.
+
 ## Remaining honest caveats
 
 - Constituencies layer is ONS BGC GB-only (632); NI deferred; no endorse/polling UI yet.

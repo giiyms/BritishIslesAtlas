@@ -25,8 +25,6 @@ export interface LayerDef {
   kind: MarkerKind;
   defaultOn: boolean;
   blurb: string;
-  /** Relative size of dot / ring markers. */
-  pointScale: number;
   icon: string;
 }
 
@@ -42,7 +40,6 @@ export const LAYERS = [
     kind: "line",
     defaultOn: true,
     blurb: "Sample motorway and trunk corridors (regional zoom only)",
-    pointScale: 1,
     icon: ICONS.roads,
   },
   {
@@ -56,7 +53,6 @@ export const LAYERS = [
     kind: "dot",
     defaultOn: true,
     blurb: "OpenStreetMap pubs (amenity=pub), every pub as a point with a heatmap at national zoom",
-    pointScale: 1.15,
     icon: ICONS.pubs,
   },
   {
@@ -70,7 +66,6 @@ export const LAYERS = [
     kind: "dot",
     defaultOn: true,
     blurb: "Preview schools",
-    pointScale: 0.92,
     icon: ICONS.schools,
   },
   {
@@ -84,7 +79,6 @@ export const LAYERS = [
     kind: "dot",
     defaultOn: false,
     blurb: "OpenStreetMap libraries (ODbL)",
-    pointScale: 0.95,
     icon: ICONS.libraries,
   },
   {
@@ -98,7 +92,6 @@ export const LAYERS = [
     kind: "square",
     defaultOn: false,
     blurb: "OpenStreetMap universities (ODbL)",
-    pointScale: 1,
     icon: ICONS.universities,
   },
   {
@@ -112,7 +105,6 @@ export const LAYERS = [
     kind: "diamond",
     defaultOn: false,
     blurb: "OpenStreetMap museums (ODbL)",
-    pointScale: 1,
     icon: ICONS.museums,
   },
   {
@@ -126,7 +118,6 @@ export const LAYERS = [
     kind: "square",
     defaultOn: false,
     blurb: "OpenStreetMap railway stations (ODbL)",
-    pointScale: 0.95,
     icon: ICONS["railway-stations"],
   },
   {
@@ -140,7 +131,6 @@ export const LAYERS = [
     kind: "diamond",
     defaultOn: false,
     blurb: "OpenStreetMap aerodromes (ODbL)",
-    pointScale: 1,
     icon: ICONS.aerodromes,
   },
   {
@@ -154,7 +144,6 @@ export const LAYERS = [
     kind: "triangle",
     defaultOn: false,
     blurb: "OpenStreetMap ferry terminals (ODbL)",
-    pointScale: 1,
     icon: ICONS["ferry-terminals"],
   },
   {
@@ -168,7 +157,6 @@ export const LAYERS = [
     kind: "diamond",
     defaultOn: false,
     blurb: "OpenStreetMap marinas (ODbL)",
-    pointScale: 1,
     icon: ICONS.marinas,
   },
   {
@@ -182,7 +170,6 @@ export const LAYERS = [
     kind: "square",
     defaultOn: false,
     blurb: "OpenStreetMap zoos (ODbL)",
-    pointScale: 1,
     icon: ICONS.zoos,
   },
   {
@@ -196,7 +183,6 @@ export const LAYERS = [
     kind: "triangle",
     defaultOn: false,
     blurb: "OpenStreetMap theatres (ODbL)",
-    pointScale: 1,
     icon: ICONS.theatres,
   },
   {
@@ -210,7 +196,6 @@ export const LAYERS = [
     kind: "diamond",
     defaultOn: false,
     blurb: "OpenStreetMap battlefields (ODbL)",
-    pointScale: 1,
     icon: ICONS.battlefields,
   },
   {
@@ -224,7 +209,6 @@ export const LAYERS = [
     kind: "square",
     defaultOn: false,
     blurb: "OpenStreetMap cinemas (ODbL)",
-    pointScale: 1,
     icon: ICONS.cinemas,
   },
   {
@@ -238,7 +222,6 @@ export const LAYERS = [
     kind: "triangle",
     defaultOn: false,
     blurb: "OpenStreetMap stadiums (ODbL)",
-    pointScale: 1,
     icon: ICONS.stadiums,
   },
   {
@@ -252,7 +235,6 @@ export const LAYERS = [
     kind: "diamond",
     defaultOn: false,
     blurb: "OpenStreetMap theme parks (ODbL)",
-    pointScale: 1,
     icon: ICONS["theme-parks"],
   },
   {
@@ -266,7 +248,6 @@ export const LAYERS = [
     kind: "ring",
     defaultOn: false,
     blurb: "OpenStreetMap viewpoints (ODbL)",
-    pointScale: 1,
     icon: ICONS.viewpoints,
   },
   {
@@ -280,7 +261,6 @@ export const LAYERS = [
     kind: "square",
     defaultOn: false,
     blurb: "OpenStreetMap arts centres (ODbL)",
-    pointScale: 1,
     icon: ICONS["arts-centres"],
   },
   {
@@ -294,7 +274,6 @@ export const LAYERS = [
     kind: "diamond",
     defaultOn: false,
     blurb: "OpenStreetMap aquariums (ODbL)",
-    pointScale: 1,
     icon: ICONS.aquariums,
   },
   {
@@ -308,7 +287,6 @@ export const LAYERS = [
     kind: "square",
     defaultOn: false,
     blurb: "OpenStreetMap named piers (ODbL)",
-    pointScale: 1,
     icon: ICONS.piers,
   },
   {
@@ -322,7 +300,6 @@ export const LAYERS = [
     kind: "diamond",
     defaultOn: false,
     blurb: "OpenStreetMap named ruins (ODbL)",
-    pointScale: 1,
     icon: ICONS.ruins,
   },
   {
@@ -336,7 +313,6 @@ export const LAYERS = [
     kind: "square",
     defaultOn: false,
     blurb: "OpenStreetMap golf courses (ODbL)",
-    pointScale: 1,
     icon: ICONS["golf-courses"],
   },
   {
@@ -350,7 +326,6 @@ export const LAYERS = [
     kind: "diamond",
     defaultOn: false,
     blurb: "OpenStreetMap galleries (ODbL)",
-    pointScale: 1,
     icon: ICONS.galleries,
   },
   {
@@ -364,7 +339,6 @@ export const LAYERS = [
     kind: "square",
     defaultOn: false,
     blurb: "OpenStreetMap marketplaces (ODbL)",
-    pointScale: 1,
     icon: ICONS.marketplaces,
   },
   {
@@ -378,7 +352,6 @@ export const LAYERS = [
     kind: "diamond",
     defaultOn: false,
     blurb: "OpenStreetMap nature reserves (ODbL)",
-    pointScale: 1,
     icon: ICONS["nature-reserves"],
   },
   {
@@ -392,7 +365,6 @@ export const LAYERS = [
     kind: "triangle",
     defaultOn: false,
     blurb: "OpenStreetMap camp sites (ODbL)",
-    pointScale: 1,
     icon: ICONS["camp-sites"],
   },
   {
@@ -406,7 +378,6 @@ export const LAYERS = [
     kind: "diamond",
     defaultOn: false,
     blurb: "OpenStreetMap named memorials (ODbL)",
-    pointScale: 1,
     icon: ICONS.memorials,
   },
   {
@@ -420,7 +391,6 @@ export const LAYERS = [
     kind: "square",
     defaultOn: false,
     blurb: "OpenStreetMap sports centres (ODbL)",
-    pointScale: 1,
     icon: ICONS["sports-centres"],
   },
   {
@@ -434,7 +404,6 @@ export const LAYERS = [
     kind: "triangle",
     defaultOn: false,
     blurb: "OpenStreetMap caravan sites (ODbL)",
-    pointScale: 1,
     icon: ICONS["caravan-sites"],
   },
   {
@@ -448,7 +417,6 @@ export const LAYERS = [
     kind: "diamond",
     defaultOn: false,
     blurb: "OpenStreetMap fitness centres (ODbL)",
-    pointScale: 1,
     icon: ICONS["fitness-centres"],
   },
   {
@@ -462,7 +430,6 @@ export const LAYERS = [
     kind: "square",
     defaultOn: false,
     blurb: "OpenStreetMap community centres (ODbL)",
-    pointScale: 1,
     icon: ICONS["community-centres"],
   },
   {
@@ -476,7 +443,6 @@ export const LAYERS = [
     kind: "diamond",
     defaultOn: false,
     blurb: "OpenStreetMap playgrounds (ODbL)",
-    pointScale: 1,
     icon: ICONS.playgrounds,
   },
   {
@@ -490,7 +456,6 @@ export const LAYERS = [
     kind: "dot",
     defaultOn: false,
     blurb: "OpenStreetMap beaches (ODbL)",
-    pointScale: 1,
     icon: ICONS.beaches,
   },
   {
@@ -504,7 +469,6 @@ export const LAYERS = [
     kind: "ring",
     defaultOn: false,
     blurb: "OpenStreetMap swimming pools (ODbL)",
-    pointScale: 1,
     icon: ICONS["swimming-pools"],
   },
   {
@@ -518,7 +482,6 @@ export const LAYERS = [
     kind: "cross",
     defaultOn: false,
     blurb: "OpenStreetMap pharmacies (ODbL)",
-    pointScale: 1,
     icon: ICONS.pharmacies,
   },
   {
@@ -532,7 +495,6 @@ export const LAYERS = [
     kind: "square",
     defaultOn: false,
     blurb: "OpenStreetMap town halls (ODbL)",
-    pointScale: 1,
     icon: ICONS.townhalls,
   },
   {
@@ -546,7 +508,6 @@ export const LAYERS = [
     kind: "cross",
     defaultOn: false,
     blurb: "OpenStreetMap places of worship (ODbL)",
-    pointScale: 1,
     icon: ICONS["places-of-worship"],
   },
   {
@@ -560,7 +521,6 @@ export const LAYERS = [
     kind: "triangle",
     defaultOn: false,
     blurb: "OpenStreetMap lighthouses (ODbL)",
-    pointScale: 1,
     icon: ICONS.lighthouses,
   },
   {
@@ -574,7 +534,6 @@ export const LAYERS = [
     kind: "square",
     defaultOn: false,
     blurb: "OpenStreetMap courthouses (ODbL)",
-    pointScale: 1,
     icon: ICONS.courthouses,
   },
   {
@@ -585,10 +544,9 @@ export const LAYERS = [
     accent: "#c43d78",
     tint: "#fdeef4",
     color: "#d44886",
-    kind: "disc",
+    kind: "dot",
     defaultOn: false,
     blurb: "OpenStreetMap nightclubs (ODbL)",
-    pointScale: 1,
     icon: ICONS.nightclubs,
   },
   {
@@ -602,7 +560,6 @@ export const LAYERS = [
     kind: "triangle",
     defaultOn: false,
     blurb: "OpenStreetMap windmills (ODbL)",
-    pointScale: 1,
     icon: ICONS.windmills,
   },
   {
@@ -616,7 +573,6 @@ export const LAYERS = [
     kind: "square",
     defaultOn: false,
     blurb: "OpenStreetMap prisons (ODbL)",
-    pointScale: 1,
     icon: ICONS.prisons,
   },
   {
@@ -627,10 +583,9 @@ export const LAYERS = [
     accent: "#2f7d6d",
     tint: "#e7f6f2",
     color: "#2f7d6d",
-    kind: "disc",
+    kind: "dot",
     defaultOn: false,
     blurb: "OpenStreetMap clinics (ODbL)",
-    pointScale: 1,
     icon: ICONS.clinics,
   },
   {
@@ -641,10 +596,9 @@ export const LAYERS = [
     accent: "#3d6f9a",
     tint: "#e7f1f8",
     color: "#3d6f9a",
-    kind: "disc",
+    kind: "dot",
     defaultOn: false,
     blurb: "OpenStreetMap dentists (ODbL)",
-    pointScale: 1,
     icon: ICONS.dentists,
   },
   {
@@ -658,7 +612,6 @@ export const LAYERS = [
     kind: "cross",
     defaultOn: false,
     blurb: "OpenStreetMap hospitals (ODbL)",
-    pointScale: 1,
     icon: ICONS.hospitals,
   },
   {
@@ -672,7 +625,6 @@ export const LAYERS = [
     kind: "square",
     defaultOn: false,
     blurb: "OpenStreetMap fire stations (ODbL)",
-    pointScale: 1,
     icon: ICONS["fire-stations"],
   },
   {
@@ -686,7 +638,6 @@ export const LAYERS = [
     kind: "diamond",
     defaultOn: false,
     blurb: "OpenStreetMap police stations (ODbL)",
-    pointScale: 1,
     icon: ICONS.police,
   },
   {
@@ -700,7 +651,6 @@ export const LAYERS = [
     kind: "dot",
     defaultOn: true,
     blurb: "Preview churches",
-    pointScale: 0.82,
     icon: ICONS.churches,
   },
   {
@@ -714,7 +664,6 @@ export const LAYERS = [
     kind: "ring",
     defaultOn: false,
     blurb: "OpenStreetMap post offices (ODbL)",
-    pointScale: 1,
     icon: ICONS.post,
   },
   {
@@ -728,7 +677,6 @@ export const LAYERS = [
     kind: "diamond",
     defaultOn: false,
     blurb: "Preview mosques",
-    pointScale: 1,
     icon: ICONS.mosques,
   },
   {
@@ -742,7 +690,6 @@ export const LAYERS = [
     kind: "disc",
     defaultOn: false,
     blurb: "Preview population discs sized by settlement",
-    pointScale: 1,
     icon: ICONS.population,
   },
   {
@@ -756,7 +703,6 @@ export const LAYERS = [
     kind: "ring",
     defaultOn: false,
     blurb: "Preview other religious sites",
-    pointScale: 0.95,
     icon: ICONS.religious,
   },
   {
@@ -770,7 +716,6 @@ export const LAYERS = [
     kind: "square",
     defaultOn: false,
     blurb: "Preview census markers",
-    pointScale: 1,
     icon: ICONS.census,
   },
   {
@@ -784,7 +729,6 @@ export const LAYERS = [
     kind: "fill",
     defaultOn: true,
     blurb: "GB Westminster election results and projections",
-    pointScale: 1,
     icon: ICONS.constituencies,
   },
   {
@@ -798,7 +742,6 @@ export const LAYERS = [
     kind: "dot",
     defaultOn: false,
     blurb: "OpenStreetMap fuel stations (ODbL)",
-    pointScale: 0.95,
     icon: ICONS.petrol,
   },
   {
@@ -812,7 +755,6 @@ export const LAYERS = [
     kind: "dot",
     defaultOn: false,
     blurb: "OpenStreetMap charging stations (ODbL)",
-    pointScale: 0.9,
     icon: ICONS.ev,
   },
   {
@@ -826,7 +768,6 @@ export const LAYERS = [
     kind: "diamond",
     defaultOn: false,
     blurb: "Upcoming · preview cemeteries",
-    pointScale: 1,
     icon: ICONS.cemeteries,
   },
   {
@@ -840,7 +781,6 @@ export const LAYERS = [
     kind: "square",
     defaultOn: false,
     blurb: "Upcoming · preview ports and airports",
-    pointScale: 1,
     icon: ICONS.immigration,
   },
   {
@@ -854,7 +794,6 @@ export const LAYERS = [
     kind: "dot",
     defaultOn: false,
     blurb: "Upcoming · preview markers, not live crime data",
-    pointScale: 1.05,
     icon: ICONS.crime,
   },
   {
@@ -868,7 +807,6 @@ export const LAYERS = [
     kind: "cross",
     defaultOn: false,
     blurb: "Upcoming · preview health markers",
-    pointScale: 1,
     icon: ICONS.health,
   },
   {
@@ -882,7 +820,6 @@ export const LAYERS = [
     kind: "dot",
     defaultOn: false,
     blurb: "Upcoming · preview weather stations",
-    pointScale: 1.2,
     icon: ICONS.weather,
   },
   {
@@ -896,7 +833,6 @@ export const LAYERS = [
     kind: "square",
     defaultOn: false,
     blurb: "OpenStreetMap power plants (ODbL)",
-    pointScale: 1,
     icon: ICONS.power,
   },
   {
@@ -910,7 +846,6 @@ export const LAYERS = [
     kind: "triangle",
     defaultOn: false,
     blurb: "OpenStreetMap wind turbines (ODbL), farms cross-checked with DESNZ REPD (OGL)",
-    pointScale: 1,
     icon: ICONS.wind,
   },
   {
@@ -924,7 +859,6 @@ export const LAYERS = [
     kind: "ring",
     defaultOn: false,
     blurb: "Upcoming · preview nuclear sites",
-    pointScale: 1.25,
     icon: ICONS.nuclear,
   },
   {
@@ -938,7 +872,6 @@ export const LAYERS = [
     kind: "square",
     defaultOn: false,
     blurb: "OpenStreetMap castles (ODbL)",
-    pointScale: 1,
     icon: ICONS.castles,
   },
   {
@@ -952,7 +885,6 @@ export const LAYERS = [
     kind: "diamond",
     defaultOn: false,
     blurb: "Upcoming · preview historic sites",
-    pointScale: 1,
     icon: ICONS.historic,
   },
   {
@@ -966,7 +898,6 @@ export const LAYERS = [
     kind: "dot",
     defaultOn: false,
     blurb: "Upcoming · preview legend sites",
-    pointScale: 1.1,
     icon: ICONS.legends,
   },
   {
@@ -980,7 +911,6 @@ export const LAYERS = [
     kind: "triangle",
     defaultOn: false,
     blurb: "Upcoming · preview summits",
-    pointScale: 1,
     icon: ICONS.mountains,
   },
 ] as const satisfies readonly LayerDef[];

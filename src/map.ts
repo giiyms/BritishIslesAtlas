@@ -27,7 +27,7 @@ import { attachResultHistory, attachSeatHistory } from "./poll-trend";
 import { singularLabel } from "./layer-groups";
 import { PLACES } from "./geo";
 import { mountVotingLegend, showVotingToast, hideVotingToast } from "./voting-ui";
-import { HEAT_MAXZOOM, ICON_FADE, heatmapPaint, iconScale, pointOpacity, pointRadius, pointStroke } from "./point-style";
+import { HEAT_MAXZOOM, ICON_FADE, heatmapPaint, iconDiscScale, markerScale, pointDrawOrder, pointOpacity, pointRadius, pointStroke } from "./point-style";
 import { SLAB_SOURCES, SLAB_RELIEF_LAYERS, SLAB_SEA_LAYERS, SLAB_OUTSIDE, SLAB_WOOD, SLAB_PARKS, SLAB_BORDERS, SLAB_NATIONAL_ROADS, SLAB_COUNTRY_LABELS, SLAB_LABEL_LAYERS, SLAB_PLACE_LABELS, SLAB_LAND, SLAB_SEA, TERRAIN_SOURCE } from "./slab";
 /** ~43k points each: plain points and heat only, no chip icons (they would pile up at z11). */
 const DENSE_LAYERS: ReadonlySet<LayerId> = new Set<LayerId>(["places-of-worship", "pubs"]);
@@ -162,7 +162,7 @@ const ATTRIBUTION =
   " · Contains OS & ONS data © Crown 2024 (OGL)";
 
 /** Chip icons replace the generic marker shapes from this zoom (fix 8). */
-const ICON_MINZOOM = 11;
+const ICON_MINZOOM = 14.5;
 
 /** Inner markup of a chip icon <svg>. */
 function iconBody(svg: string): string {
@@ -350,7 +350,7 @@ export function createAtlas(container: HTMLElement): Atlas {
       [30, 72],
     ],
     minZoom: 3.6,
-    maxZoom: 16,
+    maxZoom: 18,
     attributionControl: false,
     renderWorldCopies: false,
     // Flat top-down by default. The camera is the user's: nothing in the app
@@ -471,12 +471,17 @@ export function createAtlas(container: HTMLElement): Atlas {
       paint: { "text-color": ENDORSE_COLORS.restore.fill, "text-halo-color": "#ffffff", "text-halo-width": 1.5 },
     });
   }
-  const ordered = [...LAYERS].sort((a, b) => a.z - b.z);
   const OSM_STATIC = new Set<LayerId>(["petrol", "ev", "power", "hospitals", "fire-stations", "police", "castles", "libraries", "universities", "museums", "railway-stations", "aerodromes", "ferry-terminals", "marinas", "zoos", "theatres", "battlefields", "cinemas", "stadiums", "theme-parks", "viewpoints", "arts-centres", "aquariums", "piers", "ruins", "golf-courses", "galleries", "marketplaces", "nature-reserves", "camp-sites", "memorials", "sports-centres", "caravan-sites", "fitness-centres", "community-centres", "playgrounds", "post-offices", "beaches", "swimming-pools", "pharmacies", "townhalls", "places-of-worship", "lighthouses", "courthouses", "nightclubs", "windmills", "prisons", "clinics", "dentists", "pubs", "wind"]);
   const hasIcon = (layer: { kind: MarkerKind }) =>
     layer.kind === "dot" || layer.kind === "ring" || SYMBOL_KINDS.has(layer.kind);
   /** Every point layer: heat plus every point at every zoom (see point-style.ts). */
   const isPoint = hasIcon;
+  /** Areas and lines by z, then every point layer above them, densest first (t254u). */
+  const ordered = (() => {
+    const byZ = [...LAYERS].sort((a, b) => a.z - b.z);
+    const points = pointDrawOrder(byZ.filter(isPoint).map((layer) => layer.id));
+    return [...byZ.filter((layer) => !isPoint(layer)), ...points.map((id) => byZ.find((layer) => layer.id === id)!)];
+  })();
   const layerIds = (id: LayerId): string[] => {
     if (id === "roads") return [id, "roads-hit"];
     if (id === "constituencies") return [...CONSTITUENCY_LAYERS];
@@ -486,9 +491,14 @@ export function createAtlas(container: HTMLElement): Atlas {
     if (hasIcon(layer) && !DENSE_LAYERS.has(id)) ids.push(`${id}-icon`);
     return ids;
   };
-  const beforeFor = (z: number): string | undefined => {
-    const next = ordered.find((layer) => layer.z > z && map.getLayer(layer.id));
-    return next?.id;
+  /** First map layer of the next layer up in `ordered`, so adding a layer keeps the fixed order. */
+  const beforeFor = (id: LayerId): string | undefined => {
+    const index = ordered.findIndex((layer) => layer.id === id);
+    for (const layer of ordered.slice(index + 1)) {
+      const first = [`${layer.id}-heat`, layer.id].find((candidate) => map.getLayer(candidate));
+      if (first) return first;
+    }
+    return undefined;
   };
   /** z≥11: chip SVG icon in a white disc instead of the generic shapes (fix 8). */
   const addIconLayer = (id: LayerId, filter: FilterSpecification | undefined) => {
@@ -503,13 +513,13 @@ export function createAtlas(container: HTMLElement): Atlas {
         layout: {
           visibility: shown ? "visible" : "none",
           "icon-image": imageId,
-          "icon-size": ["interpolate", ["linear"], ["zoom"], ICON_MINZOOM, 0.85, 14, 1],
+          "icon-size": iconDiscScale(),
           // Every feature keeps its icon: no collision culling that adds icons as you zoom in.
           "icon-allow-overlap": true,
           "icon-ignore-placement": true,
         },
         paint: { "icon-opacity": ["interpolate", ["linear"], ["zoom"], ...ICON_FADE.flat()] as ExpressionSpecification },
-      }, beforeFor(layer.z));
+      }, beforeFor(id));
     };
     if (map.hasImage(imageId)) { place(); return; }
     const image = new Image(44, 44);
@@ -536,7 +546,7 @@ export function createAtlas(container: HTMLElement): Atlas {
         ...(id === "constituencies" ? { promoteId: "PCON24CD" } : {}),
       });
     }
-    const before = beforeFor(layer.z);
+    const before = beforeFor(id);
     const visible = state[id] ? "visible" : "none";
     const layout = { visibility: visible } as const;
     if (isPoint(layer)) {
@@ -608,13 +618,13 @@ export function createAtlas(container: HTMLElement): Atlas {
         "circle-color": layer.color, "circle-opacity": 0.28,
         "circle-stroke-width": 1, "circle-stroke-color": layer.accent, "circle-stroke-opacity": 0.7,
       } : layer.kind === "ring" ? {
-        "circle-radius": pointRadius(layer.pointScale * 1.15),
+        "circle-radius": pointRadius(),
         "circle-color": "rgba(255,255,255,0.2)", "circle-stroke-width": ["interpolate", ["linear"], ["zoom"], 5, 0.8, 9, 1.8],
         "circle-stroke-color": layer.color, "circle-stroke-opacity": pointOpacity(),
       } : {
-        "circle-radius": pointRadius(layer.pointScale), "circle-color": layer.color,
+        "circle-radius": pointRadius(), "circle-color": layer.color,
         "circle-opacity": pointOpacity(), "circle-stroke-width": pointStroke(),
-        "circle-stroke-color": "rgba(255,255,255,0.92)", "circle-stroke-opacity": pointOpacity(),
+        "circle-stroke-color": "#ffffff", "circle-stroke-opacity": pointOpacity(),
       };
       // No minzoom/maxzoom: the same points are drawn at every zoom.
       map.addLayer({ id, type: "circle", source: id, layout, paint }, before);
@@ -624,7 +634,7 @@ export function createAtlas(container: HTMLElement): Atlas {
       }
       // Every marker at every zoom: overlap allowed, nothing culled by collision.
       map.addLayer({ id, type: "symbol", source: id, layout: {
-        ...layout, "icon-image": `${id}-mark`, "icon-size": iconScale(layer.pointScale),
+        ...layout, "icon-image": `${id}-mark`, "icon-size": markerScale(),
         "icon-allow-overlap": true, "icon-ignore-placement": true,
       }, paint: { "icon-opacity": pointOpacity() } }, before);
     }
@@ -871,7 +881,10 @@ export function createAtlas(container: HTMLElement): Atlas {
     // Generic POI popup (fix 10): name, singular type + context, one source link.
     const brand = properties.brand ? String(properties.brand) : "";
     const isSample = !OSM_STATIC.has(layerId as LayerId);
-    const point = feature.geometry.type === "Point" ? feature.geometry.coordinates as [number, number] : null;
+    // Coincident points are drawn 2 m apart (scripts/nudge_coincident_points.py); the card shows the true spot.
+    const point = feature.geometry.type === "Point"
+      ? (typeof properties.true_lon === "number" ? [properties.true_lon, properties.true_lat] : feature.geometry.coordinates) as [number, number]
+      : null;
     const context = brand && brand !== name ? brand : point ? nearestPlace(point[0], point[1]) : "";
     const typeBits = [layer ? singularLabel(layer.label) : "Place", context].filter(Boolean);
     popupIsSeat = false;
