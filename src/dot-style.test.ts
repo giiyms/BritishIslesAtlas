@@ -46,8 +46,9 @@ describe("t254u: one small, translucent dot for every point layer", () => {
       if (!feats.length || !feats.every((f: { geometry?: { type?: string } }) => f.geometry?.type === "Point")) continue;
       for (const f of feats) {
         const key = f.geometry.coordinates.slice(0, 2).join(",");
-        expect(seen.get(key), `${file} ${f.properties.osm_id} sits exactly on ${seen.get(key)}`).toBeUndefined();
-        seen.set(key, `${file} ${f.properties.osm_id}`);
+        const prior = seen.get(key);
+        if (prior) expect.fail(`${file} ${f.properties.osm_id ?? f.properties.name} sits exactly on ${prior}`);
+        seen.set(key, `${file} ${f.properties.osm_id ?? f.properties.name}`);
         if (typeof f.properties.true_lon === "number") nudged++;
       }
     }
