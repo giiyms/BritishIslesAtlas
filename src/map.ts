@@ -1,3 +1,5 @@
+import { hydratePoiCard, poiCardHtml } from "./rich-popup";
+import { BASEMAP_BUILDINGS, BASEMAP_GROUND, BASEMAP_LABELS, BASEMAP_ROADS, BASEMAP_WATERWAYS } from "./basemap";
 import {
   AttributionControl,
   Map,
@@ -13,36 +15,35 @@ import {
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 
 setWorkerUrl(workerUrl);
-import { buildCollection } from "./geo";
 import { LAYERS, type LayerId, type MarkerKind } from "./layers";
 import {
-  enrichConstituencies,
-  fillColorExpression,
-  fillOpacityExpression,
-  loadVotingBundle,
-  constituencyPopupHtml,
-  restoreCallouts,
   labelPoint as labelPointOf,
   type FeatureCollection as VotingFeatureCollection,
-  type VotingBundle,
 } from "./voting";
 import { ENDORSE_COLORS } from "./endorse";
+import { DEFAULT_MEASURE, loadElection, loadResultsHistory, loadSeatHistory, seatColour, seatHtml, type ElectionData, type Measure } from "./election";
+import { attachResultHistory, attachSeatHistory } from "./poll-trend";
 import { singularLabel } from "./layer-groups";
-import { PLACES } from "./geo";
+import { loadPlaces, loadedPlaces } from "./geo";
 import { mountVotingLegend, showVotingToast, hideVotingToast } from "./voting-ui";
-import { DENSE_LAYERS, parseDensityStyle, serializeDensityStyle, type DensityStyle } from "./density-styles";
-import type { createDensityRenderer } from "./density-renderer";
-const DENSITY_ENABLED = new Set<LayerId>(DENSE_LAYERS);
+import { RELIGION_VIEWS } from "./religion-views";
+import { HEAT_MAXZOOM, ICON_FADE, heatmapPaint, iconDiscScale, markerScale, pointDrawOrder, pointOpacity, pointRadius, pointStroke } from "./point-style";
+import { SLAB_SOURCES, SLAB_RELIEF_LAYERS, SLAB_SEA_LAYERS, SLAB_OUTSIDE, SLAB_WOOD, SLAB_PARKS, SLAB_BORDERS, SLAB_NATIONAL_ROADS, SLAB_COUNTRY_LABELS, SLAB_LABEL_LAYERS, SLAB_PLACE_LABELS, SLAB_LAND, SLAB_SEA, TERRAIN_SOURCE } from "./slab";
+/** ~43k points each: plain points and heat only, no chip icons (they would pile up at z11). */
+const DENSE_LAYERS: ReadonlySet<LayerId> = new Set<LayerId>(["places-of-worship", "pubs", "churches"]);
+const sourceOf = (id: LayerId): LayerId => (id in RELIGION_VIEWS ? "places-of-worship" : id);
+const viewFilter = (id: LayerId) => (RELIGION_VIEWS[id] ? { filter: RELIGION_VIEWS[id]! } : {});
+const ELECTION_OPACITY: ExpressionSpecification = ["coalesce", ["get", "electionOpacity"], 0.78];
 
 export const HOME_BOUNDS: [[number, number], [number, number]] = [
-  [-12.2, 49.35],
-  [2.35, 61.15],
+  [-10.6, 49.85],
+  [1.85, 60.86],
 ];
 
-export const HOME_PADDING = { top: 28, bottom: 48, left: 36, right: 28 };
-
-const HILLSHADE_TILES =
-  "https://server.arcgisonline.com/ArcGIS/rest/services/Elevation/World_Hillshade/MapServer/tile/{z}/{y}/{x}";
+/** Home fit that clears the desktop layer panel (left) and search bar (top), so Shetland is never under the search box. */
+export const homePadding = () => window.matchMedia("(max-width: 860px)").matches
+  ? { top: 76, bottom: 64, left: 16, right: 16 }
+  : { top: 84, bottom: 48, left: 300, right: 40 };
 
 /**
  * Non-GB land masked in voting mode (style roast fix 2). Coarse hulls for the
@@ -80,25 +81,20 @@ const NON_GB_LABEL = {
   type: "FeatureCollection",
   features: [{
     type: "Feature",
-    properties: { label: "Northern Ireland, not covered" },
-    geometry: { type: "Point", coordinates: [-6.75, 54.62] },
+    properties: { label: "Republic of Ireland: no Westminster seats" },
+    geometry: { type: "Point", coordinates: [-8.1, 53.25] },
   }],
 } as const;
 
-/** Hillshade opacity: gray altitude (fix 4) vs capped texture in voting mode (fix 2). */
-const HILLSHADE_OPACITY: ExpressionSpecification = ["interpolate", ["linear"], ["zoom"], 4, 0.9, 7, 0.9, 10, 0.62, 14, 0.4];
-const HILLSHADE_OPACITY_VOTING = 0.35;
+/** Relief opacity: full colour in atlas mode, muted under the voting map. */
+const RELIEF_OPACITY = 1;
+const RELIEF_OPACITY_VOTING = 0.35;
 
 const STYLE: StyleSpecification = {
   version: 8,
   glyphs: "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
   sources: {
-    hillshade: {
-      type: "raster",
-      tiles: [HILLSHADE_TILES],
-      tileSize: 256,
-      maxzoom: 16,
-    },
+    terrain: TERRAIN_SOURCE,
     openmaptiles: {
       type: "vector",
       url: "https://tiles.openfreemap.org/planet",
@@ -107,28 +103,15 @@ const STYLE: StyleSpecification = {
     },
     "non-gb": { type: "geojson", data: NON_GB_LAND as never },
     "non-gb-label": { type: "geojson", data: NON_GB_LABEL as never },
+    ...SLAB_SOURCES,
   },
   layers: [
-    {
-      id: "land",
-      type: "background",
-      paint: { "background-color": "#eef0f1" },
-    },
-    {
-      id: "hillshade",
-      type: "raster",
-      source: "hillshade",
-      paint: {
-        "raster-opacity": HILLSHADE_OPACITY,
-        "raster-saturation": -1,
-        "raster-contrast": ["interpolate", ["linear"], ["zoom"], 7, 0.28, 11, 0.12],
-        "raster-brightness-min": 0.12,
-        // Roast fix 4 asks for brightness-max 0.9 so flats land ≈ #e6e6e6. MapLibre applies
-        // raster-contrast *before* brightness, so 0.9 with contrast 0.28 clips flats to #ffffff.
-        // 0.78 (z≤7) → 0.85 (z≥11) renders the spec's intended #e6e6e6 flats (measured).
-        "raster-brightness-max": ["interpolate", ["linear"], ["zoom"], 7, 0.78, 11, 0.85],
-      },
-    },
+    { id: "land", type: "background", paint: { "background-color": SLAB_LAND } },
+    ...SLAB_RELIEF_LAYERS,
+    SLAB_WOOD,
+    SLAB_PARKS,
+    SLAB_OUTSIDE,
+    ...BASEMAP_GROUND,
     {
       id: "non-gb-land",
       type: "fill",
@@ -142,26 +125,14 @@ const STYLE: StyleSpecification = {
       source: "openmaptiles",
       "source-layer": "water",
       filter: ["!=", ["get", "class"], "swimming_pool"],
-      paint: { "fill-color": "#d6dee6" },
+      paint: { "fill-color": ["interpolate", ["linear"], ["zoom"], 9, SLAB_SEA, 13, "#8ED6F4"] as unknown as ExpressionSpecification },
     },
-    {
-      id: "water-coast",
-      type: "line",
-      source: "openmaptiles",
-      "source-layer": "water",
-      filter: ["match", ["get", "class"], ["ocean", "lake"], true, false],
-      layout: { "line-join": "round" },
-      paint: {
-        "line-color": "#9aa5b1",
-        "line-width": ["interpolate", ["linear"], ["zoom"], 4, 0.4, 10, 0.9],
-        "line-opacity": 0.7,
-      },
-    },
-    {
-      id: "boundary-country", type: "line", source: "openmaptiles", "source-layer": "boundary",
-      filter: ["all", ["==", ["get", "admin_level"], 2], ["==", ["get", "maritime"], 0]],
-      paint: { "line-color": "#8e959f", "line-width": 1, "line-dasharray": [3, 2], "line-opacity": 0.75 },
-    },
+    ...SLAB_SEA_LAYERS,
+    ...SLAB_BORDERS,
+    ...BASEMAP_WATERWAYS,
+    ...BASEMAP_BUILDINGS,
+    SLAB_NATIONAL_ROADS,
+    ...BASEMAP_ROADS,
     {
       id: "non-gb-label",
       type: "symbol",
@@ -176,20 +147,21 @@ const STYLE: StyleSpecification = {
       },
       paint: { "text-color": "#6b7280", "text-halo-color": "rgba(255,255,255,0.85)", "text-halo-width": 1.2 },
     },
+    ...SLAB_LABEL_LAYERS,
+    ...SLAB_COUNTRY_LABELS,
+    SLAB_PLACE_LABELS,
+    ...BASEMAP_LABELS,
   ],
 };
 
-/** Preview road corridors are fake straight lines: never draw them past z7 (roast fix 7). */
-const ROADS_MAXZOOM = 7;
-
 /** One-line, deduped credit (roast fix 10); the panel's "About the data" has the full list. */
 const ATTRIBUTION =
-  '© Esri · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap</a>' +
+  '© AWS Terrain Tiles · Natural Earth · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap</a>' +
   ' · <a href="https://openmaptiles.org/" target="_blank" rel="noopener noreferrer">OpenMapTiles</a>' +
   " · Contains OS & ONS data © Crown 2024 (OGL)";
 
 /** Chip icons replace the generic marker shapes from this zoom (fix 8). */
-const ICON_MINZOOM = 11;
+const ICON_MINZOOM = 14.5;
 
 /** Inner markup of a chip icon <svg>. */
 function iconBody(svg: string): string {
@@ -210,14 +182,14 @@ function nearestPlace(lon: number, lat: number): string {
   let best = "";
   let bestD = Infinity;
   const k = Math.cos((lat * Math.PI) / 180);
-  for (const place of PLACES) {
+  for (const place of loadedPlaces()) {
     const dx = (place.lon - lon) * k;
     const dy = place.lat - lat;
     const d = dx * dx + dy * dy;
     if (d < bestD) { bestD = d; best = place.name; }
   }
-  // ~0.3° ≈ 33 km: beyond that the "context" would be misleading.
-  return bestD < 0.09 ? best : "";
+  // ~0.2° ≈ 22 km: beyond that the "context" would be misleading.
+  return bestD < 0.04 ? best : "";
 }
 
 /** Layers paused while the voting view is on (fix 2). */
@@ -322,38 +294,6 @@ function markerImage(kind: MarkerKind, color: string): ImageData {
   return context.getImageData(0, 0, canvas.width, canvas.height);
 }
 
-function zoomRadius(scale: number): ExpressionSpecification {
-  return [
-    "interpolate",
-    ["linear"],
-    ["zoom"],
-    4,
-    2.15 * scale,
-    5.4,
-    3.15 * scale,
-    8,
-    4.8 * scale,
-    12,
-    7.2 * scale,
-  ];
-}
-
-function iconSize(scale: number): ExpressionSpecification {
-  return [
-    "interpolate",
-    ["linear"],
-    ["zoom"],
-    4,
-    0.4 * scale,
-    5.4,
-    0.54 * scale,
-    8,
-    0.74 * scale,
-    12,
-    1 * scale,
-  ];
-}
-
 function motionDuration(ms: number): number {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : ms;
 }
@@ -361,8 +301,6 @@ function motionDuration(ms: number): number {
 export interface Atlas {
   map: MapLibreMap;
   isOn: (id: LayerId) => boolean;
-  getDensityStyle: () => DensityStyle;
-  setDensityStyle: (style: DensityStyle) => void;
   setLayer: (id: LayerId, on: boolean) => void;
   zoomIn: () => void;
   zoomOut: () => void;
@@ -399,22 +337,28 @@ export function createAtlas(container: HTMLElement): Atlas {
     boolean
   >;
 
+  void loadPlaces();
   const map = new Map({
     container,
     style: STYLE,
     bounds: HOME_BOUNDS,
-    fitBoundsOptions: { padding: HOME_PADDING },
+    fitBoundsOptions: { padding: homePadding() },
+    // Leave enough sea around the home fit. Tighter bounds force a minimum
+    // zoom on wide screens, overriding the padding and clipping the islands.
     maxBounds: [
-      [-18, 45],
-      [10, 64.5],
+      [-30, 35],
+      [30, 72],
     ],
     minZoom: 3.6,
-    maxZoom: 16,
+    maxZoom: 18,
     attributionControl: false,
     renderWorldCopies: false,
-    dragRotate: false,
-    pitchWithRotate: false,
-    touchPitch: false,
+    // Flat top-down by default. The camera is the user's: nothing in the app
+    // sets pitch; tilt is only via right-drag / two-finger gestures.
+    dragRotate: true,
+    pitchWithRotate: true,
+    touchPitch: true,
+    pitch: 0,
     fadeDuration: 0,
     canvasContextAttributes: {
       antialias: window.devicePixelRatio < 2,
@@ -423,25 +367,21 @@ export function createAtlas(container: HTMLElement): Atlas {
     },
   });
 
-  const compactAttribution = window.matchMedia("(max-width: 860px)").matches;
-  map.addControl(new AttributionControl({ compact: compactAttribution, customAttribution: ATTRIBUTION }), "bottom-right");
-  if (compactAttribution) {
-    // MapLibre opens the compact ⓘ on load; start collapsed so it never covers the scale bar.
-    map.once("load", () => {
-      const attrib = container.querySelector<HTMLDetailsElement>(".maplibregl-ctrl-attrib.maplibregl-compact");
-      attrib?.classList.remove("maplibregl-compact-show");
-      attrib?.removeAttribute("open");
-    });
-  }
+  // Compact ⓘ attribution at every width: the full one-line credit would run under the right-hand panel or the scale bar.
+  map.addControl(new AttributionControl({ compact: true, customAttribution: ATTRIBUTION }), "bottom-right");
+  // MapLibre opens the compact ⓘ on load; start collapsed so it never covers the scale bar.
+  map.once("load", () => {
+    const attrib = container.querySelector<HTMLDetailsElement>(".maplibregl-ctrl-attrib.maplibregl-compact");
+    attrib?.classList.remove("maplibregl-compact-show");
+    attrib?.removeAttribute("open");
+  });
 
   let loaded = false;
-  let votingBundle: VotingBundle | null = null;
+  let electionData: ElectionData | null = null;
+  let measure: Measure = DEFAULT_MEASURE;
   let enrichedSeats: VotingFeatureCollection | null = null;
   /** User chose "Show" on the voting toast: keep context layers visible. */
   let showOthers = false;
-  let densityStyle = parseDensityStyle(window.location.search);
-  let densityRenderer: ReturnType<typeof createDensityRenderer> | undefined;
-  let densityLoading: Promise<void> | undefined;
   let selected: string | null = null;
   function setSelected(code: string | null) {
     selected = code;
@@ -531,46 +471,54 @@ export function createAtlas(container: HTMLElement): Atlas {
       paint: { "text-color": ENDORSE_COLORS.restore.fill, "text-halo-color": "#ffffff", "text-halo-width": 1.5 },
     });
   }
-  const ordered = [...LAYERS].sort((a, b) => a.z - b.z);
-  const OSM_STATIC = new Set<LayerId>(["petrol", "ev", "power", "hospitals", "fire-stations", "police", "castles", "libraries", "universities", "museums", "railway-stations", "aerodromes", "ferry-terminals", "marinas", "zoos", "theatres", "battlefields", "cinemas", "stadiums", "theme-parks", "viewpoints", "arts-centres", "aquariums", "piers", "ruins", "golf-courses", "galleries", "marketplaces", "nature-reserves", "camp-sites", "memorials", "sports-centres", "caravan-sites", "fitness-centres", "community-centres", "playgrounds", "post-offices", "beaches", "swimming-pools", "pharmacies", "townhalls", "places-of-worship", "lighthouses", "courthouses", "nightclubs", "windmills", "prisons", "clinics", "dentists", "pubs"]);
-  const minZoom = (id: LayerId) => {
-    if (DENSITY_ENABLED.has(id)) return 0;
-    if (id === "post-offices") return 7;
-    return ["schools", "churches", "other-religious", "mosques", "petrol", "ev", "libraries", "universities", "museums", "railway-stations", "aerodromes", "ferry-terminals", "marinas", "zoos", "theatres", "battlefields", "cinemas", "stadiums", "theme-parks", "viewpoints", "arts-centres", "aquariums", "piers", "ruins", "golf-courses", "galleries", "marketplaces", "nature-reserves", "camp-sites", "memorials", "sports-centres", "caravan-sites", "fitness-centres", "community-centres", "playgrounds", "beaches", "swimming-pools", "pharmacies", "townhalls", "places-of-worship", "lighthouses", "courthouses", "nightclubs", "windmills", "prisons", "clinics", "dentists"].includes(id) ? 6 : 0;
-  };
   const hasIcon = (layer: { kind: MarkerKind }) =>
     layer.kind === "dot" || layer.kind === "ring" || SYMBOL_KINDS.has(layer.kind);
+  /** Every point layer: heat plus every point at every zoom (see point-style.ts). */
+  const isPoint = hasIcon;
+  /** Areas and lines by z, then every point layer above them, densest first (t254u). */
+  const ordered = (() => {
+    const byZ = [...LAYERS].sort((a, b) => a.z - b.z);
+    const points = pointDrawOrder(byZ.filter(isPoint).map((layer) => layer.id));
+    return [...byZ.filter((layer) => !isPoint(layer)), ...points.map((id) => byZ.find((layer) => layer.id === id)!)];
+  })();
   const layerIds = (id: LayerId): string[] => {
     if (id === "roads") return [id, "roads-hit"];
     if (id === "constituencies") return [...CONSTITUENCY_LAYERS];
     const layer = LAYERS.find((item) => item.id === id)!;
     const ids: string[] = [id];
-    if (id === "hospitals") ids.push("hospitals-hi");
-    if (hasIcon(layer) && !DENSITY_ENABLED.has(id)) ids.push(`${id}-icon`);
+    if (isPoint(layer)) ids.push(`${id}-heat`);
+    if (hasIcon(layer) && !DENSE_LAYERS.has(id)) ids.push(`${id}-icon`);
     return ids;
   };
-  const beforeFor = (z: number): string | undefined => {
-    const next = ordered.find((layer) => layer.z > z && map.getLayer(layer.id));
-    return next?.id;
+  /** First map layer of the next layer up in `ordered`, so adding a layer keeps the fixed order. */
+  const beforeFor = (id: LayerId): string | undefined => {
+    const index = ordered.findIndex((layer) => layer.id === id);
+    for (const layer of ordered.slice(index + 1)) {
+      const first = [`${layer.id}-heat`, layer.id].find((candidate) => map.getLayer(candidate));
+      if (first) return first;
+    }
+    return undefined;
   };
   /** z≥11: chip SVG icon in a white disc instead of the generic shapes (fix 8). */
   const addIconLayer = (id: LayerId, filter: FilterSpecification | undefined) => {
     const layer = LAYERS.find((item) => item.id === id)!;
     const imageId = `${id}-icon`;
     const place = () => {
-      if (map.getLayer(imageId) || !map.getSource(id)) return;
+      if (map.getLayer(imageId) || !map.getSource(sourceOf(id))) return;
       const shown = state[id] && !paused(id);
       map.addLayer({
-        id: imageId, type: "symbol", source: id, minzoom: ICON_MINZOOM,
-        ...(filter ? { filter } : {}),
+        id: imageId, type: "symbol", source: sourceOf(id), minzoom: ICON_MINZOOM,
+        ...(filter ? { filter } : viewFilter(id)),
         layout: {
           visibility: shown ? "visible" : "none",
           "icon-image": imageId,
-          "icon-size": ["interpolate", ["linear"], ["zoom"], ICON_MINZOOM, 0.85, 14, 1],
-          "icon-allow-overlap": id === "hospitals",
-          "icon-padding": 1,
+          "icon-size": iconDiscScale(),
+          // Every feature keeps its icon: no collision culling that adds icons as you zoom in.
+          "icon-allow-overlap": true,
+          "icon-ignore-placement": true,
         },
-      }, beforeFor(layer.z));
+        paint: { "icon-opacity": ["interpolate", ["linear"], ["zoom"], ...ICON_FADE.flat()] as ExpressionSpecification },
+      }, beforeFor(id));
     };
     if (map.hasImage(imageId)) { place(); return; }
     const image = new Image(44, 44);
@@ -583,30 +531,27 @@ export function createAtlas(container: HTMLElement): Atlas {
   const add = (id: LayerId) => {
     if (map.getLayer(id)) return;
     const layer = LAYERS.find((item) => item.id === id)!;
-    if (!map.getSource(id)) {
+    if (!map.getSource(sourceOf(id))) {
       const sourceData =
         id === "constituencies"
-          ? "/data/constituencies-gb-2024.geojson"
-          : DENSITY_ENABLED.has(id)
-            // The renderer loads every-point data only when the chosen view needs dots.
-            ? { type: "FeatureCollection" as const, features: [] }
-            : OSM_STATIC.has(id)
-              ? `/data/${id}.geojson`
-              : buildCollection(id);
+          ? { type: "FeatureCollection" as const, features: [] }
+          : `/data/${sourceOf(id)}.geojson`;
       // Source credits live in the single ATTRIBUTION line (fix 10), not per source.
-      map.addSource(id, {
+      map.addSource(sourceOf(id), {
         type: "geojson",
         data: sourceData,
         ...(id === "constituencies" ? { promoteId: "PCON24CD" } : {}),
       });
     }
-    const before = beforeFor(layer.z);
+    const before = beforeFor(id);
     const visible = state[id] ? "visible" : "none";
     const layout = { visibility: visible } as const;
-    if (DENSITY_ENABLED.has(id)) {
-      map.addLayer({ id, type: "circle", source: id, layout,
-        paint: { "circle-color": layer.color, "circle-radius": 1, "circle-opacity": 0 } }, before);
-    } else if (layer.kind === "fill") {
+    if (isPoint(layer)) {
+      // Heat under the points, gone by HEAT_MAXZOOM; fades out as the points fade in.
+      map.addLayer({ id: `${id}-heat`, type: "heatmap", source: sourceOf(id), ...viewFilter(id), maxzoom: HEAT_MAXZOOM, layout,
+        paint: heatmapPaint(id, layer.color, layer.accent) }, before);
+    }
+    if (layer.kind === "fill") {
       const isConstituencies = id === "constituencies";
       map.addLayer({
         id,
@@ -615,9 +560,11 @@ export function createAtlas(container: HTMLElement): Atlas {
         layout,
         paint: {
           "fill-color": (isConstituencies
-            ? fillColorExpression()
+            ? ["coalesce", ["get", "electionColor"], "#b9bec4"]
             : layer.color) as ExpressionSpecification | string,
-          "fill-opacity": (isConstituencies ? fillOpacityExpression() : 0.16) as ExpressionSpecification | number,
+          // Tactical colouring shades by pick confidence (electionOpacity, set per feature).
+          // Seat colours thin out at street zoom so the Apple-style basemap underneath reads clearly.
+          "fill-opacity": isConstituencies ? ["interpolate", ["linear"], ["zoom"], 10.5, ELECTION_OPACITY, 13.5, ["*", 0.22, ELECTION_OPACITY]] as unknown as ExpressionSpecification : 0.16,
         },
       }, before);
       if (!isConstituencies) {
@@ -636,35 +583,32 @@ export function createAtlas(container: HTMLElement): Atlas {
         addConstituencyOverlays(layout.visibility, before);
         void (async () => {
           try {
-            const [geo, bundle] = await Promise.all([
-              fetch("/data/constituencies-gb-2024.geojson").then((r) => r.json()),
-              loadVotingBundle(),
-            ]);
-            votingBundle = bundle;
-            const enriched = enrichConstituencies(geo, bundle.endorsements.seats);
-            enrichedSeats = enriched;
-            const source = map.getSource("constituencies") as import("maplibre-gl").GeoJSONSource | undefined;
-            source?.setData(enriched as never);
-            const callouts = map.getSource("restore-callouts") as import("maplibre-gl").GeoJSONSource | undefined;
-            callouts?.setData(restoreCallouts(enriched) as never);
-            legend.setCounts(bundle.endorsements.counts);
+            // One boundary download: loadElection() fetches it and the source is fed by setData.
+            const data = await loadElection();
+            electionData = data;
+            enrichedSeats = data.geo as VotingFeatureCollection;
+            updateElectionColours();
+            const code = new URLSearchParams(location.search).get("seat");
+            if (code) void openSeat(code);
           } catch (err) {
-            console.warn("Failed to enrich constituencies with endorsements", err);
+            console.warn("Failed to load election data", err);
           }
         })();
       }
     } else if (layer.kind === "line") {
-      // Preview corridors are straight-line stubs: never let them outlive regional zoom (fix 2).
-      map.addLayer({ id, type: "line", source: id, maxzoom: ROADS_MAXZOOM,
+      // Real OSM motorways and trunk roads: motorways a touch heavier, fading back once the basemap's
+      // own road network takes over at city zoom.
+      const motorway: ExpressionSpecification = ["==", ["get", "road_class"], "Motorway"];
+      map.addLayer({ id, type: "line", source: id,
         layout: { ...layout, "line-cap": "round", "line-join": "round" },
-        // Context gray, not brand teal (fix 2); only drawn to z7.
-        paint: { "line-color": layer.color,
-          "line-width": ["interpolate", ["linear"], ["zoom"], 5, 0.5, 8, 1.2, 12, 2.4],
-          "line-opacity": 0.7 },
+        paint: { "line-color": ["case", motorway, layer.accent, layer.color],
+          "line-width": ["interpolate", ["linear"], ["zoom"], 5, ["case", motorway, 1.1, 0.6], 8, ["case", motorway, 1.8, 1.1], 12, ["case", motorway, 3, 2.2]],
+          "line-opacity": ["interpolate", ["linear"], ["zoom"], 5, 0.7, 9, 0.8, 13, 0.45] },
       }, before);
-      map.addLayer({ id: "roads-hit", type: "line", source: id, maxzoom: ROADS_MAXZOOM,
+      map.addLayer({ id: "roads-hit", type: "line", source: id,
         layout: { ...layout, "line-cap": "round", "line-join": "round" },
-        paint: { "line-color": "#000", "line-width": 14, "line-opacity": 0.01 },
+        // Transparent colour, not low opacity: 1% black stacked over hundreds of overlapping ways smudged cities.
+        paint: { "line-color": "rgba(0,0,0,0)", "line-width": 14 },
       }, before);
     } else if (layer.kind === "dot" || layer.kind === "ring" || layer.kind === "disc") {
       const paint: CircleLayerSpecification["paint"] = layer.kind === "disc" ? {
@@ -673,55 +617,50 @@ export function createAtlas(container: HTMLElement): Atlas {
         "circle-color": layer.color, "circle-opacity": 0.28,
         "circle-stroke-width": 1, "circle-stroke-color": layer.accent, "circle-stroke-opacity": 0.7,
       } : layer.kind === "ring" ? {
-        "circle-radius": zoomRadius(layer.pointScale * 1.15),
-        "circle-color": "rgba(255,255,255,0.2)", "circle-stroke-width": 1.8,
-        "circle-stroke-color": layer.color,
+        "circle-radius": pointRadius(),
+        "circle-color": "rgba(255,255,255,0.2)", "circle-stroke-width": ["interpolate", ["linear"], ["zoom"], 5, 0.8, 9, 1.8],
+        "circle-stroke-color": layer.color, "circle-stroke-opacity": pointOpacity(id),
       } : {
-        "circle-radius": zoomRadius(layer.pointScale), "circle-color": layer.color,
-        "circle-opacity": 0.95, "circle-stroke-width": 0.8,
-        "circle-stroke-color": "rgba(255,255,255,0.92)",
+        "circle-radius": pointRadius(), "circle-color": layer.color,
+        "circle-opacity": pointOpacity(id), "circle-stroke-width": pointStroke(),
+        "circle-stroke-color": "#ffffff", "circle-stroke-opacity": pointOpacity(id),
       };
-      map.addLayer({ id, type: "circle", source: id, layout,         minzoom: minZoom(id), ...(hasIcon(layer) ? { maxzoom: ICON_MINZOOM } : {}), paint }, before);
+      // No minzoom/maxzoom: the same points are drawn at every zoom.
+      map.addLayer({ id, type: "circle", source: sourceOf(id), ...viewFilter(id), layout, paint }, before);
     } else if (SYMBOL_KINDS.has(layer.kind)) {
       if (!map.hasImage(`${id}-mark`)) {
         map.addImage(`${id}-mark`, markerImage(layer.kind, layer.color), { pixelRatio: 2 });
       }
-      // Hospitals no longer blanket the Midlands: no forced overlap below z10 (fix 8).
-      const isHospitals = id === "hospitals";
-      map.addLayer({ id, type: "symbol", source: id, layout: {
-        ...layout, "icon-image": `${id}-mark`, "icon-size": iconSize(layer.pointScale),
-        "icon-allow-overlap": false,
-      }, minzoom: minZoom(id), maxzoom: isHospitals ? 10 : ICON_MINZOOM }, before);
-      if (isHospitals) {
-        map.addLayer({ id: "hospitals-hi", type: "symbol", source: id, layout: {
-          ...layout, "icon-image": `${id}-mark`, "icon-size": iconSize(layer.pointScale),
-          "icon-allow-overlap": true, "icon-ignore-placement": true,
-        }, minzoom: 10, maxzoom: ICON_MINZOOM }, before);
-      }
+      // Every marker at every zoom: overlap allowed, nothing culled by collision.
+      map.addLayer({ id, type: "symbol", source: sourceOf(id), ...viewFilter(id), layout: {
+        ...layout, "icon-image": `${id}-mark`, "icon-size": markerScale(),
+        "icon-allow-overlap": true, "icon-ignore-placement": true,
+      }, paint: { "icon-opacity": pointOpacity(id) } }, before);
     }
-    if (hasIcon(layer) && !DENSITY_ENABLED.has(id)) addIconLayer(id, undefined);
+    if (hasIcon(layer) && !DENSE_LAYERS.has(id)) addIconLayer(id, undefined);
   };
   const votingOn = () => state.constituencies;
   const paused = (id: LayerId) => votingOn() && !showOthers && VOTING_MUTED.has(id);
+  /** Layer whose feature the open popup describes; hiding that layer closes it. */
+  let popupLayer: LayerId | null = null;
+  /** Set before addTo(); addTo() on an open popup fires "close" first, so it is copied on "open". */
+  let nextPopupLayer: LayerId | null = null;
   const apply = (id: LayerId) => {
     const shown = state[id] && !paused(id);
+    if (!shown && popupLayer === id) popup.remove();
     if (shown && loaded) add(id);
     const visibility = shown ? "visible" : "none";
     for (const layerId of layerIds(id)) {
       if (map.getLayer(layerId)) map.setLayoutProperty(layerId, "visibility", visibility);
     }
-    refreshDensity();
   };
   /** Voting view: pause context layers, cap relief, mask non-GB land, show legend (fix 2). */
   const applyVotingMode = (announce: boolean) => {
     const on = votingOn();
     const muteOthers = on && !showOthers;
     for (const id of VOTING_MUTED) apply(id);
-    if (map.getLayer("density-glow")) {
-      map.setLayoutProperty("density-glow", "visibility", muteOthers ? "none" : "visible");
-    }
-    if (map.getLayer("hillshade")) {
-      map.setPaintProperty("hillshade", "raster-opacity", on ? HILLSHADE_OPACITY_VOTING : HILLSHADE_OPACITY);
+    if (map.getLayer("dem-color-relief")) {
+      map.setPaintProperty("dem-color-relief", "color-relief-opacity", on ? RELIEF_OPACITY_VOTING : RELIEF_OPACITY);
     }
     for (const layerId of ["non-gb-land", "non-gb-label"]) {
       if (map.getLayer(layerId)) map.setLayoutProperty(layerId, "visibility", on ? "visible" : "none");
@@ -739,23 +678,112 @@ export function createAtlas(container: HTMLElement): Atlas {
     }
     if (!on) setSelected(null);
   };
-  const popup = new Popup({ closeButton: true, maxWidth: "260px", className: "atlas-popup", offset: 10 });
+  // closeOnClick is off: the built-in handler runs after ours and closed the popup we had just re-opened for the newly tapped seat (second tap needed).
+  const popup = new Popup({ closeButton: true, closeOnClick: false, maxWidth: "260px", className: "atlas-popup", offset: 10 });
   popup.on("close", () => {
+    popupLayer = null;
+    poiAbort?.abort();
+    poiAbort = null;
+    document.body.classList.remove("poi-sheet-open");
     setSelected(null);
     document.body.classList.remove("seat-sheet-open");
   });
   let popupIsSeat = false;
+  let popupIsPoi = false;
+  let poiAbort: AbortController | null = null;
+  /** Phones: the card is a bottom sheet, so pan the tapped point into the map area left above it. */
+  const keepPointAboveSheet = () => {
+    const el = popup.getElement();
+    const content = el?.querySelector<HTMLElement>(".maplibregl-popup-content");
+    if (!el || !content || window.innerWidth > 520 || el.classList.contains("sheet-peek")) return;
+    const sheetTop = content.getBoundingClientRect().top;
+    const y = map.project(popup.getLngLat()).y + map.getContainer().getBoundingClientRect().top;
+    const target = Math.max(72, sheetTop / 2); // centred in the open map, under the search box
+    if (y > sheetTop - 32) map.panBy([0, y - target], { duration: motionDuration(300) });
+  };
+  /** Desktop popups never sit under the search box: pan the map down until the card clears it. */
+  const keepPopupClearOfSearch = () => {
+    const el = popup.getElement();
+    const search = document.querySelector<HTMLElement>(".search");
+    if (!el || !search || !popupIsPoi) return;
+    if (window.innerWidth <= 520) { keepPointAboveSheet(); return; }
+    const a = el.getBoundingClientRect(), b = search.getBoundingClientRect();
+    // Clear of the layers panel too: the card would otherwise open underneath it.
+    const panel = document.querySelector<HTMLElement>("#layers")?.getBoundingClientRect();
+    const underPanel = panel && panel.width && a.left < panel.right + 8 && a.right > panel.left && a.top < panel.bottom && a.bottom > panel.top;
+    const dx = underPanel ? -(panel.right + 12 - a.left) : 0;
+    // Keep the whole card on screen and below the search box when they share columns.
+    const overlaps = a.left + dx < b.right && a.right + dx > b.left && a.top < b.bottom + 8 && a.bottom > b.top;
+    const minTop = overlaps ? b.bottom + 12 : 12;
+    const maxBottom = window.innerHeight - 72; // clear of the scale bar
+    const dy = a.top < minTop ? -(minTop - a.top) : a.bottom > maxBottom ? Math.min(a.bottom - maxBottom, a.top - minTop) : 0;
+    if (dx || dy) map.panBy([dx, dy], { duration: motionDuration(250) });
+  };
   popup.on("open", () => {
+    popupLayer = nextPopupLayer;
     popup.getElement()?.classList.toggle("is-seat", popupIsSeat);
+    popup.getElement()?.classList.toggle("is-poi", popupIsPoi && !popupIsSeat);
+    document.body.classList.toggle("poi-sheet-open", popupIsPoi && !popupIsSeat);
+    popup.getElement()?.classList.remove("sheet-peek");
     document.body.classList.toggle("seat-sheet-open", popupIsSeat);
   });
+  // Bottom-sheet gestures (<=520px): drag down to peek, further to dismiss; drag up to expand.
+  {
+    let startY = 0, dy = 0, dragging = false, sheet: HTMLElement | null = null, content: HTMLElement | null = null, wasPeek = false;
+    const sheetFrom = (target: EventTarget | null) => {
+      if (!window.matchMedia("(max-width: 520px)").matches || !(target instanceof Element)) return null;
+      return target.closest<HTMLElement>(".atlas-popup.is-seat, .atlas-popup.is-poi");
+    };
+    document.addEventListener("touchstart", (event) => {
+      sheet = sheetFrom(event.target);
+      if (!sheet || event.touches.length !== 1) { sheet = null; return; }
+      content = sheet.querySelector<HTMLElement>(".maplibregl-popup-content");
+      startY = event.touches[0].clientY; dy = 0; dragging = false; wasPeek = sheet.classList.contains("sheet-peek");
+    }, { passive: true });
+    document.addEventListener("touchmove", (event) => {
+      if (!sheet || !content) return;
+      dy = event.touches[0].clientY - startY;
+      if (!dragging) {
+        const onHandle = (event.target as Element).closest(".maplibregl-popup-close-button") === null &&
+          startY - content.getBoundingClientRect().top < 36;
+        const canDrag = onHandle || wasPeek || content.scrollTop <= 0 && dy > 0 || (wasPeek && dy < 0);
+        if (Math.abs(dy) < 6 || !canDrag) return;
+        dragging = true; sheet.classList.add("sheet-dragging");
+      }
+      event.preventDefault();
+      sheet.style.setProperty("--sheet-dy", `${Math.max(dy, wasPeek ? -60 : -20)}px`);
+    }, { passive: false });
+    const end = () => {
+      if (!sheet) return;
+      const el = sheet; sheet = null;
+      if (!dragging) return;
+      el.classList.remove("sheet-dragging"); el.style.removeProperty("--sheet-dy");
+      if (dy > 140 || (wasPeek && dy > 40)) popup.remove();
+      else if (dy > 50) el.classList.add("sheet-peek");
+      else if (dy < -30) el.classList.remove("sheet-peek");
+    };
+    document.addEventListener("touchend", end);
+    document.addEventListener("touchcancel", end);
+  }
   const NON_INTERACTIVE = new Set<string>(CONSTITUENCY_LAYERS.filter((id) =>
     id !== "constituencies" && id !== "restore-callout-dot"));
   const interactiveIds = () => ordered.flatMap((layer) => layerIds(layer.id))
-    .filter((id) => id !== "roads" && !NON_INTERACTIVE.has(id) && !!map.getLayer(id));
+    .filter((id) => id !== "roads" && !id.endsWith("-heat") && !NON_INTERACTIVE.has(id) && !!map.getLayer(id));
   const seatFallbackHtml = (name: string, code: string) =>
     `<strong class="popup-title">${escapeHtml(name)}</strong>` +
     (code ? `<div class="popup-meta">${escapeHtml(code)}</div>` : "");
+  const updateElectionColours = () => {
+    if (!enrichedSeats || !electionData) return;
+    const byCode = new globalThis.Map(electionData.seats.map(seat => [seat.code, seat]));
+    for (const feature of enrichedSeats.features) {
+      const props = feature.properties ?? (feature.properties = {});
+      const { color, opacity } = seatColour(byCode.get(String(props.PCON24CD)), electionData, measure);
+      props.electionColor = color;
+      props.electionOpacity = opacity;
+    }
+    (map.getSource("constituencies") as import("maplibre-gl").GeoJSONSource | undefined)?.setData(enrichedSeats as never);
+  };
+  window.addEventListener("atlas:measure", (event) => { measure = (event as CustomEvent<Measure>).detail; updateElectionColours(); });
   const seatLngLat = (code: string): [number, number] | null => {
     const feature = enrichedSeats?.features.find((f) => f.properties?.PCON24CD === code);
     return feature ? labelPointOf(feature.geometry) : null;
@@ -764,19 +792,41 @@ export function createAtlas(container: HTMLElement): Atlas {
     setSelected(code);
     // ≤520px: seat popups render as a bottom sheet (fix 7); nav/scale hide while it is open.
     popupIsSeat = true;
+    popupIsPoi = false;
+    nextPopupLayer = "constituencies";
     try {
-      if (!votingBundle) votingBundle = await loadVotingBundle();
+      if (!electionData) electionData = await loadElection();
+      if (!enrichedSeats) enrichedSeats = electionData.geo as VotingFeatureCollection;
       const at = lngLat ?? seatLngLat(code);
       if (!at) return;
-      const seat = votingBundle.endorsements.seats[code];
+      if (!lngLat) map.flyTo({ center: at, zoom: 9, duration: motionDuration(800) });
+      const seat = electionData.seats.find(s => s.code === code);
       if (!seat) {
         popup.setLngLat(at).setHTML(seatFallbackHtml(fallbackName || code, code)).addTo(map);
-        setSelected(code);
         return;
       }
-      popup.setLngLat(at).setMaxWidth("320px").setHTML(
-        constituencyPopupHtml(seat, votingBundle.endorsements.retrieved_at),
-      ).addTo(map);
+      popup.setLngLat(at).setMaxWidth("380px").setHTML(seatHtml(seat, electionData)).addTo(map);
+      requestAnimationFrame(keepPointAboveSheet);
+      // Wider than a phone: the seat panel docks on the right, so keep the tapped seat out from under it.
+      if (window.matchMedia("(min-width: 521px)").matches) {
+        const px = map.project(at);
+        const edge = window.innerWidth - Math.min(380, window.innerWidth - 120) - (window.innerWidth > 860 ? 16 : 12) - 24;
+        if (px.x > edge) map.panBy([px.x - edge, 0], { duration: motionDuration(400) });
+      }
+      void loadSeatHistory().then((history) => {
+        const el = popup.getElement();
+        // Only fill the panel if it still shows this seat (the user may have tapped another meanwhile).
+        if (el?.querySelector(`.copy-seat[data-seat="${code}"]`)) attachSeatHistory(el, code, history);
+      }).catch(() => { /* keep the latest-share text list */ });
+      void loadResultsHistory().then((history) => {
+        const el = popup.getElement();
+        if (el?.querySelector(`.copy-seat[data-seat="${code}"]`)) attachResultHistory(el, code, history);
+      }).catch(() => { /* keep the 2024 text list */ });
+      popup.getElement()?.querySelector<HTMLButtonElement>(".copy-seat")?.addEventListener("click", (event) => {
+        const url = new URL(location.href); url.searchParams.set("seat", code);
+        void navigator.clipboard.writeText(url.href).then(() => { (event.target as HTMLButtonElement).textContent = "Link copied"; });
+      });
+      const url = new URL(location.href); url.searchParams.set("seat", code); history.replaceState(null, "", url);
       setSelected(code);
     } catch {
       if (lngLat) popup.setLngLat(lngLat).setHTML(seatFallbackHtml(fallbackName || code, code)).addTo(map);
@@ -807,20 +857,6 @@ export function createAtlas(container: HTMLElement): Atlas {
     reformColor: ENDORSE_COLORS.reform.fill,
     onRestore: flyToRestore,
   });
-  const refreshDensity = () => {
-    if (!loaded) return;
-    const active = DENSE_LAYERS.filter(id => state[id] && !paused(id));
-    window.dispatchEvent(new CustomEvent("atlas:density-layers", { detail: active }));
-    if (densityRenderer) { densityRenderer.update(densityStyle, active); return; }
-    if (!active.length || densityLoading) return;
-    densityLoading = import("./density-renderer").then(({ createDensityRenderer }) => {
-      densityRenderer = createDensityRenderer(map, container.parentElement ?? document.body, message => {
-        console.warn(message);
-        showVotingToast("Density data could not load", "Retry", refreshDensity);
-      });
-      refreshDensity();
-    }).finally(() => { densityLoading = undefined; });
-  };
   let hovered: string | null = null;
   const setHovered = (code: string | null) => {
     if (hovered === code || !map.getSource("constituencies")) return;
@@ -836,9 +872,11 @@ export function createAtlas(container: HTMLElement): Atlas {
   };
   map.on("click", async (event) => {
     const feature = topFeature(event.point);
-    if (!feature) return;
+    if (!feature) { popup.remove(); return; }
     const properties = feature.properties as Record<string, unknown>;
-    const layerId = String(properties.layer ?? feature.source ?? "");
+    // Style layer id first: religion views share the places-of-worship source and its `layer` tag.
+    const styleId = feature.layer.id.replace(/-icon$/, "");
+    const layerId = LAYERS.some((item) => item.id === styleId) ? styleId : String(properties.layer ?? feature.source ?? "");
     const layer = LAYERS.find((item) => item.id === layerId);
     const name = String(properties.name ?? layer?.label ?? "Place");
     if (feature.layer.id === "restore-callout-dot") {
@@ -856,20 +894,27 @@ export function createAtlas(container: HTMLElement): Atlas {
     }
     // Generic POI popup (fix 10): name, singular type + context, one source link.
     const brand = properties.brand ? String(properties.brand) : "";
-    const isSample = !OSM_STATIC.has(layerId as LayerId);
-    const osmUrl = properties.osm_url ? String(properties.osm_url) : "";
-    const point = feature.geometry.type === "Point" ? feature.geometry.coordinates as [number, number] : null;
+    // Coincident points are drawn 2 m apart (scripts/nudge_coincident_points.py); the card shows the true spot.
+    const point = feature.geometry.type === "Point"
+      ? (typeof properties.true_lon === "number" ? [properties.true_lon, properties.true_lat] : feature.geometry.coordinates) as [number, number]
+      : null;
     const context = brand && brand !== name ? brand : point ? nearestPlace(point[0], point[1]) : "";
     const typeBits = [layer ? singularLabel(layer.label) : "Place", context].filter(Boolean);
     popupIsSeat = false;
-    popup.setLngLat(event.lngLat).setMaxWidth("260px").setHTML(
-      `<strong class="popup-title popup-title-poi">${escapeHtml(name)}</strong>` +
-      `<div class="popup-meta">${escapeHtml(typeBits.join(" · "))}</div>` +
-      (isSample ? `<div class="popup-sample">Sample data</div>` : "") +
-      (osmUrl
-        ? `<a class="popup-link" href="${escapeHtml(osmUrl)}" target="_blank" rel="noopener noreferrer">View on OpenStreetMap<span class="ext" aria-hidden="true">↗</span></a>`
-        : ""),
-    ).addTo(map);
+    popupIsPoi = true;
+    nextPopupLayer = layer?.id ?? null;
+    const card = {
+      layerId, name, typeLine: typeBits.join(" · "),
+      accent: layer?.accent ?? "#0f6e5f", tint: layer?.tint ?? "#e7f3f0", icon: layer?.icon ?? "",
+      props: properties, lngLat: point ?? [event.lngLat.lng, event.lngLat.lat] as [number, number],
+    };
+    popup.setLngLat(card.lngLat).setMaxWidth("340px").setHTML(poiCardHtml(card)).addTo(map);
+    poiAbort?.abort();
+    const abort = new AbortController();
+    poiAbort = abort;
+    const root = popup.getElement()?.querySelector<HTMLElement>(".poi-card");
+    requestAnimationFrame(keepPopupClearOfSearch);
+    if (root) void hydratePoiCard(root, card, abort.signal, keepPopupClearOfSearch).catch(() => undefined);
   });
   map.on("mousemove", (event) => {
     const feature = topFeature(event.point);
@@ -879,39 +924,20 @@ export function createAtlas(container: HTMLElement): Atlas {
   map.getCanvas().addEventListener("mouseleave", () => setHovered(null));
   map.on("load", () => {
     loaded = true;
-    add("population");
-    map.addLayer({ id: "density-glow", type: "heatmap", source: "population",
-      paint: {
-        "heatmap-weight": ["interpolate", ["linear"], ["get", "pop"], 0, 0, 100000, 0.3, 1000000, 0.8, 9000000, 1],
-        "heatmap-intensity": ["interpolate", ["linear"], ["zoom"], 4, 0.7, 9, 1.3],
-        "heatmap-radius": ["interpolate", ["linear"], ["zoom"], 4, 18, 9, 36],
-        // Cool slate, max alpha 0.16: no warm blobs bleeding into the pick fills (fix 4).
-        "heatmap-color": ["interpolate", ["linear"], ["heatmap-density"],
-          0, "rgba(93,107,122,0)", 0.25, "rgba(93,107,122,0.06)",
-          0.65, "rgba(93,107,122,0.12)", 1, "rgba(93,107,122,0.16)"],
-        "heatmap-opacity": ["interpolate", ["linear"], ["zoom"], 7, 0.65, 10, 0],
-      },
-    }, "population");
     for (const layer of ordered) if (state[layer.id] && !paused(layer.id)) add(layer.id);
     applyVotingMode(false);
-    map.on("zoom", refreshDensity);
-    map.on("zoomend", refreshDensity);
 
-    map.once("idle", () => { document.body.dataset.mapReady = "true"; refreshDensity(); });
+    map.once("idle", () => { document.body.dataset.mapReady = "true"; });
   });
 
   return {
     map,
     isOn: (id) => state[id],
-    getDensityStyle: () => densityStyle,
-    setDensityStyle: style => {
-      densityStyle = style;
-      window.history.replaceState(window.history.state, "", serializeDensityStyle(window.location.href, style));
-      refreshDensity();
-    },
     setLayer: (id, on) => {
       const was = state[id];
       state[id] = on;
+      // Keep the Layers panel honest when a layer changes from outside it (search, capture hook).
+      if (was !== on) window.dispatchEvent(new CustomEvent("atlas:layer", { detail: { id, on } }));
       if (id === "constituencies" && was !== on) {
         showOthers = false;
         apply(id);
@@ -933,7 +959,7 @@ export function createAtlas(container: HTMLElement): Atlas {
       map.zoomOut({ duration: motionDuration(280) });
     },
     home: () => {
-      map.fitBounds(HOME_BOUNDS, { padding: HOME_PADDING, duration: motionDuration(700) });
+      map.fitBounds(HOME_BOUNDS, { padding: homePadding(), duration: motionDuration(700) });
     },
     show: ({ lon, lat, zoom = 11, bounds }) => {
       if (bounds) {

@@ -3,8 +3,9 @@
 ## `ingest_ons_pcon2024.py`
 
 Downloads ONS July 2024 Westminster PCON **BGC** boundaries (WGS84 GeoJSON) from
-the ArcGIS FeatureServer, drops Northern Ireland (18 seats), and writes
-`public/data/constituencies-gb-2024.geojson` (632 GB features) plus a
+the ArcGIS FeatureServer and writes
+`public/data/constituencies-gb-2024.geojson` (650 UK features, including
+Northern Ireland's 18; the `-gb` file name is kept for compatibility) plus a
 `constituencies` entry in `public/data/extract-meta.json`.
 
 ```bash
@@ -791,7 +792,6 @@ Schools/churches remain stubs. Voting mode is untouched.
 
 ```bash
 python3 scripts/extract_osm_pubs.py
-python3 scripts/build_density_bins.py   # hex density bands for map extrusion
 ```
 
 Default `--max-span 2.0`. **No `name=*` filter**. Admin-clipped result at
@@ -799,56 +799,38 @@ Default `--max-span 2.0`. **No `name=*` filter**. Admin-clipped result at
 Wales 2407, NI 554, Ireland 4469,
 IoM 75, GG 44, JE 62; France bleed 0).
 
-## `build_density_bins.py`
+## Point layers: every point plus a heatmap
 
-Builds precomputed flat-top hex density GeoJSON for a point layer (pubs in
-this PR) under `public/data/density/`, plus a zoom-band manifest for lazy
-load. Generic — pass `--layer` once that layer has a point GeoJSON.
+There are no density artifacts. Every point layer is one flat GeoJSON source drawn
+two ways at once (`src/point-style.ts`): a heatmap in the layer's colour that fades
+out between z5 and z12, and every feature as a point at every zoom (no clustering,
+minzoom, sampling or collision culling), fading in over the same window. When you
+refresh an extract, copy its new `count` into `src/point-counts.ts` (heat weight only).
 
+## `build_results_history.py`
 
-## `build_density_styles.py`
-
-Prebuilds all Density style artifacts, without network access:
+Builds `public/data/results-history-gb.json`: the vote share in each UK seat (GB and Northern Ireland) at the
+2019 general election (notional, on the 2024 boundaries) and the 2024 general
+election, from the UK Parliament election results CSVs (Open Parliament Licence).
+The seat panel draws it as the "Past results" line chart. Downloads into
+`data-raw/` on first run; `--refresh` re-downloads.
 
 ```bash
-python3 scripts/build_density_styles.py --counts-only
-python3 scripts/build_density_styles.py
-# Rebuild selected dense layers only:
-python3 scripts/build_density_styles.py --layer pubs --layer places-of-worship
+python3 scripts/build_results_history.py
 ```
 
-Only pubs and places-of-worship (the ~40k-point layers) get density artifacts, to cap committed size; other layers render as plain points.
-Keep `DENSE_LAYERS` in `src/density-styles.ts` in sync
-with the audit. Current counts: beaches 8,846; community centres 16,909;
-EV chargers 9,420; memorials 14,851; petrol 10,267; pharmacies 10,310;
-places of worship 43,032; post offices 9,784; pubs 43,184; sports centres 10,726.
+## `build_seat_history.py`
 
-The builder calls `build_density_bins.build_for_layer(..., compact=True)`
-(equivalent to `python3 scripts/build_density_bins.py --layer <id> --compact`)
-for each layer. These non-empty, count-only hex cells are shared by flat hex
-and column styles. Compact radii are 0.102°, 0.025°, 0.0048° (sub-km city cells); coordinates use
-four decimals. Count-only properties and rounded geometry keep national first-load bands below 1 MB;
-Auto hands over to every-point dots at z9–10 for local detail. Columns keep
-the existing z12 dot handoff, quantile colours and screen-scaled heights.
+Backfills `public/data/polls-seats-history.json`: per-seat projected vote share
+for every past edition of the Electoral Calculus seat file (Internet Archive
+captures on 2024 boundaries) and each More in Common MRP that parses cleanly.
+Editions, their dates and the reasons for skipped files are listed in the script.
+Re-running merges into the existing file (same date replaces, other dates kept).
+Needs `openpyxl`.
 
-Additional `<layer>-constituency.json` files contain count and `per_km2`,
-keyed by `PCON24CD`. Points intersecting a shared boundary are assigned once.
-Areas use a spherical Lambert azimuthal equal-area projection centred on GB
-(radius 6,371,008.8 m). The join covers GB's 2024 seats only; points elsewhere
-are excluded. This is density by area, not population.
+```bash
+python3 scripts/build_seat_history.py
+```
 
-`<layer>-contours-{national,regional,local}.geojson` contains simplified isobands
-from Gaussian-smoothed 0.09° / 0.035° / 0.006° point histograms (sigma 1.6 / 1.2 / 1.1 cells).
-The local band starts at z9. Per-band quantile intensity drives the colour ramp.
-Values are smoothed points per grid cell, not points per km². Rings retain
-holes; smoothing can extend slightly beyond the coast. Thin spike polygons
-at the centres of coarse/medium/fine bins are written as
-`<layer>-spikes-{national,regional,local}.geojson`. Counts sum to the source point
-count for each hex and spike level. All additional geometry uses five-decimal
-coordinates. Generated artifacts belong in version control.
-
-The UI offers all eight named values (including Auto), persisted as `density`
-in the URL. Auto is the default and removes that parameter. Only active dense
-layers load artifacts, and each style loads only its required files. Hex,
-column, contour and spike bands load near their zoom window; points and
-heatmap need no density artifacts. One legend describes the selected mode.
+`fetch_polls_seats.py` (run by the daily refresh) appends the current editions
+to the same file, so history grows over time and is never overwritten.

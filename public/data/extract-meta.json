@@ -1014,8 +1014,8 @@
     }
   },
   "constituencies": {
-    "extracted_at": "2026-10-02T19:21:57Z",
-    "method": "ONS ArcGIS FeatureServer GeoJSON (WGS84 outSR=4326); filter GB-only by dropping NI PCON24CD (N*); paginated resultOffset",
+    "extracted_at": "2026-11-02T13:53:16Z",
+    "method": "ONS ArcGIS FeatureServer GeoJSON (WGS84 outSR=4326); all 650 UK seats kept (GB E/S/W + NI N05*); paginated resultOffset",
     "license": "OGL v3.0",
     "endpoint": "https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/Westminster_Parliamentary_Constituencies_July_2024_Boundaries_UK_BGC/FeatureServer/0/query",
     "source_url": "https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/Westminster_Parliamentary_Constituencies_July_2024_Boundaries_UK_BGC/FeatureServer/0/query?where=1%3D1&outFields=*&outSR=4326&f=geojson",
@@ -1025,12 +1025,14 @@
     "generalisation": "BGC ~20 m, clipped to Mean High Water",
     "layer": "constituencies",
     "file": "constituencies-gb-2024.geojson",
-    "count": 632,
+    "count": 650,
     "uk_count_downloaded": 650,
-    "ni_dropped": 18,
-    "coverage": "GB Westminster only: England+Scotland+Wales = 632; Northern Ireland 18 deferred; Ireland/IoM/CI have no Westminster seats",
-    "attribution": "Contains Ordnance Survey data © Crown copyright and database right 2024. Contains National Statistics data © Crown copyright and database right 2024.",
-    "size_bytes": 20474485
+    "gb_count": 632,
+    "ni_count": 18,
+    "coverage": "UK Westminster: England+Scotland+Wales = 632, Northern Ireland = 18; Ireland/IoM/CI have no Westminster seats",
+    "simplified_ni": "shapely simplify(tolerance=0.0004, preserve_topology=True), 5 dp",
+    "attribution": "Contains Ordnance Survey data © Crown copyright and database right 2024. Contains National Statistics data © Crown copyright and database right 2024. Northern Ireland: contains LPS Intellectual Property © Crown copyright and database right 2024.",
+    "size_bytes": 21105502
   },
   "sports-centres": {
     "extracted_at": "2026-10-02T19:25:05Z",
@@ -1697,5 +1699,172 @@
       "france_bleed_note": "Mainland France bleed checked after extract with the hard bbox heuristic (in_france_bleed). Admin polygons clip coastal France; southernmost retained points should be Channel Islands, not mainland France.",
       "density_bins": "Precomputed hex density bins for national/regional zoom live under public/data/density/pubs-*.geojson (see scripts/build_density_bins.py)."
     }
+  },
+  "wind": {
+    "extracted_at": "2026-08-10T00:10:23Z",
+    "license": "ODbL 1.0 (OSM) + OGL v3 (REPD July 2026)",
+    "count": 18471,
+    "report": {
+      "osm_base": "2026-08-10T00:10:23Z",
+      "turbines": 18471,
+      "offshore": 3712,
+      "with_farm": 14425,
+      "with_capacity": 9434,
+      "with_rotor": 2092,
+      "with_hub": 963,
+      "with_repd_match": 10896,
+      "dropped": {
+        "BEL": 53,
+        "FRA": 1211,
+        "outside-fence": 629
+      },
+      "repd": {
+        "Wind Offshore / Operational / total": 49,
+        "Wind Offshore / Operational / with_osm_turbine": 49,
+        "Wind Offshore / Under Construction / total": 8,
+        "Wind Offshore / Under Construction / with_osm_turbine": 7,
+        "Wind Onshore / Operational / total": 785,
+        "Wind Onshore / Operational / with_osm_turbine": 763,
+        "Wind Onshore / Under Construction / total": 37,
+        "Wind Onshore / Under Construction / with_osm_turbine": 34
+      },
+      "largest_repd_operational_gaps": [
+        "Bhlaraidh (previously Balmacaan) (Wind Onshore, 110 MW, Scotland)",
+        "Brechfa Forest West (Wind Onshore, 57.4 MW, Wales)",
+        "Causeymire (Wind Onshore, 48.3 MW, Scotland)",
+        "Hill of Towie (Drummuir) (Wind Onshore, 48 MW, Scotland)",
+        "Dalquhandy Windfarm (Wind Onshore, 42 MW, Scotland)",
+        "Ewe Hill (extension) (Wind Onshore, 36.8 MW, Scotland)",
+        "Drumderg (Wind Onshore, 36.8 MW, Scotland)",
+        "Minsca (Wind Onshore, 36.8 MW, Scotland)",
+        "Airies Farm (Wind Onshore, 35 MW, Scotland)",
+        "Calliachar (Wind Onshore, 32.2 MW, Scotland)",
+        "Kilbraur Windfarm Farlary - Extension (Wind Onshore, 20 MW, Scotland)",
+        "Bradwell Wind Farm (Repower) (Wind Onshore, 20 MW, England)",
+        "Tappaghan (Wind Onshore, 19.5 MW, Northern Ireland)",
+        "Ewe Hill (Wind Onshore, 13.8 MW, Scotland)",
+        "Seegronan (Wind Onshore, 13.8 MW, Northern Ireland)"
+      ],
+      "repd_operational_gap_count": 22
+    }
+  },
+  "ratings-cqc": {
+    "source": "CQC Latest ratings (Locations), 1 October 2026",
+    "licence": "OGL v3.0",
+    "cqc_locations": 9296,
+    "layers": {
+      "hospitals": {
+        "features": 1946,
+        "rated": 501
+      },
+      "clinics": {
+        "features": 3723,
+        "rated": 444
+      },
+      "dentists": {
+        "features": 7135,
+        "rated": 1
+      }
+    }
+  },
+  "mountains": {
+    "layer": "mountains",
+    "count": 2651,
+    "license": "CC BY 4.0",
+    "source": "Database of British and Irish Hills v18.6",
+    "url": "https://www.hill-bagging.co.uk/dobih/downloads/",
+    "filter": "Marilyn, Munro, Hewitt, Arderin or Wainwright"
+  },
+  "weather": {
+    "layer": "weather",
+    "count": 37,
+    "license": "OGL v3",
+    "source": "Met Office historic station data",
+    "url": "https://www.metoffice.gov.uk/research/climate/maps-and-data/historic-station-data",
+    "stations_reporting": 31
+  },
+  "population": {
+    "layer": "population",
+    "count": 1203,
+    "license": "CC BY 4.0",
+    "source": "GeoNames cities1000",
+    "url": "https://download.geonames.org/export/dump/",
+    "filter": "population >= 10,000, not PPLX"
+  },
+  "census": {
+    "layer": "census",
+    "count": 392,
+    "license": "OGL v3 (ONS, NRS, NISRA); CC BY 4.0 (CSO, Tailte Éireann)",
+    "source": "Census 2021 (E&W, NI), Census 2022 (Scotland, Ireland)",
+    "url": "https://www.nomisweb.co.uk/sources/census_2021",
+    "filter": "one marker per local authority"
+  },
+  "schools": {
+    "layer": "schools",
+    "count": 33086,
+    "license": "OGL v3 (DfE, Ofsted); ODbL (OpenStreetMap)",
+    "source": "GIAS + Ofsted MI (England); OpenStreetMap amenity=school (elsewhere)",
+    "url": "https://get-information-schools.service.gov.uk/Downloads",
+    "filter": "open schools; universities excluded"
+  },
+  "roads": {
+    "layer": "roads",
+    "count": 1020,
+    "license": "ODbL 1.0",
+    "source": "OpenStreetMap via Geofabrik extracts",
+    "url": "https://download.geofabrik.de/europe.html",
+    "filter": "highway=motorway|trunk, merged per ref, simplified ~25 m"
+  },
+  "cemeteries": {
+    "extracted_at": "2026-11-01",
+    "method": "Geofabrik PBF extracts (great-britain, ireland-and-northern-ireland, isle-of-man, guernsey-jersey) via scripts/extract_pbf.py",
+    "license": "ODbL 1.0",
+    "layer": "cemeteries",
+    "count": 27964,
+    "filter": "landuse=cemetery or amenity=grave_yard (nodes and areas, area centre points)"
+  },
+  "historic": {
+    "extracted_at": "2026-11-01",
+    "method": "Geofabrik PBF extracts (great-britain, ireland-and-northern-ireland, isle-of-man, guernsey-jersey) via scripts/extract_pbf.py",
+    "license": "ODbL 1.0",
+    "layer": "historic",
+    "count": 40871,
+    "filter": "historic=archaeological_site (nodes and areas)"
+  },
+  "legends": {
+    "extracted_at": "2026-11-01",
+    "method": "Geofabrik PBF extracts (great-britain, ireland-and-northern-ireland, isle-of-man, guernsey-jersey) via scripts/extract_pbf.py",
+    "license": "ODbL 1.0",
+    "layer": "legends",
+    "count": 1681,
+    "filter": "holy wells (place_of_worship/historic/amenity/man_made/natural=holy_well, or a named holy/saint's spring well) and natural or historic features whose name invokes a legend (fairy, giant's, devil's, King Arthur, Merlin, Fionn, Cú Chulainn, Robin Hood, ...); pubs, shops and houses dropped"
+  },
+  "health": {
+    "extracted_at": "2026-11-01",
+    "layer": "health",
+    "count": 10099,
+    "method": "NHS ODS epraccur + PHS + BSO registers geocoded by postcode; HSE Service Directory (Ireland, May 2022); OSM amenity=doctors for the Isle of Man and Channel Islands",
+    "license": "OGL v3 (UK registers, CQC, ONSPD); CC BY 4.0 (HSE); ODbL 1.0 (OSM part)"
+  },
+  "nuclear": {
+    "extracted_at": "2026-11-01",
+    "layer": "nuclear",
+    "count": 46,
+    "method": "ONR register of nuclear site licences and ONR regulated-sites map; Wikidata coordinates and reactor facts",
+    "license": "OGL v3 (ONR); CC0 (Wikidata); OGL v3 (ONSPD postcodes)"
+  },
+  "immigration": {
+    "extracted_at": "2026-11-01",
+    "layer": "immigration",
+    "count": 70,
+    "method": "CAA 2025 and CSO airport passengers, DfT SPAS0101 and CSO port traffic, Home Office Det_03a detention; Wikidata, OSM and postcodes.io coordinates",
+    "license": "CAA statistics (cited); OGL v3 (DfT, Home Office, ONSPD); CC BY 4.0 (CSO); CC0 (Wikidata); ODbL (OSM)"
+  },
+  "crime": {
+    "extracted_at": "2026-11-01",
+    "layer": "crime",
+    "count": 918,
+    "method": "Home Office CSP open data and PSNI tables (Apr 2025 to Mar 2026), Scottish Government council tables 2025-26, CSO CJA07 Garda stations 2025; ONS council centroids, OSM and GeoNames station positions",
+    "license": "OGL v3 (Home Office, ONS, Scottish Government, PSNI); CC BY 4.0 (CSO, GeoNames); ODbL (OSM)"
   }
 }

@@ -193,7 +193,7 @@ export const ICONS = {
     `<path d="M9 3.5v5.2M15 3.5v5.2"/><path d="M7.2 8.7h9.6v2.6a4.8 4.8 0 0 1-9.6 0V8.7z"/><path d="M12 16.2V20.5"/>`,
   ),
   wind: icon(
-    `<path d="M3 8h10.5a2.8 2.8 0 1 0-2.8-2.8"/><path d="M3 12h14a2.8 2.8 0 1 1-2.8 2.8"/><path d="M3 16h7.5a2.3 2.3 0 1 1-2.3 2.3"/>`,
+    `<path d="M12 10.5 11 21h2l-1-10.5"/><circle cx="12" cy="9" r="1.4"/><path d="M12 7.6V2.5"/><path d="M13.2 9.7l4.4 2.6"/><path d="M10.8 9.7l-4.4 2.6"/>`,
   ),
   nuclear: icon(
     `<circle cx="12" cy="12" r="1.7" fill="currentColor" stroke="none"/><ellipse cx="12" cy="12" rx="8.5" ry="3.3"/><ellipse cx="12" cy="12" rx="8.5" ry="3.3" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="8.5" ry="3.3" transform="rotate(120 12 12)"/>`,

@@ -1189,6 +1189,22 @@ Pipeline `note` repeats brand or operator on 79 of 1182.
 
 
 
+
+## Wind turbines (`wind`)
+
+| | |
+|---|---|
+| **File** | `public/data/wind.geojson` (built by `scripts/extract_wind_turbines.py`) |
+| **Features** | 18471 individual turbines, 3712 offshore. One point per OSM turbine node; this replaced the old 32-point preview stub. |
+| **Source (turbines)** | [OpenStreetMap](https://www.openstreetmap.org/) via Overpass: `node[power=generator][generator:source=wind]` in 49.8–61.2°N, 11.0°W–3.2°E (`out body`), endpoint `overpass.openstreetmap.fr`, OSM base 2026-08-10T00:10:23Z. Offshore turbines come from the same OSM data. |
+| **Source (farms)** | OSM `power=plant` + `plant:source=wind` ways and relations (`out geom`): turbine membership first, then point-in-plant-area. 14425 turbines have a farm name. Where OSM has neither, the nearest operational or under-construction REPD wind site within 4 km (onshore) or 25 km (offshore) supplies the name; the popup labels it "Nearest REPD site". |
+| **Cross-check** | DESNZ [Renewable Energy Planning Database](https://www.gov.uk/government/publications/renewable-energy-planning-database-quarterly-extract), July 2026 (Q2) CSV, OGL v3. BNG coordinates are converted with pyproj (EPSG:27700→4326). A REPD site counts as covered when at least one kept turbine lies within 4 km (onshore) or 25 km (offshore). Offshore operational: 49/49 covered. Onshore operational: 763/785. Under construction: offshore 7/8, onshore 34/37. Largest uncovered operational REPD sites (missing in OSM, or REPD point >4 km from the turbines): Bhlaraidh (previously Balmacaan) (Wind Onshore, 110 MW, Scotland); Brechfa Forest West (Wind Onshore, 57.4 MW, Wales); Causeymire (Wind Onshore, 48.3 MW, Scotland); Hill of Towie (Drummuir) (Wind Onshore, 48 MW, Scotland); Dalquhandy Windfarm (Wind Onshore, 42 MW, Scotland); Ewe Hill (extension) (Wind Onshore, 36.8 MW, Scotland); Drumderg (Wind Onshore, 36.8 MW, Scotland); Minsca (Wind Onshore, 36.8 MW, Scotland); Airies Farm (Wind Onshore, 35 MW, Scotland); Calliachar (Wind Onshore, 32.2 MW, Scotland). REPD covers the UK only (≥150 kW, 1 MW before 2021), so Irish turbines are OSM-only. |
+| **Fields** | `name`, `farm`, `farm_from_repd`, `operator`, `capacity_mw` (9434 have it), `rotor_m` (2092), `hub_m` (963), `height_m`, `manufacturer`, `model`, `status` (Operational / Under construction / Disused from OSM lifecycle tags), `offshore`, `start_date`, `ref`, `repd_ref`, `repd_status`, `osm_id`, `osm_url`. Empty values are omitted. |
+| **Clipping** | Turbines on land are kept when inside Natural Earth 10m GBR/IRL/IMN/GGY/JEY (+~1 km). Turbines on other land are dropped (France 1211, Belgium 53). Offshore turbines must lie inside a UK/Irish-waters fence (north of 50.1°N; east limit 1.3°E south of 51.2°N, 2.2°E to 51.75°N, then 3.0°E), which drops 629 Dutch, Belgian and French offshore turbines. |
+| **Not used** | Crown Estate and EMODnet offshore layers were not added: OSM already places all 49 operational REPD offshore farms. |
+| **License** | ODbL 1.0 © OpenStreetMap contributors; REPD: contains public sector information licensed under the Open Government Licence v3.0; Natural Earth: public domain. |
+| **Separate from** | Historic windmills (`windmills`, `man_made=windmill`) remain their own layer. |
+
 ## Windmills (`windmills`)
 
 | | |
@@ -1322,15 +1338,15 @@ Pipeline `note` repeats brand or operator on 6230 of 43184.
 | | |
 |---|---|
 | **File** | `public/data/constituencies-gb-2024.geojson` |
-| **Features** | **632** polygons (GB Westminster only) |
-| **Coverage** | England 543 + Scotland 57 + Wales 32 = **632**. Northern Ireland 18 seats **dropped** for v1 (different party system; deferred). Republic of Ireland, Isle of Man, and Channel Islands have no Westminster seats and are out of scope. Source download is the full UK set (650); ingest filters to GB. |
-| **Sample vs full** | Full ONS July 2024 Westminster Parliamentary Constituency boundaries (BGC), filtered to Great Britain. BGC is generalised (~20 m) and clipped to Mean High Water — suitable for web MapLibre; not survey-grade cadastral edges. |
+| **Features** | **650** polygons (all UK Westminster seats) |
+| **Coverage** | England 543 + Scotland 57 + Wales 32 + Northern Ireland 18 = **650**. Northern Ireland was added on 2 Nov 2026. Republic of Ireland, Isle of Man, and Channel Islands have no Westminster seats and are out of scope. File names keep the old `-gb` suffix so cached URLs and scripts keep working; the contents are UK-wide. |
+| **Sample vs full** | Full ONS July 2024 Westminster Parliamentary Constituency boundaries (BGC), UK-wide. BGC is generalised (~20 m) and clipped to Mean High Water — suitable for web MapLibre; not survey-grade cadastral edges. |
 | **Source** | [Office for National Statistics](https://www.ons.gov.uk/) Open Geography Portal — Westminster Parliamentary Constituencies (July 2024) Boundaries UK **BGC** |
 | **As-of** | 4 July 2024 (post-2023 Boundary Commission review; used for the 2024 general election) |
 | **Endpoint used** | ArcGIS FeatureServer GeoJSON (WGS84 `outSR=4326`): `https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/Westminster_Parliamentary_Constituencies_July_2024_Boundaries_UK_BGC/FeatureServer/0/query` |
 | **Hub** | [data.gov.uk BGC](https://www.data.gov.uk/dataset/7165b3a0-a1f2-40ff-a8e0-cfc2a573be30/westminster-parliamentary-constituencies-july-2024-boundaries-uk-bgc) · [Open Geography Portal](https://geoportal.statistics.gov.uk/datasets/ons::westminster-parliamentary-constituencies-july-2024-boundaries-uk-bgc-2/about) |
 | **Extract date (UTC)** | 2026-10-02T19:21:57Z |
-| **Method** | `scripts/ingest_ons_pcon2024.py` — download FeatureServer GeoJSON with `resultOffset` pagination, keep `PCON24CD` / `PCON24NM`, drop NI codes (`PCON24CD` starting with `N`), assert exactly 632 GB features |
+| **Method** | `scripts/ingest_ons_pcon2024.py` — download FeatureServer GeoJSON with `resultOffset` pagination, keep `PCON24CD` / `PCON24NM`, assert exactly 650 UK features (543 E, 57 S, 32 W, 18 N) |
 | **File size** | ~20.5 MB GeoJSON (minified). Prefer GeoJSON for v1; TopoJSON/PMTiles deferred if mobile load becomes painful |
 | **License** | [Open Government Licence v3.0](https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/) — contains Ordnance Survey **and** ONS IPR |
 | **Attribution** | Contains Ordnance Survey data © Crown copyright and database right 2024. Contains National Statistics data © Crown copyright and database right 2024. |
@@ -1348,13 +1364,325 @@ Popup shows **name + PCON24CD only** in this PR — no candidates, polls, or end
 ### Honest caveats
 
 - Boundaries are **BGC** (~20 m generalisation), not full-resolution BFC/BFE.
-- **GB-only**: NI 18 seats deferred; Ireland / IoM / CI out.
+- **UK-wide** (650 incl. Northern Ireland's 18); Ireland / IoM / CI have no Westminster seats.
 - No party colours, endorse badges, candidates, or polling in this layer yet.
 
 
+## Place card: live tags, ratings and photos (t251u/t252u)
+
+The rich place card has no data of its own. When a place is opened, it fetches the details below in the browser. Nothing is scraped, and no ratings come from Google or Tripadvisor.
+
+| Part of card | Source | Licence | How |
+|---|---|---|---|
+| Rows (hours, fee, capacity, denomination, heritage, wheelchair, operator, address, phone, website, Wikipedia/Wikidata, all tags) | OpenStreetMap API `api/0.6/{type}/{id}.json` | © OpenStreetMap contributors, ODbL 1.0 | Fetched live for the clicked `osm_id`. The "Open now / closes at" badge is computed in Europe/London time from `opening_hours`. If the value can't be parsed (PH, months or sunrise), the raw text is shown with no badge. |
+| Food hygiene rating (pubs, nightclubs, restaurants, cafés, fast food, bars) | Food Standards Agency FHRS (England, Wales, NI) / FHIS (Scotland) API `api.ratings.food.gov.uk` | Open Government Licence v3.0 | Fetched live: establishments within 0.25 mi, keeping the best name match (score at least 0.5). The card shows the rating, the inspection date and a link to `ratings.food.gov.uk/business/{id}`. With no confident match it says so and shows no rating. |
+| CQC overall rating (hospitals, clinics) | Care Quality Commission "Care directory with ratings" / latest ratings file, 1 Oct 2026 | Open Government Licence v3.0 | Joined offline by `scripts/extract_cqc_ratings.py` into `public/data/ratings-cqc.json`. It uses only Overall rows rated Outstanding, Good, Requires improvement or Inadequate. Postcodes are geocoded via postcodes.io (ONSPD, OGL). A match needs to be within 400 m with a strict name similarity (shared/max tokens at least 0.6, or at least 2 shared tokens with one name contained in the other). Matched: hospitals 501/1946 and clinics 444/3723. The card shows the rating, the publication date and a link to `cqc.org.uk/location/{id}`. |
+| Dentists | CQC registers dentists but publishes no overall ratings for them | — | No rating is shown (1/7135 matched; not used). |
+| Schools | Ofsted / Estyn / Education Scotland | — | Deferred until the schools layer has real GIAS/SEED data (item f). |
+| Petrol stations | DESNZ Fuel Finder (Motor Fuel Price (Open Data) Regulations 2025) | — | **Not available**: the API needs GOV.UK One Login plus OAuth client credentials, and the open CSV page returns 403 to automated access. No fuel prices are shown. |
+| Photo | Wikimedia Commons (`wikimedia_commons=*`, `image=` Commons file, Wikidata P18, Wikipedia page image), Geograph Britain and Ireland (oEmbed) | Per image, shown on the card (author + licence from Commons extmetadata / Geograph oEmbed, usually CC BY-SA) | Lazy-loaded behind a skeleton. Arbitrary `image=` URLs are never loaded. With no photo the card says "No open-licence photo linked yet". No placeholder or generated images are used. |
+
+## Point styling and coincident points (t254u)
+
+Every point layer shares one radius ramp (about 2.5 px at z6 to 5.5 px at z16), 80% fill opacity and a thin white keyline. Draw order is by feature count, densest at the bottom (pubs, places of worship), rarest on top, so a rare feature is never hidden under a dense one. Points that share exactly the same coordinates (349 positions, mostly castle+museum and memorial+church pairs) are moved 2 m apart by `scripts/nudge_coincident_points.py`; the original coordinates are kept in `true_lon`/`true_lat` and used by the place card. No data values change.
+
+## Churches, mosques and other religious sites (f)
+
+Source: the OpenStreetMap places-of-worship extract already used by the Places of worship layer (`public/data/places-of-worship.geojson`, `amenity=place_of_worship`, Geofabrik GB/IE extract, © OpenStreetMap contributors, ODbL 1.0). No copy of the data is shipped: the three layers read that one file and filter it in the browser on the OSM `religion` tag (`src/religion-views.ts`).
+
+- Churches: `religion=christian`, 40,381 sites.
+- Mosques: `religion=muslim`, 1,367 sites.
+- Other religious: everything else, 1,284 sites (Jewish 202, Sikh 201, Hindu 162, Buddhist 130, Spiritualist 112, multifaith 78, smaller faiths, and 348 with no or `none` religion tag).
+
+Caveats: OSM coverage of places of worship is very good for churches and uneven for house mosques, small gurdwaras and temples in rented rooms; a site missing a `religion` tag lands in Other religious. Check: `src/religion-views.test.ts` verifies every place of worship falls in exactly one view and the counts match.
+
+## Mountains
+
+`public/data/mountains.geojson` (2,651 summits) is built by `scripts/build_mountains.py` from the
+**Database of British and Irish Hills v18.6** (DoBIH, www.hills-database.co.uk), downloaded as
+`hillcsv.zip` from https://www.hill-bagging.co.uk/dobih/downloads/. Licence: **CC BY 4.0**;
+attribution "Contains data from The Database of British and Irish Hills v18.6".
+
+- Kept: every hill on the Marilyn (150 m drop), Munro, Hewitt, Arderin or Wainwright lists.
+  The card also names any other DoBIH list the hill is on (Corbett, Graham, Donald, Nuttall,
+  Vandeleur-Lynam, Furth).
+- Card: height, prominence (drop), lists, county, summit feature, and a link to the hill's
+  hill-bagging.co.uk page. Positions are the DoBIH summit coordinates (WGS84).
+- Gaelic/Welsh/Irish alternative names in square brackets become `alt_name`.
+
+## Weather stations
+
+`public/data/weather.geojson` (37 stations) is built by `scripts/build_weather.py` from the
+**Met Office historic station data** (https://www.metoffice.gov.uk/research/climate/maps-and-data/historic-station-data),
+one text file per station. Licence: **Open Government Licence v3**; "Contains Met Office data © Crown copyright".
+
+- Card: the latest month in the file (provisional values are flagged as such), its mean daily
+  high/low, rain and sunshine; the station's 1991–2020 averages (temperatures from at least 300 of
+  the 360 months; rain and sunshine from years with all 12 months, at least 20 years); first year
+  of record, station height and a link to the station's file.
+- Stations the Met Office no longer updates (Cwmystwyth, Lowestoft, Nairn, Paisley, Ringway,
+  Southampton) keep their pin and show "Record ended".
+- Position: the station's current site from the file header (several stations have moved).
+- Ireland outside Northern Ireland has no station yet: Met Éireann's monthly data endpoint
+  (cli.fusio.net, CC BY 4.0) returned empty files from this box on 2026-11-01.
+
+## Place search and nearest town
+
+`public/data/towns.json` (4,186 places) is built by `scripts/build_towns.py` from **GeoNames**
+`cities1000.txt` (https://download.geonames.org/export/dump/, downloaded 2026-11-01). Licence:
+**CC BY 4.0**, "Contains data from GeoNames (geonames.org)".
+
+- Every populated place of 1,000+ people in GB, IE, IM, JE and GG, PPLX sections skipped. It feeds the
+  instant place matches in search (Nominatim and postcodes.io fill in the rest) and the town named on
+  a card's type line, which is left blank when no town is within about 22 km.
+- Replaces a hand-typed list of about 170 cities, which named Taunton for Hinkley Point.
+
+## Population
+
+`public/data/population.geojson` (1,203 settlements) is built by `scripts/build_population.py` from
+**GeoNames** `cities1000.txt` (https://download.geonames.org/export/dump/, downloaded 2026-11-01).
+Licence: **CC BY 4.0**, "Contains data from GeoNames (geonames.org)".
+
+- Kept: populated places (feature class P) in GB, IE, IM, JE and GG with a population of 10,000 or
+  more, inside the isles (drops e.g. Dhekelia). PPLX entries (sections of a larger place) are
+  skipped so a city's districts don't stack on the city itself.
+- Disc radius: `clamp(5, sqrt(pop) / 75, 32)` px at z5.6, scaled with zoom.
+- Card: population, nation, the date GeoNames last updated the record, and a link to it.
+- Caveat: GeoNames populations are not all one census year, and a few suburbs that GeoNames keeps
+  as separate places (e.g. Worcester Park) still sit inside London's disc.
+- The old sample-driven "density glow" heatmap that sat under the map is removed.
+
+## Census
+
+`public/data/census.geojson` (392 councils) is built by `scripts/build_census.py`, one square marker
+per local authority, from the latest census in each jurisdiction (downloaded 2026-11-01):
+
+- **England & Wales**: ONS Census 2021 via Nomis (TS001 usual residents, TS004 country of birth,
+  TS007B age), 318 local authorities as of April 2023. Licence: **Open Government Licence v3**.
+- **Scotland**: Scotland's Census 2022 (National Records of Scotland) output-area tables UV101b and
+  UV204b, summed to the 32 council areas with NRS's 2022 output-area centroid lookup
+  (maps.gov.scot `NRS/Census2022` layer 2). **OGL v3**. NRS perturbs small cells, so these sums can
+  differ from NRS's own council totals by a fraction of a percent (Glasgow: 620,870 here vs
+  622,820 published).
+- **Northern Ireland**: NISRA Census 2021 flexible table builder (LGD14 by country of birth, LGD14
+  by 5-year age band), 11 councils. **OGL v3**.
+- **Ireland**: CSO Census 2022 PxStat tables SAP2022T1T1ACTY (age) and SAP2022T2T1CTY
+  (birthplace), 31 local authorities. Licence: **CC BY 4.0**.
+- Positions: ONS Local Authority Districts (December 2023) BGC `LAT`/`LONG` for the UK (OGL);
+  for Ireland, the centroid of the largest part of each Tailte Éireann 2024 local authority
+  boundary (CC BY 4.0).
+- Card: usual residents, share born outside the UK (UK councils) or outside Ireland (Irish
+  councils), share aged 65 and over, census year, nation, and a link to the publisher's page
+  (ONS Explore Local Statistics for England and Wales).
+- Not covered: the Isle of Man (2021 census) and Jersey (2021) and Guernsey (no census; population
+  register) have no council marker yet.
+- Links: https://www.nomisweb.co.uk/sources/census_2021, https://www.scotlandscensus.gov.uk/search-the-census, https://build.nisra.gov.uk/en/custom/data?d=PEOPLE&v=LGD14&v=COB_BASIC, https://data.cso.ie/table/SAP2022T2T1CTY
+
+## Schools
+
+`public/data/schools.geojson` (33,086 schools) is built by `scripts/build_schools.py` (downloaded
+2026-11-01):
+
+- **England (24,860)**: DfE *Get Information about Schools* all-establishments extract, open
+  establishments only, universities, online providers, British schools overseas, offshore and
+  service-children schools and Welsh-establishment records dropped; positions are the GIAS
+  easting/northing converted from OSGB36 to WGS84 with pyproj. Licence: **OGL v3**.
+- **Ofsted grades**: Ofsted's monthly management information *State-funded schools inspections
+  and outcomes* (latest publication date in the file 29 September 2026), joined on URN. The card
+  shows the new report-card judgements (achievement, curriculum and teaching, attendance and
+  behaviour, personal development, inclusion, leadership, safeguarding met / not met) where a
+  school has had one, the latest graded overall effectiveness (1 Outstanding to 4 Inadequate) with
+  its date, and the latest ungraded inspection outcome. **OGL v3**. Independent schools are not in
+  that file; their card names the inspectorate GIAS lists (Ofsted, Independent Schools
+  Inspectorate or School Inspection Service) and links the GIAS record.
+- **Wales, Scotland, Northern Ireland, Ireland, the Isle of Man, Jersey and Guernsey (8,226)**:
+  OpenStreetMap `amenity=school` (ODbL) from the Geofabrik extracts via `scripts/extract_pbf.py`,
+  named and not disused, dropping anything inside England (ONS Countries December 2023 BUC, OGL)
+  or within about 200 m of a GIAS school, and keeping one point where a school is mapped both as a
+  node and an outline. The card names the inspectorate (Estyn, Education Scotland, ETI, the
+  Department of Education Inspectorate, ...) but carries no grades: Estyn stopped summary grades
+  in 2022, and Education Scotland, ETI and the Irish inspectorate publish reports rather than a
+  bulk grade file.
+- Card links are built from the id: the Ofsted report (`reports.ofsted.gov.uk/provider/ELS/<URN>`)
+  for graded schools, the GIAS record otherwise, the OSM object outside England.
+- Caveats: OSM completeness varies (Ireland 2,790 against roughly 3,950 Department of Education
+  schools; Wales and Scotland near complete for state schools). The ONS country outline is
+  generalised, so a school within a few hundred metres of the English border can land on either
+  side.
+- Links: https://get-information-schools.service.gov.uk/Downloads, https://www.gov.uk/government/statistical-data-sets/monthly-management-information-ofsteds-school-inspections-outcomes, https://download.geofabrik.de/europe.html, https://www.openstreetmap.org/copyright
+
+## Roads
+
+`public/data/roads.geojson` (1,020 roads) is built by `scripts/build_roads.py` from the Geofabrik
+OpenStreetMap extracts (Great Britain, Ireland and Northern Ireland, Isle of Man, Guernsey and
+Jersey; downloaded 2026-11-01) via `scripts/extract_pbf.py`. Licence: **ODbL 1.0**.
+
+- Every `highway=motorway` and `highway=trunk` way (98 motorways, the rest trunk roads; Irish
+  national primary roads are tagged trunk). Links and slip roads are not included.
+- Ways are grouped by road number (`ref`, else name), class and nation (ONS Countries December 2023
+  outlines, OGL, so the English, Northern Irish and Irish M1s stay separate), merged into continuous
+  lines and simplified to about 25 m. Junction roundabouts with no number and under 2 km are dropped.
+- Both carriageways of a dual carriageway are separate OSM ways, so they draw as two close lines at
+  city zoom; the layer fades back from z9 as the basemap's own road network takes over.
+- Card: road number, class, nation, with an OpenStreetMap search link (a merged road has no single
+  OSM id).
+- Replaces the straight-line preview corridors that were capped at z7.
+- Links: https://download.geofabrik.de/europe.html, https://www.openstreetmap.org/copyright
+
+## Cemeteries
+
+`public/data/cemeteries.geojson` (27,964 sites) is built by `scripts/build_pbf_layers.py cemeteries`
+from the same Geofabrik OpenStreetMap extracts (downloaded 2026-11-01) via `scripts/extract_pbf.py`.
+Licence: **ODbL 1.0**.
+
+- Every `landuse=cemetery` and `amenity=grave_yard` node or area, one point per site (areas at their
+  centre), marked disused or abandoned sites dropped.
+- Card: kind (cemetery vs churchyard or graveyard), surveyed area in hectares when the site is an
+  area, then the live OSM tags (religion, denomination, operator, website) like every OSM layer.
+- About three quarters of churchyards carry no name in OSM; those cards read "Churchyard".
+- Replaces the five-point preview.
+- Links: https://download.geofabrik.de/europe.html, https://www.openstreetmap.org/copyright
+
+## Historic (archaeological sites)
+
+`public/data/historic.geojson` (40,871 sites) is built by `scripts/build_pbf_layers.py historic` from
+the Geofabrik OpenStreetMap extracts (downloaded 2026-11-01). Licence: **ODbL 1.0**.
+
+- Every `historic=archaeological_site` node or area (areas at their centre): hillforts and Irish
+  ringforts (about half the set, largely from the National Monuments Service import), barrows,
+  standing stones and circles, crannogs, brochs, settlements and Roman forts.
+- Card: site type, fortification type and period when tagged, then the live OSM tags.
+- Unnamed sites (about two thirds) are titled by their type, e.g. "Fortification".
+- Castles, battlefields and memorials stay in their own layers. The Stonehenge stone circle itself is not
+  tagged `historic=archaeological_site` in the extract, so only its surrounding barrows appear.
+- Replaces the ten-point preview.
+- Links: https://download.geofabrik.de/europe.html, https://www.openstreetmap.org/copyright
+
+## Legends (holy wells and folklore places)
+
+`public/data/legends.geojson` (1,681 places) is built by `scripts/build_pbf_layers.py legends` from
+the Geofabrik OpenStreetMap extracts (downloaded 2026-11-01). Licence: **ODbL 1.0**.
+
+- Holy wells: anything tagged `holy_well` (place of worship, historic, amenity, man_made or natural),
+  plus springs named as a saint's, Our Lady's, holy, tobar or ffynnon well.
+- Places named in folklore: natural and historic features whose name invokes a legend (fairy,
+  giant's, devil's, witch's, wishing well, King Arthur, Merlin, Fionn mac Cumhaill / Finn McCool,
+  Cú Chulainn, Robin Hood, pixies, boggarts, druids, dragons). Bare Gaelic "fionn" (white) is not
+  matched; pubs, shops, houses, farms, hostels, playgrounds, trails and memorials are dropped.
+- This is a name-based selection, not a folklore gazetteer: it shows where the legend is written
+  on the map, not every place with a story. No open, georeferenced folklore dataset covers the
+  isles (the National Folklore Collection's Dúchas places are per-parish and CC BY-NC).
+- Replaces the eight-point preview.
+- Links: https://download.geofabrik.de/europe.html, https://www.openstreetmap.org/copyright
+
+## Health (GP practices)
+
+`public/data/health.geojson` (10,099 practices) is built by `scripts/build_health.py` from each
+nation's official register, geocoded by postcode with postcodes.io (ONS Postcode Directory, OGL v3.0).
+
+| Nation | Practices | Source | Licence |
+|---|---|---|---|
+| England | 6,157 | NHS England ODS `epraccur` (active GP practices, role RO76), via the ODS Data Search and Export report | OGL v3.0 |
+| Wales | 398 | Same register (W-prefixed codes) | OGL v3.0 |
+| Scotland | 876 | Public Health Scotland, GP practice contact details and list sizes, 1 Oct 2026 | OGL v3.0 |
+| Northern Ireland | 299 | BSO GP Practice Reference File, July 2026, via OpenDataNI | OGL v3.0 |
+| Ireland | 2,343 | HSE Service Directory "Family Practice (GP) Sites", May 2022 (coordinates as published) | CC BY 4.0 |
+| Isle of Man, Channel Islands | 26 | OpenStreetMap `amenity=doctors` with a name | ODbL 1.0 |
+
+- England's practices carry the CQC overall rating and its publication date (5,902 matched on ODS
+  code from the CQC "Latest ratings" file, 1 Oct 2026); the card links the CQC report.
+- Scotland and Northern Ireland carry registered list sizes; Northern Ireland also names the partners.
+- The HSE file was published on data.gov.ie in May 2022 and has since been withdrawn there; it is
+  read from the Internet Archive copy. It is the only open, georeferenced GP list for Ireland, so
+  practices opened or closed since 2022 are not reflected.
+- 9 UK practices whose postcode does not geocode are omitted.
+- Replaces the eight-point preview.
+- Links: https://digital.nhs.uk/services/organisation-data-service/data-search-and-export, https://www.opendata.nhs.scot/dataset/gp-practice-contact-details-and-list-sizes, https://www.opendatani.gov.uk/dataset/gp-practice-list-sizes, https://www.cqc.org.uk/about-us/transparency/using-cqc-data, https://web.archive.org/ (HSE GP sites, data.gov.ie May 2022), https://postcodes.io/
+
+## Immigration
+
+`public/data/immigration.geojson` (70 points) is built by `scripts/build_immigration.py`.
+
+- UK airports: CAA annual airport data 2025, Table 10.1, international (EU and other) terminal
+  passengers, for every reporting airport with at least 10,000 (the Channel Islands and Isle of Man
+  are CAA "non-UK reporting airports"; their figure is non-UK traffic). CAA statistics are cited, not resold.
+- Irish airports: CSO table TAA05, all passengers 2025 (CC BY 4.0). Ireland has almost no domestic flights.
+- UK seaports: DfT sea passenger statistics SPAS0101, international short-sea ferry and cruise
+  passengers 2025 (OGL), for each port with at least 20,000. Milford Haven's ferry traffic is shown
+  at the Pembroke Dock terminal. Routes between Great Britain and Northern Ireland are domestic and not counted.
+- Channel Tunnel: the ORR figure in SPAS0101 (Eurotunnel shuttles and Eurostar together), placed at
+  the Folkestone terminal. St Pancras is shown without a separate number.
+- Irish seaports: CSO table TBA12, passenger cars 2025. CSO stopped publishing passenger numbers by
+  port after 2019 (table TBA13), so cars are the latest official measure.
+- Detention: Home Office immigration detention statistics, table Det_03a, people detained at each
+  removal centre and residential short-term holding facility on 30 June 2026 (OGL). Sites marked
+  closed in that column drop out (Dungavel), and reopened ones appear (Campsfield House).
+- Coordinates: Wikidata by ICAO code or item (CC0); OpenStreetMap terminal elements for Harwich, Tyne,
+  Hull, Immingham, Tilbury, Liverpool and Ringaskiddy, where Wikidata marks the harbour (ODbL);
+  postcodes.io for the Manchester holding facility's gov.uk address.
+- Under the Common Travel Area there is no routine passport control between the UK, Ireland, the
+  Isle of Man and the Channel Islands, so passenger counts are traffic, not immigration checks.
+- Replaces the ten-point preview.
+- Links: https://www.caa.co.uk/data-and-analysis/uk-aviation-market/airports/uk-airport-data/uk-airport-data-2025/annual-2025/, https://data.cso.ie/table/TAA05, https://data.cso.ie/table/TBA12, https://www.gov.uk/government/statistical-data-sets/sea-passenger-statistics-spas, https://www.gov.uk/government/statistical-data-sets/immigration-system-statistics-data-tables
+
+## Crime
+
+`public/data/crime.geojson` (918 points) is built by `scripts/build_crime.py`. Every point is an area
+the police publish recorded-crime counts for, with the total, the main offence groups and, in the UK, a rate.
+
+- England and Wales: Home Office police recorded crime open data tables, Community Safety Partnership
+  file for April 2025 to March 2026 (updated 22 October 2026, OGL). One point per partnership (312);
+  fraud is recorded nationally by Action Fraud and is not in these figures.
+  - Kent Police records Maidstone, Medway, Tonbridge and Malling and Tunbridge Wells together (Home
+    Office force note); they are one point with the force's other unplaced crime.
+  - Forces that could not place more than 3% of their crime in a partnership (Greater Manchester,
+    Humberside) say so on each card; that crime is only in the force total.
+  - Manchester Airport is its own partnership and sits on the airport, without a rate.
+  - Partnerships are matched to councils with the ONS LAD25-CSP25-PFA25 lookup (OGL). Partnerships that
+    are former districts of a merged council (Cumbria, Northamptonshire, Buckinghamshire, East Suffolk,
+    Bournemouth and Poole) are rebuilt from Census 2021 MSOA residents (Nomis) inside the ONS
+    December 2018 district boundary, using ONS MSOA population-weighted centroids.
+- Scotland: Scottish Government, Recorded Crime in Scotland 2025-26, tables 1 and 4 (OGL), one point
+  per council area. Rates are the published ones (NRS mid-2024 population). Scotland counts crimes,
+  not offences such as speeding, under Scots law, so totals are not directly comparable with England.
+- Northern Ireland: PSNI police recorded crime tables to 31 March 2026, district summaries (OGL), one
+  point per policing district (the eleven council areas).
+- Rates in England, Wales and Northern Ireland are per 1,000 Census 2021 residents; Scotland uses its published rate.
+  The City of London and Westminster rates are high because few people live where many work and visit.
+- Ireland: CSO table CJA07, recorded crime incidents by Garda station, 2025 (CC BY 4.0). CSO publishes
+  Garda crime statistics "under reservation" while recording quality is reviewed, and each card says
+  so. Stations have no population, so there is no rate. One station recorded nothing and is left out.
+  - Positions: the OSM police station of that name (398), else an unnamed OSM police station within
+    1.5 km of the village (30), else the village from OSM or GeoNames (129), else the townland or
+    street from OSM (7). Each card says which. Irish-language station names are matched through
+    their English forms (logainm.ie), and same-named villages are kept to their Garda division.
+- Placed on the census layer's council markers (ONS LAD BGC centroids) where an area is one council.
+- Replaces the preview markers.
+- Links: https://www.gov.uk/government/statistical-data-sets/police-recorded-crime-and-outcomes-open-data-tables, https://www.gov.scot/publications/recorded-crime-scotland-2025-26/, https://www.psni.police.uk/about-us/our-publications-and-reports/official-statistics/police-recorded-crime-statistics, https://data.cso.ie/table/CJA07
+
+## Nuclear
+
+`public/data/nuclear.geojson` (46 sites) is built by `scripts/build_nuclear.py`.
+
+- The site list is the Office for Nuclear Regulation's register of nuclear site licences (37 licensed
+  sites; OGL v3.0) plus the Ministry of Defence-authorised sites on ONR's March 2026 map of regulated
+  sites (Clyde, Coulport, Devonport naval base, Loch Goil, Loch Ewe, Vulcan, Portsmouth, Portland,
+  Southampton). Calder Hall is shown separately inside the Sellafield licence.
+- Coordinates, capacity, and established, opened and closed years come from Wikidata (CC0). Six sites
+  with no Wikidata coordinate are placed at the postcode in the ONR register (postcodes.io, OGL);
+  Sizewell B uses its OpenStreetMap outline (way 27625744, ODbL) and Sizewell C its Wikipedia
+  coordinate, because Wikidata gives all three Sizewell stations one point.
+- Status (generating, defuelling, decommissioning, under construction) follows the licensee and
+  the Wikidata closure date; "Stopped generating" is Wikidata's end-of-service year.
+- MOD berths and naval bases are regulated, not licensed, so their cards cite the ONR map instead
+  of a licence number. Wikidata places Loch Goil and Loch Ewe at the loch, not the berth.
+- Ireland, the Isle of Man and the Channel Islands have no nuclear installations.
+- Replaces the nine-point preview.
+- Links: https://www.onr.org.uk/register-of-nuclear-site-licences, https://www.onr.org.uk/our-work/map-of-sites-and-facilities, https://www.wikidata.org/
+
 ## Remaining honest caveats
 
-- Constituencies layer is ONS BGC GB-only (632); NI deferred; no endorse/polling UI yet.
+- Constituencies layer is ONS BGC, all 650 UK seats (Northern Ireland added 2 Nov 2026).
 - OSM tagging completeness varies; absence of a station on the map is not proof
   it does not exist on the ground.
 - Ways are centre points, not footprints.
@@ -1964,7 +2292,7 @@ Popup shows **name + PCON24CD only** in this PR — no candidates, polls, or end
 
 ## Voting P1 — candidates, polls, endorsements
 
-Editorial **Reform / Restore Britain** endorsement map over GB Westminster seats (632).
+Editorial **Reform / Restore Britain** endorsement map over GB Westminster seats (632). Northern Ireland is not part of this legacy map: Reform UK and Restore Britain have no NI candidates or projections; NI seats are handled by the tactical pick (see *Northern Ireland* below).
 Never endorses Labour or Conservatives. Daniel per-seat overrides always win.
 **Restore-ahead rule (locked 2026-10-05):** any trusted seat poll (EC or More in Common)
 with Restore share strictly ahead of Reform → Vote Restore, even without a Democracy Club
@@ -1978,7 +2306,7 @@ Democracy Club is **sparse** — most seats are presumed Reform under locked ant
 | Field | Value |
 |---|---|
 | **File** | `public/data/candidates-gb.json` |
-| **Source** | [Democracy Club Candidates](https://candidates.democracyclub.org.uk/) CSV export (`party_id` PP7931 Reform UK, PP18382 Restore Britain; `election_id=^parl.*`) |
+| **Source** | [Democracy Club Candidates](https://candidates.democracyclub.org.uk/) CSV export, all parties (`election_id=^parl.*&field_group=person_profiles`, no `party_id` filter). GB seats keep Reform UK / Restore Britain standing; NI seats list `ni_candidates` (any party, current or future parl candidacies only). On 2 Nov 2026 Democracy Club listed **no** NI candidates for the next general election, so every NI seat has an empty list and the card says so. |
 | **License** | **CC-BY-SA** |
 | **Script** | `scripts/fetch_candidates.py` (idempotent; writes `retrieved_at`) |
 | **Join** | DC `post_label` → ONS `PCON24NM` via name normalisation; keyed by `PCON24CD` |
@@ -2005,6 +2333,30 @@ Democracy Club is **sparse** — most seats are presumed Reform under locked ant
 | **Script** | `scripts/fetch_polls_seats.py` |
 | **Caveats** | If a provider cannot be fetched, **keep the last good provider block** and set `status=stale` (with `stale_error`); only use `link_out` + empty `seats` when there is no prior good block — **never invent numbers**, never blank a loaded strip on a transient failure. Projections ≠ results. |
 
+### Seat projection history (`polls-seats-history`)
+
+| Field | Value |
+|---|---|
+| **File** | `public/data/polls-seats-history.json` (fetched only when a seat panel opens) |
+| **Shape** | `seats[code][provider] = [[date, con, lab, ld, ref, grn, snp, pc, rb, oth], …]`, shares in %, 0.1 dp, `null` = not published. `providers[key].editions` lists each point's date, fieldwork, date basis and source URL; `skipped` says what was left out and why. |
+| **Electoral Calculus** | Earlier editions of `electdata_pred.txt` from Internet Archive (Wayback) captures, plus the live file. Only captures on 2024 boundaries (all 650 seats match) are used; captures up to 2024-06 are on 2019 boundaries and are skipped. Each point is dated by the EC "Updated" date on the archived/live prediction page, checked by comparing the page's headline seat totals with the file. |
+| **More in Common** | Each published MRP edition (XLSX/CSV under moreincommon.org.uk uploads) that parses cleanly, dated by publication date. Non-vote-share MRPs (e.g. leader ratings) are skipped. GB only (632 seats): More in Common's MRP does not cover Northern Ireland. |
+| **Northern Ireland (EC)** | NI rows use the party list in `parties_ni` (`dup, sf, sdlp, uup, alliance, tuv, ind, oth`). EC's file reuses its GB columns for NI: CON=UUP, LAB=SDLP, LIB=DUP, Reform=Alliance, Green=TUV, NAT=Sinn Féin, MIN=Independent, OTH=Other (checked against the 2024 results). NI figures were byte-identical in every archived edition checked (April 2025 to October 2026) and are within ~0.1 pt of the 2024 result, so the NI line is flat; the seat card says so. |
+| **Scripts** | `scripts/build_seat_history.py` (one-off backfill; re-runnable), `scripts/fetch_polls_seats.py` (daily refresh appends a point for a new edition date, replaces a same-date point, never deletes history). |
+
+### Past general-election results (`results-history-gb`)
+
+| Field | Value |
+|---|---|
+| **File** | `public/data/results-history-gb.json` (fetched only when a seat panel opens; drawn as a line chart, one line per party) |
+| **Shape** | `seats[code] = [[date, con, lab, ld, ref, grn, snp, pc, spk, oth], …]` for GB; NI seats use `parties_ni` (`dup, sf, sdlp, uup, alliance, tuv, con, grn, aont, pbp, ind, oth`). % of valid votes, 0.1 dp, `null` = no candidate. All 650 UK seats, 2024 boundaries. |
+| **2019-12-12 (notional)** | UK Parliament election results, [general election 5](https://electionresults.parliament.uk/general-elections/5) ([`candidacies.csv`](https://electionresults.parliament.uk/general-elections/5/candidacies.csv)): notional 2019 results on the 2024 boundaries by Rallings & Thrasher (Prof David Denver for Scotland, Nicholas Whyte for Northern Ireland) for BBC, ITV News, Sky News and PA, published by the House of Commons Library. Estimates, not votes cast. |
+| **2024-07-04 (actual)** | Same site, [general election 6](https://electionresults.parliament.uk/general-elections/6) ([`candidacies.csv`](https://electionresults.parliament.uk/general-elections/6/candidacies.csv)); matches `results-2024-gb.json`. |
+| **Licence** | [Open Parliament Licence v3.0](https://www.parliament.uk/site-information/copyright-parliament/open-parliament-licence/) |
+| **Mapping** | 2019 Brexit Party (BRX) is plotted on the Reform UK line: same registered party, renamed January 2021 (said on screen). Speaker is its own series; minor parties and independents are `oth`. |
+| **Gaps** | No official notional results on the 2024 boundaries exist for 2017 or earlier, so only two elections are shown. |
+| **Script** | `scripts/build_results_history.py` (`--refresh` re-downloads both CSVs into `data-raw/`). |
+
 ### Overrides (`overrides`)
 
 | Field | Value |
@@ -2027,7 +2379,21 @@ Democracy Club is **sparse** — most seats are presumed Reform under locked ant
 
 ### 2024 results
 
-Commons Library [CBP-10009](https://commonslibrary.parliament.uk/research-briefings/cbp-10009/) join is **deferred** (source fetch blocked by Cloudflare from this environment). Popup notes follow-up; no invented winners.
+| | |
+|---|---|
+| **File** | `public/data/results-2024-gb.json` (650 UK seats keyed by ONS `PCON24CD`; joins 650/650 to `constituencies-gb-2024.geojson`) |
+| **Source** | House of Commons Library / UK Parliament [election results service](https://electionresults.parliament.uk/general-elections/6), general election of 4 July 2024, [candidacies CSV](https://electionresults.parliament.uk/general-elections/6/candidacies.csv). Same underlying data as Commons Library [CBP-10009](https://commonslibrary.parliament.uk/research-briefings/cbp-10009/) (whose file host is behind a Cloudflare challenge for scripted fetches). |
+| **Licence** | [Open Parliament Licence v3.0](https://www.parliament.uk/site-information/copyright-parliament/open-parliament-licence/) — attribute "Contains Parliamentary information licensed under the Open Parliament Licence v3.0." |
+| **Script** | `scripts/build_results_2024.py` (downloads the raw CSV to `data-raw/`, gitignored, when missing; `--refresh` re-downloads; exits non-zero on any join mismatch) |
+| **Fields per seat** | `name`, `country`, `winner_party`, `winner_name`, `result`, `majority`, `majority_pct`, `turnout_pct` (valid votes / electorate), `electorate`, `valid_votes`, `shares` (top 6 candidates as `[party, %]` plus summed `Other`). Party names in top-level `parties`. Northern Ireland included (DUP, Sinn Féin, SDLP, UUP, Alliance, TUV, etc.). |
+
+### Northern Ireland (18 seats)
+
+| | |
+|---|---|
+| **Covered** | ONS 2024 boundaries; 2024 results and 2019 notional results (UK Parliament, Open Parliament Licence); Electoral Calculus seat projection with win probabilities; NI party colours. |
+| **Pick rule** | Labour does not stand in Northern Ireland, so the stop-Labour rule does not apply. The card says so and shows the Electoral Calculus projected winner with its win probability (low confidence under 60%), plus the 2024 result. Without a projection it falls back to the 2024 winner. Owner overrides still win; Labour and Green are never picked. Reform UK / Restore Britain are not shown for NI (no candidates or projections). Code: `src/tactical.ts`. |
+| **Missing** | More in Common's MRP is GB only. Electoral Calculus's NI figures have not changed since at least April 2025 and match the 2024 result, so they add little beyond 2024. Democracy Club lists no NI candidates for the next general election yet. |
 
 ### Postcode → seat
 

@@ -33,6 +33,8 @@ EC_PAGE = "https://www.electoralcalculus.co.uk/prediction_main.html"
 EC_FAQ = "https://www.electoralcalculus.co.uk/faq.html"
 MIC_XLSX = "https://www.moreincommon.org.uk/wp-content/uploads/2026/09/Sep26-MRP.xlsx"
 MIC_PAGE = "https://www.moreincommon.org.uk/research/more-in-commons-september-2026-mrp/"
+MIC_PUBLISHED = "2026-09-26"  # history point date for MIC_XLSX (MiC publication date)
+MIC_FIELDWORK = "21 Aug 2026 – 21 Sep 2026"
 UA = "BritishIslesAtlas/fetch_polls_seats (https://github.com/giiyms/BritishIslesAtlas)"
 
 
@@ -263,8 +265,10 @@ def load_electoral_calculus(by_norm: dict[str, str], previous: dict | None = Non
             fieldwork = f"{m.group(1)} – {m.group(2)}"
         um = re.search(r"Updated\s+([0-9]{1,2}\s+\w+\s+20\d{2})", page, flags=re.I)
         updated = um.group(1) if um else None
+        page_seats = ec_page_pred_seats(page)
     except Exception:
         updated = None
+        page_seats = {}
 
     reader = csv.DictReader(io.StringIO(text), delimiter=";")
     seats: dict[str, dict] = {}
@@ -279,8 +283,12 @@ def load_electoral_calculus(by_norm: dict[str, str], previous: dict | None = Non
             if code:
                 break
         if not code:
-            # Drop NI / unmatched
             unmatched.append(name)
+            continue
+        if code.startswith("N"):
+            ni = ni_row(code, name, row)
+            if ni:
+                seats[code] = ni
             continue
         try:
             votes = {
@@ -343,11 +351,74 @@ def load_electoral_calculus(by_norm: dict[str, str], previous: dict | None = Non
         "notes": [
             "Parsed from the public electdata_pred.txt seat table (vote counts → percentages).",
             "Restore Britain is not broken out by Electoral Calculus in this file (restore_share=null).",
+            "Northern Ireland: EC reuses GB column headers for NI parties (CON=UUP, LAB=SDLP, LIB=DUP, "
+            "Reform=Alliance, Green=TUV, NAT=Sinn Féin, MIN=Independent, OTH=Other); NI rows carry ni_shares "
+            "and null GB-party shares. Mapping inferred from EC's MP column and its NI headline seat totals. "
+            "EC's NI figures were identical in every archived edition checked (April 2025 to October 2026).",
             "Projections are projections, not results. Attribution: Electoral Calculus.",
             "EC FAQ: Overview extracts may be republished with attribution + retrieval date.",
         ],
         "seats": seats,
+        "_page_seats": page_seats,  # internal: headline seat totals, used to date the history point
     }
+
+
+# In Northern Ireland rows EC reuses the GB column headers for NI parties.
+# Inferred from the 2024 MPs in its MP column (e.g. Belfast East / Gavin Robinson
+# DUP is LIB, Belfast South and Mid Down / Claire Hanna SDLP is LAB, North Antrim /
+# Jim Allister TUV is Green, North Down / Alex Easton Ind is MIN) and checked against
+# the headline NI seat totals on prediction_main.html (SF 7, DUP 5, SDLP 2, UUP 1,
+# Alliance 1, TUV 1, NI Other 1). EC does not model Conservatives, Labour, Green NI,
+# Reform or Restore in NI, so those shares are null, not zero.
+EC_NI_COLUMNS = {
+    "CON": ("uup", "UUP"),
+    "LAB": ("sdlp", "SDLP"),
+    "LIB": ("dup", "DUP"),
+    "Reform": ("alliance", "Alliance"),
+    "Green": ("tuv", "TUV"),
+    "NAT": ("sf", "Sinn Féin"),
+    "MIN": ("ind", "Independent"),
+    "OTH": ("oth", "Other"),
+}
+
+
+def ni_row(code: str, name: str, row: dict) -> dict | None:
+    try:
+        votes = {key: float(row.get(col) or 0) for col, (key, _) in EC_NI_COLUMNS.items()}
+        chances = {key: float(row.get(f"{col} chance") or 0) for col, (key, _) in EC_NI_COLUMNS.items()}
+    except ValueError:
+        return None
+    shares = pct_from_votes(votes)
+    labels = {key: label for key, label in EC_NI_COLUMNS.values()}
+    winner_key = max(shares, key=lambda k: shares[k])
+    return {
+        "pcon24cd": code,
+        "name": name,
+        "region": "NI",
+        "con_share": None,
+        "lab_share": None,
+        "ld_share": None,
+        "reform_share": None,
+        "green_share": None,
+        "nat_share": None,
+        "restore_share": None,
+        "oth_share": shares["oth"],
+        "ni_shares": {k: v for k, v in shares.items() if k != "oth"},
+        "projected_winner": labels[winner_key],
+        "chances": chances,
+    }
+
+
+def ec_page_pred_seats(page: str) -> dict[str, int]:
+    """Headline 'Pred Seats' per party from prediction_main.html (CON/LAB/Reform)."""
+    import html as _html
+    text = re.sub(r"\s+", " ", _html.unescape(re.sub(r"<[^>]+>", " ", page)))
+    out = {}
+    for party in ("CON", "LAB", "Reform"):
+        m = re.search(rf"\b{party} [\d.]+% \d+ [\d.]+% \d+ (\d+) \d+", text)
+        if m:
+            out[party] = int(m.group(1))
+    return out
 
 
 def load_more_in_common(by_norm: dict[str, str], previous: dict | None = None) -> dict:
@@ -488,11 +559,17 @@ def load_more_in_common(by_norm: dict[str, str], previous: dict | None = None) -
 
 def main() -> int:
     by_norm, by_code = load_pcon_index()
-    assert len(by_code) == 632
+    assert len(by_code) == 650
     retrieved_at = now_iso()
     previous = load_previous_providers()
     ec = load_electoral_calculus(by_norm, previous.get("electoral_calculus"))
     mic = load_more_in_common(by_norm, previous.get("more_in_common"))
+    page_seats = ec.pop("_page_seats", {})
+    try:
+        from build_seat_history import append_live
+        print(append_live(ec, mic, page_seats, mic_date=MIC_PUBLISHED, mic_fieldwork=MIC_FIELDWORK))
+    except Exception as exc:  # history is additive; never block the seat refresh
+        print(f"Seat history not updated: {exc}", file=sys.stderr)
     out = {
         "retrieved_at": retrieved_at,
         "notes": [

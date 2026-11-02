@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
-"""Ingest ONS July 2024 Westminster PCON BGC boundaries (GB-only, 632 seats).
+"""Ingest ONS July 2024 Westminster PCON BGC boundaries (UK, 650 seats).
 
-Downloads WGS84 GeoJSON from the ONS ArcGIS FeatureServer, drops Northern
-Ireland (18 seats), writes public/data/constituencies-gb-2024.geojson, and
-merges metadata into public/data/extract-meta.json.
+Downloads WGS84 GeoJSON from the ONS ArcGIS FeatureServer and writes all 650
+seats (632 GB + 18 Northern Ireland) to public/data/constituencies-gb-2024.geojson
+(file name kept from the GB-only era). Also writes the 18 NI seats into
+public/data/constituencies-gb-2024-simplified.geojson, simplified with shapely
+(tolerance SIMPLIFY_TOL degrees, 5 dp) to match the existing GB simplified
+features, and merges metadata into public/data/extract-meta.json.
 
 Usage:
   python3 scripts/ingest_ons_pcon2024.py
@@ -21,6 +24,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT_GEOJSON = ROOT / "public" / "data" / "constituencies-gb-2024.geojson"
+OUT_SIMPLIFIED = ROOT / "public" / "data" / "constituencies-gb-2024-simplified.geojson"
+# GB simplified features predate this script; 0.0004 deg (~40 m) with shapely
+# reproduces their ~62% vertex retention, so NI is simplified to match.
+SIMPLIFY_TOL = 0.0004
 META_PATH = ROOT / "public" / "data" / "extract-meta.json"
 
 FEATURE_SERVER = (
@@ -110,6 +117,35 @@ def slim_feature(feat: dict) -> dict:
     }
 
 
+def _round(coords, dp: int = 5):
+    if coords and isinstance(coords[0], (int, float)):
+        return [round(c, dp) for c in coords]
+    return [_round(c, dp) for c in coords]
+
+
+def write_simplified_ni(ni: list[dict]) -> None:
+    """Replace the N* features in the simplified file; GB features untouched."""
+    from shapely.geometry import mapping, shape
+
+    data = json.loads(OUT_SIMPLIFIED.read_text(encoding="utf-8"))
+    kept = [f for f in data["features"] if not f["properties"]["PCON24CD"].startswith("N")]
+    for feat in ni:
+        geom = shape(feat["geometry"]).simplify(SIMPLIFY_TOL, preserve_topology=True)
+        g = mapping(geom)
+        kept.append(
+            {
+                "type": "Feature",
+                "geometry": {"type": g["type"], "coordinates": _round(json.loads(json.dumps(g["coordinates"])))},
+                "properties": dict(feat["properties"]),
+            }
+        )
+    if len(kept) != EXPECTED_UK:
+        raise SystemExit(f"Simplified file would have {len(kept)} features, expected {EXPECTED_UK}")
+    data["features"] = kept
+    OUT_SIMPLIFIED.write_text(json.dumps(data, separators=(",", ":")), encoding="utf-8")
+    print(f"Wrote {OUT_SIMPLIFIED} ({len(kept)} features; NI simplified)", flush=True)
+
+
 def main() -> int:
     raw = download_all()
     print(f"Downloaded {len(raw)} features (expect {EXPECTED_UK} UK)", flush=True)
@@ -130,14 +166,14 @@ def main() -> int:
             missing_fields.append(repr(props.get("PCON24CD")))
             continue
         if is_northern_ireland(props):
-            ni.append(feat)
+            ni.append(slim_feature(feat))
         else:
             gb.append(slim_feature(feat))
 
     if missing_fields:
         raise SystemExit(f"Features missing PCON24CD/PCON24NM: {len(missing_fields)}")
     if len(ni) != EXPECTED_NI:
-        raise SystemExit(f"Expected {EXPECTED_NI} NI features dropped, got {len(ni)}")
+        raise SystemExit(f"Expected {EXPECTED_NI} NI features, got {len(ni)}")
     if len(gb) != EXPECTED_GB:
         raise SystemExit(f"Expected {EXPECTED_GB} GB features, got {len(gb)}")
 
@@ -149,18 +185,24 @@ def main() -> int:
         assert not code.upper().startswith("N"), f"NI code leaked: {code}"
         assert feat.get("geometry"), f"missing geometry for {code}"
 
-    collection = {"type": "FeatureCollection", "features": gb}
+    for feat in ni:
+        assert feat["properties"]["PCON24CD"].startswith("N05"), feat["properties"]
+        assert feat.get("geometry"), f"missing geometry for {feat['properties']['PCON24CD']}"
+
+    uk = gb + ni
+    collection = {"type": "FeatureCollection", "features": uk}
     OUT_GEOJSON.parent.mkdir(parents=True, exist_ok=True)
     OUT_GEOJSON.write_text(json.dumps(collection, separators=(",", ":")), encoding="utf-8")
     size_bytes = OUT_GEOJSON.stat().st_size
-    print(f"Wrote {OUT_GEOJSON} ({size_bytes:,} bytes, {len(gb)} features)", flush=True)
+    print(f"Wrote {OUT_GEOJSON} ({size_bytes:,} bytes, {len(uk)} features)", flush=True)
+    write_simplified_ni(ni)
 
     extracted_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     meta_entry = {
         "extracted_at": extracted_at,
         "method": (
             "ONS ArcGIS FeatureServer GeoJSON (WGS84 outSR=4326); "
-            "filter GB-only by dropping NI PCON24CD (N*); paginated resultOffset"
+            "all 650 UK seats kept (GB E/S/W + NI N05*); paginated resultOffset"
         ),
         "license": LICENSE,
         "endpoint": FEATURE_SERVER,
@@ -171,16 +213,19 @@ def main() -> int:
         "generalisation": "BGC ~20 m, clipped to Mean High Water",
         "layer": LAYER_ID,
         "file": "constituencies-gb-2024.geojson",
-        "count": len(gb),
+        "count": len(uk),
         "uk_count_downloaded": len(raw),
-        "ni_dropped": len(ni),
+        "gb_count": len(gb),
+        "ni_count": len(ni),
         "coverage": (
-            f"GB Westminster only: England+Scotland+Wales = {len(gb)}; "
-            f"Northern Ireland {len(ni)} deferred; Ireland/IoM/CI have no Westminster seats"
+            f"UK Westminster: England+Scotland+Wales = {len(gb)}, "
+            f"Northern Ireland = {len(ni)}; Ireland/IoM/CI have no Westminster seats"
         ),
+        "simplified_ni": f"shapely simplify(tolerance={SIMPLIFY_TOL}, preserve_topology=True), 5 dp",
         "attribution": (
             "Contains Ordnance Survey data © Crown copyright and database right 2024. "
-            "Contains National Statistics data © Crown copyright and database right 2024."
+            "Contains National Statistics data © Crown copyright and database right 2024. "
+            "Northern Ireland: contains LPS Intellectual Property © Crown copyright and database right 2024."
         ),
         "size_bytes": size_bytes,
     }
@@ -192,7 +237,7 @@ def main() -> int:
     META_PATH.write_text(json.dumps(meta, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(f"Updated {META_PATH} key '{LAYER_ID}'", flush=True)
     print(
-        f"OK: GB={len(gb)} NI_dropped={len(ni)} size={size_bytes:,}B extracted_at={extracted_at}",
+        f"OK: GB={len(gb)} NI={len(ni)} size={size_bytes:,}B extracted_at={extracted_at}",
         flush=True,
     )
     return 0

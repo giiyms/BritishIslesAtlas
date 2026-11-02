@@ -7,6 +7,12 @@ import { createAtlas } from "./map";
 import { mountPanel } from "./panel";
 import { mountScale } from "./scale";
 import { mountSearch } from "./search";
+import { mountElectionUI } from "./election-ui";
+
+// Safari ignores user-scalable=no; block its page pinch-zoom gestures (the map handles its own pinch).
+for (const type of ["gesturestart", "gesturechange", "gestureend"]) {
+  document.addEventListener(type, (event) => event.preventDefault());
+}
 
 const mapNode = document.querySelector<HTMLElement>("#map");
 const panel = document.querySelector<HTMLElement>("#layers");
@@ -21,15 +27,17 @@ if (!mapNode || !panel || !search || !scale || !zoomIn || !zoomOut || !home) {
 }
 
 const atlas = createAtlas(mapNode);
-mountPanel(panel, { isOn: atlas.isOn, setOn: atlas.setLayer, onRestore: atlas.flyToRestore, getDensityStyle: atlas.getDensityStyle, setDensityStyle: atlas.setDensityStyle });
+mountElectionUI((code) => atlas.openSeat(code));
+mountPanel(panel, { isOn: atlas.isOn, setOn: atlas.setLayer, onRestore: atlas.flyToRestore });
 mountScale(scale, atlas.map);
 mountSearch(search, (hit) => {
   // "What do I vote here?": a postcode hit opens its seat popup once the camera lands.
   // Registered before show() so a zero-duration (reduced-motion) jump still triggers it.
-  if (hit.seatCode) {
-    const code = hit.seatCode;
-    atlas.map.once("moveend", () => atlas.openSeat(code, [hit.lon, hit.lat]));
-  }
+  atlas.map.once("moveend", () => {
+    const feature = atlas.map.getLayer("constituencies") ? atlas.map.queryRenderedFeatures(atlas.map.project([hit.lon, hit.lat]), { layers: ["constituencies"] })[0] : undefined;
+    const code = hit.seatCode || String(feature?.properties?.PCON24CD ?? "");
+    if (code) atlas.openSeat(code, [hit.lon, hit.lat]);
+  });
   atlas.show(hit);
 });
 
