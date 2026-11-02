@@ -1,4 +1,4 @@
-import { loadPlaces, searchPlaces, type Place } from "./geo";
+import { loadPlaces, loadedPlaces, searchPlaces, type Place } from "./geo";
 
 export interface SearchHit {
   title: string;
@@ -25,10 +25,30 @@ function zoomFor(place: Place): number {
   return 12.4;
 }
 
+/** Region, plus the nearest larger town when several results share a name (six Newports). */
+export function placeSubtitles(results: Place[], all: Place[]): string[] {
+  const count = new Map<string, number>();
+  for (const place of results) count.set(place.name, (count.get(place.name) ?? 0) + 1);
+  return results.map((place) => {
+    if ((count.get(place.name) ?? 0) < 2) return place.region;
+    const cos = Math.cos((place.lat * Math.PI) / 180);
+    let near: Place | null = null;
+    let best = 0.6 ** 2; // ~65 km
+    for (const other of all) {
+      if (other.pop <= Math.max(place.pop, 15_000) || other.name === place.name) continue;
+      const d = ((other.lon - place.lon) * cos) ** 2 + (other.lat - place.lat) ** 2;
+      if (d < best) [best, near] = [d, other];
+    }
+    return near ? `${place.region} · near ${near.name}` : place.region;
+  });
+}
+
 function localHits(query: string): SearchHit[] {
-  return searchPlaces(query).map((place) => ({
+  const results = searchPlaces(query);
+  const subtitles = placeSubtitles(results, loadedPlaces());
+  return results.map((place, index) => ({
     title: place.name,
-    subtitle: place.region,
+    subtitle: subtitles[index],
     lon: place.lon,
     lat: place.lat,
     zoom: zoomFor(place),
