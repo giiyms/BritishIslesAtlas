@@ -24,7 +24,7 @@ import { ENDORSE_COLORS } from "./endorse";
 import { DEFAULT_MEASURE, loadElection, loadResultsHistory, loadSeatHistory, seatColour, seatHtml, type ElectionData, type Measure } from "./election";
 import { attachResultHistory, attachSeatHistory } from "./poll-trend";
 import { singularLabel } from "./layer-groups";
-import { PLACES } from "./geo";
+import { loadPlaces, loadedPlaces } from "./geo";
 import { mountVotingLegend, showVotingToast, hideVotingToast } from "./voting-ui";
 import { RELIGION_VIEWS } from "./religion-views";
 import { HEAT_MAXZOOM, ICON_FADE, heatmapPaint, iconDiscScale, markerScale, pointDrawOrder, pointOpacity, pointRadius, pointStroke } from "./point-style";
@@ -182,14 +182,14 @@ function nearestPlace(lon: number, lat: number): string {
   let best = "";
   let bestD = Infinity;
   const k = Math.cos((lat * Math.PI) / 180);
-  for (const place of PLACES) {
+  for (const place of loadedPlaces()) {
     const dx = (place.lon - lon) * k;
     const dy = place.lat - lat;
     const d = dx * dx + dy * dy;
     if (d < bestD) { bestD = d; best = place.name; }
   }
-  // ~0.3° ≈ 33 km: beyond that the "context" would be misleading.
-  return bestD < 0.09 ? best : "";
+  // ~0.2° ≈ 22 km: beyond that the "context" would be misleading.
+  return bestD < 0.04 ? best : "";
 }
 
 /** Layers paused while the voting view is on (fix 2). */
@@ -337,6 +337,7 @@ export function createAtlas(container: HTMLElement): Atlas {
     boolean
   >;
 
+  void loadPlaces();
   const map = new Map({
     container,
     style: STYLE,
@@ -690,18 +691,33 @@ export function createAtlas(container: HTMLElement): Atlas {
   let popupIsSeat = false;
   let popupIsPoi = false;
   let poiAbort: AbortController | null = null;
+  /** Phones: the card is a bottom sheet, so pan the tapped point into the map area left above it. */
+  const keepPointAboveSheet = () => {
+    const el = popup.getElement();
+    const content = el?.querySelector<HTMLElement>(".maplibregl-popup-content");
+    if (!el || !content || window.innerWidth > 520 || el.classList.contains("sheet-peek")) return;
+    const sheetTop = content.getBoundingClientRect().top;
+    const y = map.project(popup.getLngLat()).y + map.getContainer().getBoundingClientRect().top;
+    const target = Math.max(72, sheetTop / 2); // centred in the open map, under the search box
+    if (y > sheetTop - 32) map.panBy([0, y - target], { duration: motionDuration(300) });
+  };
   /** Desktop popups never sit under the search box: pan the map down until the card clears it. */
   const keepPopupClearOfSearch = () => {
     const el = popup.getElement();
     const search = document.querySelector<HTMLElement>(".search");
-    if (!el || !search || !popupIsPoi || window.innerWidth <= 520) return;
+    if (!el || !search || !popupIsPoi) return;
+    if (window.innerWidth <= 520) { keepPointAboveSheet(); return; }
     const a = el.getBoundingClientRect(), b = search.getBoundingClientRect();
+    // Clear of the layers panel too: the card would otherwise open underneath it.
+    const panel = document.querySelector<HTMLElement>("#layers")?.getBoundingClientRect();
+    const underPanel = panel && panel.width && a.left < panel.right + 8 && a.right > panel.left && a.top < panel.bottom && a.bottom > panel.top;
+    const dx = underPanel ? -(panel.right + 12 - a.left) : 0;
     // Keep the whole card on screen and below the search box when they share columns.
-    const overlaps = a.left < b.right && a.right > b.left && a.top < b.bottom + 8 && a.bottom > b.top;
+    const overlaps = a.left + dx < b.right && a.right + dx > b.left && a.top < b.bottom + 8 && a.bottom > b.top;
     const minTop = overlaps ? b.bottom + 12 : 12;
-    const maxBottom = window.innerHeight - 56; // clear of the scale bar
-    if (a.top < minTop) map.panBy([0, -(minTop - a.top)], { duration: motionDuration(250) });
-    else if (a.bottom > maxBottom) map.panBy([0, Math.min(a.bottom - maxBottom, a.top - minTop)], { duration: motionDuration(250) });
+    const maxBottom = window.innerHeight - 72; // clear of the scale bar
+    const dy = a.top < minTop ? -(minTop - a.top) : a.bottom > maxBottom ? Math.min(a.bottom - maxBottom, a.top - minTop) : 0;
+    if (dx || dy) map.panBy([dx, dy], { duration: motionDuration(250) });
   };
   popup.on("open", () => {
     popupLayer = nextPopupLayer;
@@ -790,6 +806,7 @@ export function createAtlas(container: HTMLElement): Atlas {
         return;
       }
       popup.setLngLat(at).setMaxWidth("380px").setHTML(seatHtml(seat, electionData)).addTo(map);
+      requestAnimationFrame(keepPointAboveSheet);
       // Wider than a phone: the seat panel docks on the right, so keep the tapped seat out from under it.
       if (window.matchMedia("(min-width: 521px)").matches) {
         const px = map.project(at);
@@ -896,7 +913,7 @@ export function createAtlas(container: HTMLElement): Atlas {
     const abort = new AbortController();
     poiAbort = abort;
     const root = popup.getElement()?.querySelector<HTMLElement>(".poi-card");
-    keepPopupClearOfSearch();
+    requestAnimationFrame(keepPopupClearOfSearch);
     if (root) void hydratePoiCard(root, card, abort.signal, keepPopupClearOfSearch).catch(() => undefined);
   });
   map.on("mousemove", (event) => {

@@ -175,7 +175,7 @@ export function mountPanel(
   // "N layers on · Clear" (fix 6).
   const refreshStatus = () => {
     const n = LAYERS.filter((layer) => options.isOn(layer.id)).length;
-    count.textContent = `${n} layer${n === 1 ? "" : "s"} on`;
+    count.textContent = n === 0 ? "No layers on" : `${n} layer${n === 1 ? "" : "s"} on`;
     clear.hidden = n === 0;
     count.classList.toggle("is-off", n === 0);
     for (const details of groups) refreshGroup(details);

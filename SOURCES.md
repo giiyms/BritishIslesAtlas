@@ -1426,6 +1426,17 @@ one text file per station. Licence: **Open Government Licence v3**; "Contains Me
 - Ireland outside Northern Ireland has no station yet: Met Éireann's monthly data endpoint
   (cli.fusio.net, CC BY 4.0) returned empty files from this box on 2026-11-01.
 
+## Place search and nearest town
+
+`public/data/towns.json` (4,186 places) is built by `scripts/build_towns.py` from **GeoNames**
+`cities1000.txt` (https://download.geonames.org/export/dump/, downloaded 2026-11-01). Licence:
+**CC BY 4.0**, "Contains data from GeoNames (geonames.org)".
+
+- Every populated place of 1,000+ people in GB, IE, IM, JE and GG, PPLX sections skipped. It feeds the
+  instant place matches in search (Nominatim and postcodes.io fill in the rest) and the town named on
+  a card's type line, which is left blank when no town is within about 22 km.
+- Replaces a hand-typed list of about 170 cities, which named Taunton for Hinkley Point.
+
 ## Population
 
 `public/data/population.geojson` (1,203 settlements) is built by `scripts/build_population.py` from

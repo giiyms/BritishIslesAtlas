@@ -1,4 +1,4 @@
-import { searchPlaces, type Place } from "./geo";
+import { loadPlaces, searchPlaces, type Place } from "./geo";
 
 export interface SearchHit {
   title: string;
@@ -200,6 +200,7 @@ export function mountSearch(
     paint();
     queueRemote(query);
   });
+  input.addEventListener("focus", () => void loadPlaces(), { once: true });
 
   input.addEventListener("keydown", (event) => {
     if (event.key === "ArrowDown" && hits.length) {
