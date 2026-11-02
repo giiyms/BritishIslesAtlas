@@ -117,12 +117,50 @@ describe('decideTacticalPick', () => {
   });
 });
 
+describe('Northern Ireland (no Labour candidates)', () => {
+  const N = 'N05000012';
+  const niRow = (ni_shares: Record<string, number>, chances: Record<string, number>, projected_winner: string): SeatProjectionRow =>
+    ({ projected_winner, ni_shares, chances, oth_share: 1.5, lab_share: null, con_share: null });
+  const result2024 = { winner: 'TUV', shares: [['TUV', 28.3], ['DUP', 27.2], ['Sinn Féin', 18.7]] as [string, number][] };
+
+  it('shows the projected winner with its win probability and the 2024 result, at low confidence when close', () => {
+    const pick = decideTacticalPick({ code: N, projections: [ec(niRow({ tuv: 28.2, dup: 27.2, sf: 18.7 }, { tuv: 0.446, dup: 0.42 }, 'TUV'))], result2024 });
+    expect(pick.party).toBe('TUV');
+    expect(pick.noLabour).toBe(true);
+    expect(pick.confidence).toBe('low');
+    expect(pick.reason).toContain('Labour does not stand in Northern Ireland, so the stop-Labour rule does not apply here.');
+    expect(pick.reason).toContain('Electoral Calculus projects TUV to win (28.2%), win probability 45%');
+    expect(pick.reason).toContain('In 2024 TUV won on 28.3%, ahead of DUP on 27.2%.');
+  });
+  it('is medium confidence when the projection is clear, and falls back to the 2024 winner without one', () => {
+    expect(decideTacticalPick({ code: N, projections: [ec(niRow({ dup: 46.6, alliance: 40.3 }, { dup: 0.7 }, 'DUP'))] }).confidence).toBe('medium');
+    const fallback = decideTacticalPick({ code: N, projections: [], result2024 });
+    expect(fallback.party).toBe('TUV');
+    expect(fallback.noLabour).toBe(true);
+    expect(fallback.source).toBe('results-2024');
+    expect(fallback.reason).toContain('No seat projection is available');
+  });
+  it('still lets an owner override win, and never picks Green', () => {
+    const over = decideTacticalPick({ code: N, projections: [ec(niRow({ tuv: 28.2, dup: 27.2 }, {}, 'TUV'))], override: { party: 'DUP', note: 'test' } });
+    expect(over.party).toBe('DUP');
+    expect(over.source).toBe('override');
+    expect(over.noLabour).toBe(true);
+    const green = decideTacticalPick({ code: N, projections: [], result2024: { winner: 'Green', shares: [['Green', 40], ['Alliance', 35]] } });
+    expect(green.party).toBe('Alliance');
+  });
+  it('uses the normal stop-Labour rule if Labour ever appears in a Northern Ireland seat', () => {
+    const pick = decideTacticalPick({ code: N, projections: [], result2024: { winner: 'Labour', shares: [['Labour', 40], ['DUP', 30]] } });
+    expect(pick.noLabour).toBeUndefined();
+    expect(pick.party).toBe('DUP');
+  });
+});
+
 describe('tactical picks on the shipped data', () => {
   const read = (name: string) => JSON.parse(readFileSync(new URL(`../public/data/${name}`, import.meta.url), 'utf8'));
   const seats = joinSeats(read('constituencies-gb-2024-simplified.geojson'), read('results-2024-gb.json'), read('candidates-gb.json'), read('polls-seats.json'), read('overrides.json'));
 
-  it('gives every GB seat a non-Labour pick with a reason and sources', () => {
-    expect(seats).toHaveLength(632);
+  it('gives every UK seat a non-Labour pick with a reason and sources', () => {
+    expect(seats).toHaveLength(650);
     for (const seat of seats) {
       expect(seat.pick.party, seat.name).toBeTruthy();
       expect(isLabour(seat.pick.party), seat.name).toBe(false);
@@ -131,6 +169,20 @@ describe('tactical picks on the shipped data', () => {
       expect(seat.pick.reason.length).toBeGreaterThan(20);
       expect(seat.pick.sources.length).toBeGreaterThan(0);
     }
+  });
+
+  it('shows the projected winner in all 18 Northern Ireland seats and says the stop-Labour rule does not apply', () => {
+    const ni = seats.filter(s => s.code.startsWith('N'));
+    expect(ni).toHaveLength(18);
+    for (const seat of ni) {
+      expect(seat.pick.noLabour, seat.name).toBe(true);
+      expect(seat.pick.reason).toContain('Labour does not stand in Northern Ireland');
+      expect(seat.pick.reason).toContain('In 2024');
+      expect(['Reform UK', 'Restore Britain']).not.toContain(seat.pick.party);
+    }
+    expect(seats.filter(s => !s.code.startsWith('N')).every(s => !s.pick.noLabour)).toBe(true);
+    expect(seats.find(s => s.code === 'N05000001')!.pick.party).toBe('DUP'); // Belfast East
+    expect(seats.find(s => s.code === 'N05000013')!.pick.party).toBe('Independent'); // North Down
   });
 
   it('picks more than one party (no default party)', () => {

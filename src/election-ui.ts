@@ -35,7 +35,7 @@ function seatCountsHtml(d: ElectionData): string {
   ];
   const parties = [...new Set(columns.flatMap(([, m]) => [...m.keys()]))].sort((a, b) => Math.max(...columns.map(([, m]) => m.get(b) ?? 0)) - Math.max(...columns.map(([, m]) => m.get(a) ?? 0)));
   return `<div class="mini-scroll"><table class="mini-table counts"><thead><tr><th>Party</th>${columns.map(([h]) => `<th>${escapeHtml(h)}</th>`).join('')}</tr></thead><tbody>${parties.map(p => `<tr><td><i class="swatch" style="background:${partyColour(p)}"></i>${escapeHtml(p)}</td>${columns.map(([, m]) => `<td>${m.get(p) ?? '–'}</td>`).join('')}</tr>`).join('')}</tbody></table></div>` +
-    `<p class="seat-small">Seats each provider projects each party to win, from ${providers.map(([, p]) => `<a href="${escapeHtml(p.url)}"${EXT}>${escapeHtml(p.provider)}</a> (fieldwork ${escapeHtml(p.fieldwork ?? 'not stated')})`).join(' and ')}. Tactical picks never include Labour or Green.</p>`;
+    `<p class="seat-small">Seats each provider projects each party to win, from ${providers.map(([, p]) => `<a href="${escapeHtml(p.url)}"${EXT}>${escapeHtml(p.provider)}</a> (fieldwork ${escapeHtml(p.fieldwork ?? 'not stated')})`).join(' and ')}. Tactical picks never include Labour or Green. In Northern Ireland (18 seats, no Labour candidates) the pick column counts the projected winner; More in Common covers Great Britain only.</p>`;
 }
 
 const HOW_IT_WORKS = `<ol class="how">
@@ -43,8 +43,9 @@ const HOW_IT_WORKS = `<ol class="how">
 <li><strong>Seat projections.</strong> For each provider (Electoral Calculus and More in Common): if it projects a winner other than Labour or Green, that party is its pick. If it projects Labour or Green to win, its pick is the other party (not Labour, not Green) with the highest projected share (the challenger).</li>
 <li><strong>Agreement.</strong> Both providers name the same party: <em>high</em> confidence. Only one provider: <em>medium</em>. They disagree: the party with the higher average projected share across providers, at <em>low</em> confidence. Confidence also drops to low if the combined others/independents vote is bigger than the named challenger.</li>
 <li><strong>No projection.</strong> Use the 2024 result: the strongest party other than Labour and Green. That is <em>medium</em> confidence with a lead of ${CLEAR_2024_MARGIN}+ points over the next eligible party, otherwise <em>low</em>.</li>
+<li><strong>Northern Ireland.</strong> Labour does not stand in Northern Ireland, so the stop-Labour rule has nothing to act on in its 18 seats. The map and seat card show Electoral Calculus’s projected winner instead (medium confidence, low when its win probability is under 60%), or the 2024 winner if there is no projection, and say so in the card. More in Common’s MRP covers Great Britain only. Owner overrides still win.</li>
 </ol><p>Any party can be the pick, including Conservative, Reform UK, Restore Britain, Liberal Democrat, SNP, Plaid Cymru or an independent, except Labour and Green, which the site owner excludes. There is no default party. Labour and Green are never picked. On the map, a stronger fill means higher confidence.</p>
-<p>Projections are model estimates, not results. Candidate names are confirmed only for Reform UK and Restore Britain (Democracy Club). For other parties check <a href="https://whocanivotefor.co.uk/"${EXT}>Who can I vote for?</a>. ${escapeHtml(OWNER_NOTE)} This is civic information, not Electoral Commission advice.</p>`;
+<p>Projections are model estimates, not results. Candidate names are confirmed only for Reform UK and Restore Britain in Great Britain, and for any party Democracy Club lists in Northern Ireland. For other parties check <a href="https://whocanivotefor.co.uk/"${EXT}>Who can I vote for?</a>. ${escapeHtml(OWNER_NOTE)} This is civic information, not Electoral Commission advice.</p>`;
 
 type Column = { key: string; label: string; value: (s: ElectionSeat) => string; sort?: (s: ElectionSeat) => number };
 
@@ -53,11 +54,11 @@ export function mountElectionUI(openSeat: (code: string) => void): void {
   const wide = window.matchMedia('(min-width: 861px)').matches;
   root.id = 'info-panel';
   root.setAttribute('aria-labelledby', 'info-panel-title');
-  root.innerHTML = `<button type="button" class="info-close" aria-label="Hide info panel" aria-controls="info-panel">×</button><h1 id="info-panel-title">Stop Labour: GB tactical vote atlas</h1><p class="lede">Who is best placed to beat Labour in each of 632 GB seats, with the evidence shown. Northern Ireland is not covered.</p>` +
+  root.innerHTML = `<button type="button" class="info-close" aria-label="Hide info panel" aria-controls="info-panel">×</button><h1 id="info-panel-title">Stop Labour: UK tactical vote atlas</h1><p class="lede">Who is best placed to beat Labour in each of 632 GB seats, with the evidence shown. Labour does not stand in Northern Ireland’s 18 seats, so there the map shows the projected winner instead.</p>` +
     `<p class="owner-note">${escapeHtml(OWNER_NOTE)}</p>` +
     `<label>Map colour <select aria-label="Map colour"><option value="tactical">Who to back to stop Labour</option><option value="winner">2024 winning party</option><option value="majority">2024 majority size</option><option value="proj:electoral_calculus">Projected winner (Electoral Calculus)</option><option value="proj:more_in_common">Projected winner (More in Common)</option></select></label>` +
     `<div class="election-legend" aria-live="polite">Loading election data…</div>` +
-    `<button type="button" class="open-table">Table of all 632 seats</button>` +
+    `<button type="button" class="open-table">Table of all 650 seats</button>` +
     `<details${wide ? ' open' : ''}><summary>National polls</summary><div class="national-summary"></div></details>` +
     `<details><summary>Seat counts by provider</summary><div class="seat-counts"></div></details>` +
     `<details><summary>How this works</summary>${HOW_IT_WORKS}</details>`;
@@ -82,7 +83,7 @@ export function mountElectionUI(openSeat: (code: string) => void): void {
 
   // Table view.
   const dialog = document.createElement('dialog'); dialog.className = 'election-table';
-  dialog.innerHTML = `<header><h2>All GB constituencies</h2><button type="button" class="close-table" aria-label="Close seat table">×</button></header>` +
+  dialog.innerHTML = `<header><h2>All 650 UK constituencies</h2><button type="button" class="close-table" aria-label="Close seat table">×</button></header>` +
     `<div class="table-tools"><input type="search" placeholder="Search seats or parties" aria-label="Search seats or parties"><select class="f-party" aria-label="Filter by tactical pick"><option value="">Any pick</option></select><select class="f-conf" aria-label="Filter by confidence"><option value="">Any confidence</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select><button class="csv">Export CSV</button></div>` +
     `<p class="table-count"></p><div class="table-scroll"><table><thead></thead><tbody></tbody></table></div>`;
   document.body.append(dialog);
@@ -135,7 +136,7 @@ export function mountElectionUI(openSeat: (code: string) => void): void {
     if (!data) return;
     const rows = [['Code', ...columns.map(c => c.label), 'Reason', 'Sources'], ...filtered(data).map(s => [s.code, ...columns.map(c => c.value(s)), s.pick.reason, s.pick.sources.map(x => x.url).join(' ')])];
     const csv = rows.map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\r\n');
-    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'gb-tactical-picks.csv'; a.click(); URL.revokeObjectURL(a.href);
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'uk-tactical-picks.csv'; a.click(); URL.revokeObjectURL(a.href);
   });
 
   void loadElection().then(d => {

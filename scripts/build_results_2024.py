@@ -6,8 +6,8 @@ Source: House of Commons Library / UK Parliament election results service
 Licence: Open Parliament Licence v3.0.
 
 The raw CSV (~3.5 MB) is cached under data-raw/ (gitignored) and downloaded only
-when missing; pass --refresh to re-download. Northern Ireland is excluded so the
-output joins 1:1 to public/data/constituencies-gb-2024.geojson (PCON24CD).
+when missing; pass --refresh to re-download. All 650 UK seats, including the 18
+in Northern Ireland, join 1:1 to public/data/constituencies-gb-2024.geojson (PCON24CD).
 Never invents numbers: every figure comes straight from the CSV.
 """
 
@@ -63,8 +63,6 @@ def main() -> int:
 
     by_seat: dict[str, list[dict]] = defaultdict(list)
     for r in rows:
-        if r["Country name"] == "Northern Ireland":
-            continue
         by_seat[r["Constituency geographic code"]].append(r)
 
     parties: dict[str, str] = {}
@@ -112,7 +110,7 @@ def main() -> int:
         "license_url": LICENCE_URL,
         "retrieved_at": datetime.fromtimestamp(RAW.stat().st_mtime, timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "notes": [
-            "GB only (Northern Ireland excluded). Keyed by ONS PCON24CD.",
+            "All 650 UK seats (632 GB + 18 Northern Ireland). Keyed by ONS PCON24CD.",
             "turnout_pct = valid votes / electorate (House of Commons Library convention).",
             f"shares: top {TOP_N} candidates by vote as [party, % of valid votes], remaining candidates summed as Other.",
             "Party codes: see parties. Ind = independent, Spk = Speaker, Oth = unlabelled minor candidate.",

@@ -1,5 +1,5 @@
 /**
- * Tactical pick: "who to back to stop Labour" for one GB seat. Pure, no DOM, no fetch.
+ * Tactical pick: "who to back to stop Labour" for one UK seat. Pure, no DOM, no fetch.
  *
  * Rule (no default party; any non-Labour party can be picked):
  *  1. A site-owner override in overrides.json wins (an override naming Labour is ignored).
@@ -11,6 +11,10 @@
  *  3. No projection → 2024 result: strongest non-Labour party. Medium confidence
  *     with a clear (10+ point) lead over the next non-Labour party, else low.
  * Labour and Green are never returned (owner rule).
+ *
+ * Northern Ireland (PCON24CD N*): Labour does not stand, so there is nothing to stop.
+ * When no input shows a Labour vote, the pick is the projected winner (else the 2024
+ * winner), flagged `noLabour` so the card says so plainly. Overrides still win.
  */
 import { canonicalParty } from "./parties";
 
@@ -52,7 +56,16 @@ export interface TacticalPick {
   reason: string;
   sources: SourceLink[];
   providerPicks: ProviderPick[];
+  /** Northern Ireland seat with no Labour candidate: the stop-Labour rule does not apply. */
+  noLabour?: boolean;
 }
+
+export const isNorthernIreland = (code: string): boolean => code.startsWith("N");
+
+/** Electoral Calculus Northern Ireland share keys (`ni_shares`, `chances`) → canonical party. */
+export const NI_SHARE_KEYS: Record<string, string> = {
+  DUP: "dup", "Sinn Féin": "sf", SDLP: "sdlp", UUP: "uup", Alliance: "alliance", TUV: "tuv", Independent: "ind",
+};
 
 export const CONFIDENCE_RANK: Record<Confidence, number> = { high: 3, medium: 2, low: 1 };
 /** 2024 lead (points) over the next non-Labour party that counts as "clear". */
@@ -91,6 +104,12 @@ function shareKey(party: string, code: string): string | null {
 const num = (value: unknown): number | null => typeof value === "number" && Number.isFinite(value) ? value : null;
 
 export function projectedShare(row: SeatProjectionRow, party: string, code: string): number | null {
+  if (isNorthernIreland(code)) {
+    if (party === "Other") return num(row.oth_share);
+    const ni = row.ni_shares as Record<string, unknown> | undefined;
+    const k = NI_SHARE_KEYS[party];
+    return k && ni ? num(ni[k]) : null;
+  }
   const key = shareKey(party, code);
   if (!key) return null;
   for (const k of key.split("|")) {
@@ -102,7 +121,7 @@ export function projectedShare(row: SeatProjectionRow, party: string, code: stri
 
 /** Named parties with a share in this row (the combined "Other" column is excluded). */
 export function projectedShares(row: SeatProjectionRow, code: string): [string, number][] {
-  const parties = ["Conservative", "Labour", "Liberal Democrat", "Reform UK", "Green", "Restore Britain",
+  const parties = isNorthernIreland(code) ? Object.keys(NI_SHARE_KEYS) : ["Conservative", "Labour", "Liberal Democrat", "Reform UK", "Green", "Restore Britain",
     ...(code.startsWith("S") ? ["SNP"] : code.startsWith("W") ? ["Plaid Cymru"] : [])];
   return parties.flatMap((p) => { const v = projectedShare(row, p, code); return v === null ? [] : [[p, v] as [string, number]]; })
     .sort((a, b) => b[1] - a[1]);
@@ -184,6 +203,51 @@ function fromResults(result: Result2024Input): TacticalPick | null {
   return { party, confidence, source: "results-2024", reason, sources: result.url ? [{ label: "2024 results (House of Commons Library)", url: result.url }] : [], providerPicks: [] };
 }
 
+/** Win probability EC gives `party` in an NI row (0..1), if published. */
+function niChance(row: SeatProjectionRow, party: string): number | null {
+  const chances = row.chances as Record<string, unknown> | undefined;
+  const k = party === "Other" ? "oth" : NI_SHARE_KEYS[party];
+  return k && chances ? num(chances[k]) : null;
+}
+
+const NO_LABOUR = "Labour does not stand in Northern Ireland, so the stop-Labour rule does not apply here.";
+
+function result2024Text(result: Result2024Input | undefined): string {
+  if (!result) return "";
+  const ranked = [...result.shares].filter(([p]) => p !== "Other").sort((a, b) => b[1] - a[1]);
+  const won = ranked.find(([p]) => p === result.winner) ?? ranked[0];
+  const second = ranked.find(([p]) => p !== won?.[0]);
+  return won ? ` In 2024 ${won[0]} won on ${pct(won[1])}${second ? `, ahead of ${second[0]} on ${pct(second[1])}` : ""}.` : "";
+}
+
+/** A Labour vote anywhere in the inputs means the normal stop-Labour rule applies. */
+function labourStands(input: TacticalInput): boolean {
+  return input.projections.some((p) => (projectedShare(p.row, "Labour", input.code) ?? 0) > 0) ||
+    (input.result2024?.shares ?? []).some(([p, v]) => isLabour(p) && v > 0);
+}
+
+function fromNorthernIreland(input: TacticalInput): TacticalPick | null {
+  const resultLinks = input.result2024?.url ? [{ label: "2024 results (House of Commons Library)", url: input.result2024.url }] : [];
+  const r2024 = result2024Text(input.result2024);
+  const picks = input.projections.flatMap((p) => { const pick = providerPick(p, input.code); return pick ? [pick] : []; });
+  if (picks.length) {
+    const pick = picks[0];
+    const chance = niChance(input.projections[0].row, pick.party);
+    const confidence: Confidence = chance !== null && chance < 0.6 ? "low" : "medium";
+    return {
+      party: pick.party, confidence, source: "projection", noLabour: true,
+      reason: `${NO_LABOUR} Shown instead: the projected winner. ${explain(pick)}${chance !== null ? `, win probability ${Math.round(chance * 100)}%` : ""}.${r2024}`,
+      sources: [...linksFor(input.projections), ...resultLinks], providerPicks: picks,
+    };
+  }
+  const fallback = input.result2024 ? fromResults(input.result2024) : null;
+  if (!fallback) return null;
+  return {
+    ...fallback, noLabour: true,
+    reason: `${NO_LABOUR} No seat projection is available, so this shows the 2024 result.${r2024}`,
+  };
+}
+
 /** Canonical party named by an override (supports the legacy `endorse` field). */
 export function overrideParty(override: OverrideInput): string | null {
   const raw = (override.party ?? override.endorse ?? "").trim();
@@ -194,7 +258,8 @@ export function overrideParty(override: OverrideInput): string | null {
 }
 
 export function decideTacticalPick(input: TacticalInput): TacticalPick {
-  const automatic: TacticalPick = fromProjections(input) ?? (input.result2024 ? fromResults(input.result2024) : null) ?? {
+  const ni = isNorthernIreland(input.code) && !labourStands(input) ? fromNorthernIreland(input) : null;
+  const automatic: TacticalPick = ni ?? fromProjections(input) ?? (input.result2024 ? fromResults(input.result2024) : null) ?? {
     party: null, confidence: "low", source: "none",
     reason: "No projection or 2024 result data names a party other than Labour or Green here.", sources: [], providerPicks: [],
   };

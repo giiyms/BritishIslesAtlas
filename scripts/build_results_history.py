@@ -5,7 +5,7 @@ Writes public/data/results-history-gb.json for the seat panel's "Past results" c
 
 Points (real published figures only):
   * 12 Dec 2019: notional results on 2024 boundaries (Rallings & Thrasher, Prof David Denver for
-    Scotland), commissioned by BBC, ITV News, Sky News and PA, published by UK Parliament /
+    Scotland, Nicholas Whyte for Northern Ireland), commissioned by BBC, ITV News, Sky News and PA, published by UK Parliament /
     House of Commons Library as general election 5 (is_notional=true).
   * 4 Jul 2024: actual results, general election 6.
 No earlier elections have official notional results on the 2024 boundaries, so none are added.
@@ -33,13 +33,17 @@ LICENCE_URL = "https://www.parliament.uk/site-information/copyright-parliament/o
 ELECTIONS = [
     {"date": "2019-12-12", "label": "2019 notional", "notional": True, "id": 5,
      "raw": ROOT / "data-raw" / "ge2019-notional-candidacies.csv",
-     "note": "2019 is notional: the estimated result on the 2024 boundaries by Rallings & Thrasher (Prof David Denver for Scotland) for BBC, ITV News, Sky News and PA."},
+     "note": "2019 is notional: the estimated result on the 2024 boundaries by Rallings & Thrasher (Prof David Denver for Scotland, Nicholas Whyte for Northern Ireland) for BBC, ITV News, Sky News and PA."},
     {"date": "2024-07-04", "label": "2024", "notional": False, "id": 6,
      "raw": ROOT / "data-raw" / "ge2024-candidacies.csv", "note": "Actual result."},
 ]
 PARTIES = ["con", "lab", "ld", "ref", "grn", "snp", "pc", "spk", "oth"]
 # Brexit Party (2019) is the same registered party as Reform UK (renamed January 2021).
 ABBR = {"Con": "con", "Lab": "lab", "LD": "ld", "RUK": "ref", "BRX": "ref", "Green": "grn", "SNP": "snp", "PC": "pc"}
+# Northern Ireland seats (PCON24CD N*) have their own key order. Green here is Green Party Northern Ireland.
+PARTIES_NI = ["dup", "sf", "sdlp", "uup", "alliance", "tuv", "con", "grn", "aont", "pbp", "ind", "oth"]
+ABBR_NI = {"DUP": "dup", "SF": "sf", "SDLP": "sdlp", "UUP": "uup", "APNI": "alliance", "TUV": "tuv", "Con": "con",
+           "Green": "grn", "AONT": "aont", "PBP": "pbp", "PBPA": "pbp", "": "ind"}
 
 
 def page_url(e: dict) -> str:
@@ -65,10 +69,14 @@ def load_rows(e: dict, refresh: bool) -> list[dict]:
     return rows
 
 
-def party_key(r: dict) -> str:
+def party_key(r: dict, ni: bool = False) -> str:
     if r["Candidate is standing as Commons Speaker"] == "true":
         return "spk"
-    return ABBR.get(r["Main party abbreviation"].strip(), "oth")
+    abbr = r["Main party abbreviation"].strip()
+    if ni:
+        # Blank abbreviation is an independent only when no party name is given either.
+        return ABBR_NI.get(abbr, "oth") if abbr or not r.get("Main party name", "").strip() else "oth"
+    return ABBR.get(abbr, "oth")
 
 
 def main() -> int:
@@ -82,26 +90,29 @@ def main() -> int:
         for r in load_rows(e, refresh):
             code = r["Constituency geographic code"]
             if code not in codes:
-                continue  # Northern Ireland
-            votes[code][party_key(r)] += int(r["Candidate vote count"])
+                raise SystemExit(f"{e['label']}: unknown constituency {code}")
+            votes[code][party_key(r, code.startswith("N"))] += int(r["Candidate vote count"])
             valid[code] = int(r["Election valid vote count"])
         missing = codes - votes.keys()
         if missing:
             raise SystemExit(f"{e['label']}: no result for {sorted(missing)[:5]}")
         for code in sorted(votes):
             v = votes[code]
-            seats[code].append([e["date"], *[round(v[p] * 100 / valid[code], 1) if p in v else None for p in PARTIES]])
+            keys = PARTIES_NI if code.startswith("N") else PARTIES
+            seats[code].append([e["date"], *[round(v[p] * 100 / valid[code], 1) if p in v else None for p in keys]])
         print(f"{e['label']}: {len(votes)} seats")
     out = {
         "source": "UK Parliament election results (House of Commons Library)",
         "license": LICENCE, "license_url": LICENCE_URL,
         "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "notes": [
-            "Vote share (% of valid votes) on the 2024 constituency boundaries. GB only.",
+            "Vote share (% of valid votes) on the 2024 constituency boundaries. All 650 UK seats.",
+            "Northern Ireland seats (N*) use parties_ni; grn there is Green Party Northern Ireland, ind is independents.",
             "ref in 2019 is the Brexit Party, the same registered party as Reform UK (renamed January 2021).",
             "No official notional results on these boundaries exist for elections before 2019.",
         ],
         "parties": PARTIES,
+        "parties_ni": PARTIES_NI,
         "elections": [{"date": e["date"], "label": e["label"], "notional": e["notional"], "note": e["note"],
                        "source_url": page_url(e), "data_url": page_url(e) + "/candidacies.csv"} for e in ELECTIONS],
         "seats": dict(sorted(seats.items())),

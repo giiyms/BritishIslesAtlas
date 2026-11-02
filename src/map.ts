@@ -81,8 +81,8 @@ const NON_GB_LABEL = {
   type: "FeatureCollection",
   features: [{
     type: "Feature",
-    properties: { label: "Northern Ireland, not covered" },
-    geometry: { type: "Point", coordinates: [-6.75, 54.62] },
+    properties: { label: "Republic of Ireland: no Westminster seats" },
+    geometry: { type: "Point", coordinates: [-8.1, 53.25] },
   }],
 } as const;
 

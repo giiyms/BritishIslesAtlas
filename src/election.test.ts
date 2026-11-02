@@ -9,13 +9,17 @@ describe('election data joins', () => {
     const candidates = read('candidates-gb.json');
     const projections = read('polls-seats.json');
     const seats = joinSeats(geo, results, candidates, projections);
-    expect(seats).toHaveLength(632);
-    expect(new Set(seats.map(s => s.code)).size).toBe(632);
-    expect(seats.every(s => s.result && s.candidates && s.projections.length === 2)).toBe(true);
+    expect(seats).toHaveLength(650);
+    expect(new Set(seats.map(s => s.code)).size).toBe(650);
+    expect(seats.filter(s => s.code.startsWith('N'))).toHaveLength(18);
+    // Northern Ireland: Electoral Calculus only (More in Common's MRP is GB-only).
+    expect(seats.every(s => s.result && s.candidates && s.projections.length === (s.code.startsWith('N') ? 1 : 2))).toBe(true);
     const codes = new Set(seats.map(s => s.code));
-    for (const table of [results.seats, candidates.seats, ...Object.values(projections.providers).map((p: any) => p.seats)]) {
+    const gb = new Set([...codes].filter(c => !c.startsWith('N')));
+    for (const table of [results.seats, candidates.seats, projections.providers.electoral_calculus.seats]) {
       expect(new Set(Object.keys(table))).toEqual(codes);
     }
+    expect(new Set(Object.keys(projections.providers.more_in_common.seats))).toEqual(gb);
     expect(seats.find(s => s.code === 'E14001063')?.result?.name).toBe('Aldershot');
   });
   it('resolves projection labels using the seat nation', () => {
@@ -53,10 +57,33 @@ describe('election data joins', () => {
     expect(html).toMatch(/candidate not yet confirmed|Candidate: /);
   });
   it('only names candidates for parties covered by the candidate file', () => {
-    const seat = { candidates: { reform: { standing: 'yes', name: 'A Candidate' } } } as unknown as ElectionSeat;
+    const seat = { code: 'E14001063', candidates: { reform: { standing: 'yes', name: 'A Candidate' } } } as unknown as ElectionSeat;
     expect(candidateFor(seat, 'Reform UK')?.name).toBe('A Candidate');
     expect(candidateFor(seat, 'Conservative')).toBeNull();
     expect(candidateFor(seat, 'Restore Britain')).toBeNull();
+  });
+  it('renders a Northern Ireland card: projected winner, no stop-Labour pick, no Reform/Restore, MiC GB-only', () => {
+    const data = { geo: read('constituencies-gb-2024-simplified.geojson'), results: read('results-2024-gb.json'), candidates: read('candidates-gb.json'), projections: read('polls-seats.json'), national: read('polls-national.json'), overrides: read('overrides.json') };
+    const seats = joinSeats(data.geo, data.results, data.candidates, data.projections, data.overrides);
+    const seat = seats.find(s => s.code === 'N05000001')!;
+    expect(seat.name).toBe('Belfast East');
+    const html = seatHtml(seat, { ...data, seats });
+    expect(html).toContain('Projected winner · no stop-Labour pick: Labour does not stand in Northern Ireland');
+    expect(html).not.toContain('Who to back to stop Labour');
+    expect(html).toContain('<strong>DUP</strong>');
+    expect(html).toContain('More in Common’s MRP covers Great Britain only');
+    expect(html).toContain('Democracy Club lists no candidates here for the next general election yet.');
+    expect(html).not.toMatch(/Reform UK|Restore Britain/);
+    expect(html).toContain('Win probability: DUP');
+    expect(partyColour('DUP')).not.toBe(partyColour('Other'));
+    for (const p of ['Sinn Féin', 'SDLP', 'UUP', 'Alliance', 'TUV']) expect(partyColour(p)).not.toBe(partyColour('Other'));
+  });
+  it('maps Northern Ireland party labels without catching other Alliances', () => {
+    expect(canonicalParty('APNI')).toBe('Alliance');
+    expect(canonicalParty('Sinn Fein')).toBe('Sinn Féin');
+    expect(canonicalParty('Democratic Unionist Party - D.U.P.')).toBe('DUP');
+    expect(canonicalParty('Alliance for Democracy and Freedom')).toBe('Alliance for Democracy and Freedom');
+    expect(canonicalParty('PBPA')).toBe('People Before Profit');
   });
   it('does not assign a party colour to missing data', () => {
     expect(partyColour('')).toBe('#b9bec4');

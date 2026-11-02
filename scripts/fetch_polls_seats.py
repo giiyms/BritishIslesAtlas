@@ -283,8 +283,12 @@ def load_electoral_calculus(by_norm: dict[str, str], previous: dict | None = Non
             if code:
                 break
         if not code:
-            # Drop NI / unmatched
             unmatched.append(name)
+            continue
+        if code.startswith("N"):
+            ni = ni_row(code, name, row)
+            if ni:
+                seats[code] = ni
             continue
         try:
             votes = {
@@ -347,11 +351,61 @@ def load_electoral_calculus(by_norm: dict[str, str], previous: dict | None = Non
         "notes": [
             "Parsed from the public electdata_pred.txt seat table (vote counts → percentages).",
             "Restore Britain is not broken out by Electoral Calculus in this file (restore_share=null).",
+            "Northern Ireland: EC reuses GB column headers for NI parties (CON=UUP, LAB=SDLP, LIB=DUP, "
+            "Reform=Alliance, Green=TUV, NAT=Sinn Féin, MIN=Independent, OTH=Other); NI rows carry ni_shares "
+            "and null GB-party shares. Mapping inferred from EC's MP column and its NI headline seat totals. "
+            "EC's NI figures were identical in every archived edition checked (April 2025 to October 2026).",
             "Projections are projections, not results. Attribution: Electoral Calculus.",
             "EC FAQ: Overview extracts may be republished with attribution + retrieval date.",
         ],
         "seats": seats,
         "_page_seats": page_seats,  # internal: headline seat totals, used to date the history point
+    }
+
+
+# In Northern Ireland rows EC reuses the GB column headers for NI parties.
+# Inferred from the 2024 MPs in its MP column (e.g. Belfast East / Gavin Robinson
+# DUP is LIB, Belfast South and Mid Down / Claire Hanna SDLP is LAB, North Antrim /
+# Jim Allister TUV is Green, North Down / Alex Easton Ind is MIN) and checked against
+# the headline NI seat totals on prediction_main.html (SF 7, DUP 5, SDLP 2, UUP 1,
+# Alliance 1, TUV 1, NI Other 1). EC does not model Conservatives, Labour, Green NI,
+# Reform or Restore in NI, so those shares are null, not zero.
+EC_NI_COLUMNS = {
+    "CON": ("uup", "UUP"),
+    "LAB": ("sdlp", "SDLP"),
+    "LIB": ("dup", "DUP"),
+    "Reform": ("alliance", "Alliance"),
+    "Green": ("tuv", "TUV"),
+    "NAT": ("sf", "Sinn Féin"),
+    "MIN": ("ind", "Independent"),
+    "OTH": ("oth", "Other"),
+}
+
+
+def ni_row(code: str, name: str, row: dict) -> dict | None:
+    try:
+        votes = {key: float(row.get(col) or 0) for col, (key, _) in EC_NI_COLUMNS.items()}
+        chances = {key: float(row.get(f"{col} chance") or 0) for col, (key, _) in EC_NI_COLUMNS.items()}
+    except ValueError:
+        return None
+    shares = pct_from_votes(votes)
+    labels = {key: label for key, label in EC_NI_COLUMNS.values()}
+    winner_key = max(shares, key=lambda k: shares[k])
+    return {
+        "pcon24cd": code,
+        "name": name,
+        "region": "NI",
+        "con_share": None,
+        "lab_share": None,
+        "ld_share": None,
+        "reform_share": None,
+        "green_share": None,
+        "nat_share": None,
+        "restore_share": None,
+        "oth_share": shares["oth"],
+        "ni_shares": {k: v for k, v in shares.items() if k != "oth"},
+        "projected_winner": labels[winner_key],
+        "chances": chances,
     }
 
 
@@ -505,7 +559,7 @@ def load_more_in_common(by_norm: dict[str, str], previous: dict | None = None) -
 
 def main() -> int:
     by_norm, by_code = load_pcon_index()
-    assert len(by_code) == 632
+    assert len(by_code) == 650
     retrieved_at = now_iso()
     previous = load_previous_providers()
     ec = load_electoral_calculus(by_norm, previous.get("electoral_calculus"))

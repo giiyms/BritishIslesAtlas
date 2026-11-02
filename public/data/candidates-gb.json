@@ -1,5 +1,5 @@
 {
-  "retrieved_at": "2026-10-28T16:50:43Z",
+  "retrieved_at": "2026-11-02T13:56:09Z",
   "source": "Democracy Club Candidates",
   "license": "CC-BY-SA",
   "source_url": "https://candidates.democracyclub.org.uk/",
@@ -8,13 +8,15 @@
     "Names only when present in Democracy Club; never invented.",
     "standing=unknown means no confirmed Westminster candidacy in DC for that party in scope.",
     "Restore Britain coverage is sparse; most seats default to presumed Reform under locked anti-split rules.",
-    "GB Westminster only (632 PCON24 seats)."
+    "All 650 UK PCON24 seats. GB seats carry Reform UK and Restore Britain only.",
+    "Northern Ireland seats carry ni_candidates: every party's current or future Westminster candidacy in DC (empty = none listed yet)."
   ],
   "counts": {
     "reform_matched": 6,
     "restore_matched": 2,
     "reform_rows": 6,
-    "restore_rows": 2
+    "restore_rows": 2,
+    "ni_candidates": 0
   },
   "unmatched": [],
   "seats": {
@@ -2320,7 +2322,7 @@
         "ballot_paper_id": "parl.holborn-and-st-pancras.by.2026-10-08",
         "election_id": "parl.2026-10-08",
         "election_date": "2026-10-08",
-        "election_current": true,
+        "election_current": false,
         "wcivf_url": "https://whocanivotefor.co.uk/elections/parl.holborn-and-st-pancras.by.2026-10-08/",
         "dc_person_url": "https://candidates.democracyclub.org.uk/person/132661/"
       },
@@ -2333,7 +2335,7 @@
         "ballot_paper_id": "parl.holborn-and-st-pancras.by.2026-10-08",
         "election_id": "parl.2026-10-08",
         "election_date": "2026-10-08",
-        "election_current": true,
+        "election_current": false,
         "wcivf_url": "https://whocanivotefor.co.uk/elections/parl.holborn-and-st-pancras.by.2026-10-08/",
         "dc_person_url": "https://candidates.democracyclub.org.uk/person/139511/"
       }
@@ -6417,6 +6419,96 @@
       "restore": {
         "standing": "unknown"
       }
+    },
+    "N05000001": {
+      "pcon24cd": "N05000001",
+      "pcon24nm": "Belfast East",
+      "ni_candidates": []
+    },
+    "N05000002": {
+      "pcon24cd": "N05000002",
+      "pcon24nm": "Belfast North",
+      "ni_candidates": []
+    },
+    "N05000003": {
+      "pcon24cd": "N05000003",
+      "pcon24nm": "Belfast South and Mid Down",
+      "ni_candidates": []
+    },
+    "N05000004": {
+      "pcon24cd": "N05000004",
+      "pcon24nm": "Belfast West",
+      "ni_candidates": []
+    },
+    "N05000005": {
+      "pcon24cd": "N05000005",
+      "pcon24nm": "East Antrim",
+      "ni_candidates": []
+    },
+    "N05000006": {
+      "pcon24cd": "N05000006",
+      "pcon24nm": "East Londonderry",
+      "ni_candidates": []
+    },
+    "N05000007": {
+      "pcon24cd": "N05000007",
+      "pcon24nm": "Fermanagh and South Tyrone",
+      "ni_candidates": []
+    },
+    "N05000008": {
+      "pcon24cd": "N05000008",
+      "pcon24nm": "Foyle",
+      "ni_candidates": []
+    },
+    "N05000009": {
+      "pcon24cd": "N05000009",
+      "pcon24nm": "Lagan Valley",
+      "ni_candidates": []
+    },
+    "N05000010": {
+      "pcon24cd": "N05000010",
+      "pcon24nm": "Mid Ulster",
+      "ni_candidates": []
+    },
+    "N05000011": {
+      "pcon24cd": "N05000011",
+      "pcon24nm": "Newry and Armagh",
+      "ni_candidates": []
+    },
+    "N05000012": {
+      "pcon24cd": "N05000012",
+      "pcon24nm": "North Antrim",
+      "ni_candidates": []
+    },
+    "N05000013": {
+      "pcon24cd": "N05000013",
+      "pcon24nm": "North Down",
+      "ni_candidates": []
+    },
+    "N05000014": {
+      "pcon24cd": "N05000014",
+      "pcon24nm": "South Antrim",
+      "ni_candidates": []
+    },
+    "N05000015": {
+      "pcon24cd": "N05000015",
+      "pcon24nm": "South Down",
+      "ni_candidates": []
+    },
+    "N05000016": {
+      "pcon24cd": "N05000016",
+      "pcon24nm": "Strangford",
+      "ni_candidates": []
+    },
+    "N05000017": {
+      "pcon24cd": "N05000017",
+      "pcon24nm": "Upper Bann",
+      "ni_candidates": []
+    },
+    "N05000018": {
+      "pcon24cd": "N05000018",
+      "pcon24nm": "West Tyrone",
+      "ni_candidates": []
     }
   }
 }

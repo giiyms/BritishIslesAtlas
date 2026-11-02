@@ -33,6 +33,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from fetch_polls_seats import (  # noqa: E402
+    EC_NI_COLUMNS,
     ec_name_variants,
     fetch_bytes,
     load_pcon_index,
@@ -42,6 +43,8 @@ from fetch_polls_seats import (  # noqa: E402
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "public" / "data" / "polls-seats-history.json"
 PARTIES = ["con", "lab", "ld", "ref", "grn", "snp", "pc", "rb", "oth"]
+# Northern Ireland seats (PCON24CD N*) use their own key order. EC column mapping: fetch_polls_seats.EC_NI_COLUMNS.
+PARTIES_NI = ["dup", "sf", "sdlp", "uup", "alliance", "tuv", "ind", "oth"]
 PROVIDER_NAMES = {"electoral_calculus": "Electoral Calculus", "more_in_common": "More in Common"}
 WAYBACK = "https://web.archive.org/web/{ts}id_/https://www.electoralcalculus.co.uk/electdata_pred.txt"
 
@@ -95,6 +98,9 @@ def ec_point(row: dict, code: str) -> list[float | None]:
     if total <= 0:
         raise ValueError("zero votes")
     pct = {k: 100.0 * x / total for k, x in v.items()}
+    if code.startswith("N"):
+        by_key = {EC_NI_COLUMNS[col][0]: x for col, x in pct.items()}
+        return [r1(by_key[k]) for k in PARTIES_NI]
     nat = pct["NAT"]
     return [r1(pct["CON"]), r1(pct["LAB"]), r1(pct["LIB"]), r1(pct["Reform"]), r1(pct["Green"]),
             r1(nat) if code.startswith("S") else None, r1(nat) if code.startswith("W") else None,
@@ -188,10 +194,11 @@ def load_history() -> dict:
         try:
             data = json.loads(OUT.read_text(encoding="utf-8"))
             if data.get("parties") == PARTIES:
+                data["parties_ni"] = PARTIES_NI
                 return data
         except (OSError, json.JSONDecodeError):
             pass
-    return {"parties": PARTIES, "providers": {}, "seats": {}}
+    return {"parties": PARTIES, "parties_ni": PARTIES_NI, "providers": {}, "seats": {}}
 
 
 def add_edition(history: dict, provider: str, edition: dict, seats: dict[str, list]) -> int:
@@ -211,8 +218,11 @@ def write_history(history: dict) -> None:
         "Per-seat projected vote share (%) over time, one point per provider edition, dated by the provider's published/update date.",
         "Real published data only; null means the provider did not model that party for that seat.",
         "EC NAT is shown as SNP (Scotland) or Plaid Cymru (Wales); EC Other includes MIN.",
+        "Northern Ireland seats (N*) use parties_ni. EC's NI columns: CON=UUP, LAB=SDLP, LIB=DUP, Reform=Alliance, Green=TUV, NAT=Sinn Féin, MIN=Independent, OTH=Other.",
+        "EC's Northern Ireland figures are identical in every edition here (April 2025 onwards). More in Common's MRP covers Great Britain only, so NI has no MiC points.",
     ]
-    ordered = {k: history[k] for k in ["generated_at", "notes", "parties", "providers"]}
+    history["parties_ni"] = PARTIES_NI
+    ordered = {k: history[k] for k in ["generated_at", "notes", "parties", "parties_ni", "providers"]}
     ordered["seats"] = {code: history["seats"][code] for code in sorted(history["seats"])}
     OUT.write_text(json.dumps(ordered, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
 
@@ -227,6 +237,9 @@ def _iso_date(text: str | None) -> str | None:
 
 
 def ec_row_point(row: dict, code: str) -> list[float | None]:
+    if code.startswith("N"):
+        ni = row.get("ni_shares") or {}
+        return [row.get("oth_share") if k == "oth" else ni.get(k) for k in PARTIES_NI]
     nat = row.get("nat_share")
     return [row.get("con_share"), row.get("lab_share"), row.get("ld_share"), row.get("reform_share"), row.get("green_share"),
             nat if code.startswith("S") else None, nat if code.startswith("W") else None, None, row.get("oth_share")]
@@ -275,7 +288,7 @@ def main() -> int:
         text = decode_ec(fetch_bytes(WAYBACK.format(ts=ed["capture"])))
         seats = parse_ec_text(text, by_norm)
         if len(seats) != len(by_code):
-            print(f"EC {ed['capture']}: matched {len(seats)}/632 seats, skipped", file=sys.stderr)
+            print(f"EC {ed['capture']}: matched {len(seats)}/{len(by_code)} seats, skipped", file=sys.stderr)
             continue
         add_edition(history, "electoral_calculus", {
             "date": ed["date"], "fieldwork": ed["fieldwork"], "date_basis": "EC update date (archived prediction page)",

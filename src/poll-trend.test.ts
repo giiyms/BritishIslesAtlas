@@ -61,17 +61,20 @@ describe('seat projection history', () => {
     const h = JSON.parse(readFileSync('public/data/polls-seats-history.json', 'utf8')) as SeatHistory;
     expect(h.parties).toEqual(PARTIES);
     const codes = Object.keys(h.seats);
-    expect(codes).toHaveLength(632);
-    expect(codes.every(c => /^(E1400|S1400|W0700)\d{4}$/.test(c))).toBe(true);
+    expect(codes).toHaveLength(650);
+    expect(codes.every(c => /^(E1400|S1400|W0700|N0500)\d{4}$/.test(c))).toBe(true);
+    expect(codes.filter(c => c.startsWith('N'))).toHaveLength(18);
+    expect(h.parties_ni).toEqual(['dup', 'sf', 'sdlp', 'uup', 'alliance', 'tuv', 'ind', 'oth']);
     for (const [key, p] of Object.entries(h.providers)) {
       expect(p.editions.length).toBeGreaterThan(1);
       const dates = p.editions.map(e => e.date);
       expect([...dates].sort()).toEqual(dates);
-      for (const pointsBySeat of Object.values(h.seats)) {
+      for (const [code, pointsBySeat] of Object.entries(h.seats)) {
         const points = pointsBySeat[key] ?? [];
+        if (code.startsWith('N')) expect(key, 'More in Common is GB-only').not.toBe(points.length ? 'more_in_common' : '');
         for (const pt of points) {
           expect(dates).toContain(pt[0]);
-          expect(pt).toHaveLength(PARTIES.length + 1);
+          expect(pt).toHaveLength((code.startsWith('N') ? h.parties_ni!.length : PARTIES.length) + 1);
           for (const v of pt.slice(1)) if (v !== null) expect(v as number).toBeGreaterThanOrEqual(0), expect(v as number).toBeLessThanOrEqual(100);
         }
       }
@@ -86,15 +89,18 @@ describe('seat projection history', () => {
     expect(last.slice(1, 6)).toEqual([ec.con_share, ec.lab_share, ec.ld_share, ec.reform_share, ec.green_share]);
     const mic = live.providers.more_in_common.seats.E14001063;
     expect(h.seats.E14001063.more_in_common.at(-1)!.slice(1, 5)).toEqual([mic.con_share, mic.lab_share, mic.ld_share, mic.reform_share]);
+    const ni = live.providers.electoral_calculus.seats.N05000001;
+    expect(h.seats.N05000001.electoral_calculus.at(-1)!.slice(1)).toEqual([...['dup', 'sf', 'sdlp', 'uup', 'alliance', 'tuv', 'ind'].map(k => ni.ni_shares[k]), ni.oth_share]);
   });
 });
 
 describe('seat past general-election results', () => {
   const h = JSON.parse(readFileSync('public/data/results-history-gb.json', 'utf8')) as ResultsHistory;
-  it('ships the 2019 notional and 2024 actual results for all 632 seats', () => {
+  it('ships the 2019 notional and 2024 actual results for all 650 seats', () => {
     expect(h.elections.map(e => [e.date, e.notional])).toEqual([['2019-12-12', true], ['2024-07-04', false]]);
-    expect(Object.keys(h.seats)).toHaveLength(632);
-    for (const pts of Object.values(h.seats)) {
+    expect(Object.keys(h.seats)).toHaveLength(650);
+    for (const [code, pts] of Object.entries(h.seats)) {
+      expect(pts[0]).toHaveLength((code.startsWith('N') ? h.parties_ni!.length : h.parties.length) + 1);
       expect(pts.map(p => p[0])).toEqual(['2019-12-12', '2024-07-04']);
       const total = (pts[1].slice(1) as (number | null)[]).reduce<number>((a, v) => a + (v ?? 0), 0);
       expect(total).toBeGreaterThan(99.4); expect(total).toBeLessThan(100.6);
@@ -104,6 +110,11 @@ describe('seat past general-election results', () => {
     const r = JSON.parse(readFileSync('public/data/results-2024-gb.json', 'utf8'));
     const lab = r.seats.E14001063.shares.find((s: [string, number]) => s[0] === 'Lab')[1];
     expect(h.seats.E14001063[1][1 + h.parties.indexOf('lab')]).toBe(lab);
+  });
+  it('keys Northern Ireland seats by NI parties (North Down: independent Alex Easton won in 2024)', () => {
+    const nd = h.seats.N05000013;
+    expect(nd[1][1 + h.parties_ni!.indexOf('ind')]).toBe(48.6);
+    expect(nd[0][1 + h.parties_ni!.indexOf('dup')]).toBe(38.7);
   });
   it('draws two elections as a line with dots and names them', () => {
     const html = seatTrendHtml(h.seats.E14001063, h.parties, h.elections.map(e => ({ date: e.date, label: e.label })), 'election');

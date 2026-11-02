@@ -1014,8 +1014,8 @@
     }
   },
   "constituencies": {
-    "extracted_at": "2026-10-02T19:21:57Z",
-    "method": "ONS ArcGIS FeatureServer GeoJSON (WGS84 outSR=4326); filter GB-only by dropping NI PCON24CD (N*); paginated resultOffset",
+    "extracted_at": "2026-11-02T13:53:16Z",
+    "method": "ONS ArcGIS FeatureServer GeoJSON (WGS84 outSR=4326); all 650 UK seats kept (GB E/S/W + NI N05*); paginated resultOffset",
     "license": "OGL v3.0",
     "endpoint": "https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/Westminster_Parliamentary_Constituencies_July_2024_Boundaries_UK_BGC/FeatureServer/0/query",
     "source_url": "https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/Westminster_Parliamentary_Constituencies_July_2024_Boundaries_UK_BGC/FeatureServer/0/query?where=1%3D1&outFields=*&outSR=4326&f=geojson",
@@ -1025,12 +1025,14 @@
     "generalisation": "BGC ~20 m, clipped to Mean High Water",
     "layer": "constituencies",
     "file": "constituencies-gb-2024.geojson",
-    "count": 632,
+    "count": 650,
     "uk_count_downloaded": 650,
-    "ni_dropped": 18,
-    "coverage": "GB Westminster only: England+Scotland+Wales = 632; Northern Ireland 18 deferred; Ireland/IoM/CI have no Westminster seats",
-    "attribution": "Contains Ordnance Survey data © Crown copyright and database right 2024. Contains National Statistics data © Crown copyright and database right 2024.",
-    "size_bytes": 20474485
+    "gb_count": 632,
+    "ni_count": 18,
+    "coverage": "UK Westminster: England+Scotland+Wales = 632, Northern Ireland = 18; Ireland/IoM/CI have no Westminster seats",
+    "simplified_ni": "shapely simplify(tolerance=0.0004, preserve_topology=True), 5 dp",
+    "attribution": "Contains Ordnance Survey data © Crown copyright and database right 2024. Contains National Statistics data © Crown copyright and database right 2024. Northern Ireland: contains LPS Intellectual Property © Crown copyright and database right 2024.",
+    "size_bytes": 21105502
   },
   "sports-centres": {
     "extracted_at": "2026-10-02T19:25:05Z",

@@ -116,18 +116,24 @@ export type SeatHistory = {
   generated_at: string;
   notes?: string[];
   parties: string[];
+  /** Key order for Northern Ireland seats (PCON24CD N*). */
+  parties_ni?: string[];
   providers: Record<string, { provider: string; editions: SeatHistoryEdition[]; skipped?: string[] }>;
   seats: Record<string, Record<string, SeatHistoryPoint[]>>;
 };
 export type ResultsHistory = {
   source: string; license: string; license_url: string; notes?: string[];
   parties: string[];
+  parties_ni?: string[];
   elections: { date: string; label: string; notional: boolean; note: string; source_url: string; data_url: string }[];
   seats: Record<string, SeatHistoryPoint[]>;
 };
 const SEAT_PARTY_NAMES: Record<string, string> = {
   con: 'Conservative', lab: 'Labour', ld: 'Liberal Democrat', ref: 'Reform UK', grn: 'Green', snp: 'SNP', pc: 'Plaid Cymru', rb: 'Restore Britain', spk: 'Speaker', oth: 'Other',
+  dup: 'DUP', sf: 'Sinn Féin', sdlp: 'SDLP', uup: 'UUP', alliance: 'Alliance', tuv: 'TUV', aont: 'Aontú', pbp: 'People Before Profit', ind: 'Independent',
 };
+/** Northern Ireland seats carry their own party key order. */
+const keysFor = (code: string, h: { parties: string[]; parties_ni?: string[] }) => code.startsWith('N') ? h.parties_ni ?? h.parties : h.parties;
 export const SEAT_MIN_SHARE = 1; // parties never reaching this share in any edition are left off the chart
 export const ONE_POINT_NOTE = 'Only one projection published';
 
@@ -188,7 +194,7 @@ export function attachSeatHistory(root: ParentNode, code: string, history: SeatH
     const points = seat[key];
     if (!points?.length || el.dataset.history) return;
     const snaps = (history.providers[key]?.editions ?? []).map(e => ({ date: e.date, label: e.fieldwork ? `fieldwork ${e.fieldwork}` : '' }));
-    const html = seatTrendHtml(points, history.parties, snaps);
+    const html = seatTrendHtml(points, keysFor(code, history), snaps);
     if (!html) return;
     el.dataset.history = '1';
     el.innerHTML = `<p class="proj-hist-cap">Projected vote share (%), one point per published projection</p>${html}`;
@@ -225,13 +231,13 @@ export function attachResultHistory(root: ParentNode, code: string, history: Res
   const el = root.querySelector<HTMLElement>('.result-history');
   const points = history.seats[code];
   if (!el || el.dataset.history || !points?.length) return;
-  const html = seatTrendHtml(points, history.parties, history.elections.map(e => ({ date: e.date, label: e.label })), 'election');
+  const html = seatTrendHtml(points, keysFor(code, history), history.elections.map(e => ({ date: e.date, label: e.label })), 'election');
   if (!html) return;
   el.dataset.history = '1';
   const notional = history.elections.filter(e => e.notional && points.some(p => p[0] === e.date));
   const notes = [
     ...notional.map(e => e.note),
-    ...(notional.length ? ['Reform UK in 2019 is the Brexit Party (renamed Reform UK in 2021).'] : []),
+    ...(notional.length && !code.startsWith('N') ? ['Reform UK in 2019 is the Brexit Party (renamed Reform UK in 2021).'] : []),
   ];
   el.innerHTML = `<p class="proj-hist-cap">Vote share (%) at each general election, on today’s boundaries</p>${html}` +
     (notes.length ? `<p class="proj-meta">${notes.map(escapeHtml).join(' ')}</p>` : '');

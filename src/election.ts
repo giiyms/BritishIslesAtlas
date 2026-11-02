@@ -1,10 +1,11 @@
 import { canonicalParty, partyColour } from './parties';
-import { decideTacticalPick, projectedShare, projectedShares, projectedWinner, type OverrideInput, type TacticalPick } from './tactical';
+import { decideTacticalPick, isNorthernIreland, projectedShare, projectedShares, projectedWinner, type OverrideInput, type TacticalPick } from './tactical';
 export { canonicalParty, partyColour } from './parties';
 
 export type Result = { name: string; country: string; winner_party: string; winner_name: string; majority: number; majority_pct: number; shares: [string, number][] };
-type Candidate = { standing?: string; name?: string; wcivf_url?: string; dc_person_url?: string };
-type Candidates = { reform?: Candidate; restore?: Candidate };
+type Candidate = { standing?: string; name?: string; party_name?: string; wcivf_url?: string; dc_person_url?: string };
+/** GB seats: Reform UK and Restore Britain only. NI seats: every party's listed candidacy (`ni_candidates`). */
+type Candidates = { reform?: Candidate; restore?: Candidate; ni_candidates?: Candidate[] };
 type Projection = { projected_winner?: string; chances?: Record<string, number>; [key: string]: unknown };
 export type Provider = { provider: string; status: string; url: string; data_url?: string; fieldwork?: string; updated?: string; retrieved_at: string; seats: Record<string, Projection> };
 export type SeatProjection = { key: string; provider: Provider; row: Projection };
@@ -88,8 +89,12 @@ export function seatColour(seat: ElectionSeat | undefined, data: Pick<ElectionDa
   return { color: partyColour(party), opacity: 0.78, label: party || 'Unavailable' };
 }
 
-/** Confirmed candidate for the picked party. Only Reform UK and Restore Britain are covered by candidates-gb.json. */
+/** Confirmed candidate for the picked party. GB: Reform UK and Restore Britain only. NI: any party Democracy Club lists. */
 export function candidateFor(seat: ElectionSeat, party: string | null): { name: string; url?: string } | null {
+  if (isNorthernIreland(seat.code)) {
+    const ni = party ? seat.candidates?.ni_candidates?.find(c => c.name && canonicalParty(c.party_name ?? '', seat.code) === party) : undefined;
+    return ni?.name ? { name: ni.name, url: ni.wcivf_url || ni.dc_person_url } : null;
+  }
   const row = party === 'Reform UK' ? seat.candidates?.reform : party === 'Restore Britain' ? seat.candidates?.restore : undefined;
   return row?.standing === 'yes' && row.name ? { name: row.name, url: row.wcivf_url || row.dc_person_url } : null;
 }
@@ -98,9 +103,12 @@ export const CONFIDENCE_LABEL = { high: 'High confidence', medium: 'Medium confi
 const EXT = ' target="_blank" rel="noopener noreferrer"';
 const link = (href: string | undefined, text: string) => href ? `<a href="${escapeHtml(href)}"${EXT}>${escapeHtml(text)}</a>` : escapeHtml(text);
 const fmt = (v: number) => `${Number.isInteger(v) ? v : v.toFixed(1)}%`;
-const CHANCE_LABEL: Record<string, string> = { con: 'Conservative', lab: 'Labour', ld: 'Liberal Democrat', reform: 'Reform UK', green: 'Green', nat: 'Nationalist', restore: 'Restore Britain' };
+const CHANCE_LABEL: Record<string, string> = { con: 'Conservative', lab: 'Labour', ld: 'Liberal Democrat', reform: 'Reform UK', green: 'Green', nat: 'Nationalist', restore: 'Restore Britain',
+  dup: 'DUP', sf: 'Sinn Féin', sdlp: 'SDLP', uup: 'UUP', alliance: 'Alliance', tuv: 'TUV', ind: 'Independent', oth: 'Other' };
 
 export const OWNER_NOTE = 'Picks reflect this site owner’s tactical goal: stopping Labour winning seats. Check the evidence and make your own choice; you decide how to vote.';
+export const NI_NOTE = 'Labour does not stand in Northern Ireland, so this site’s stop-Labour goal does not apply here and there is no tactical pick. The party shown is the projected winner (or the 2024 winner), with the evidence. You decide how to vote.';
+const NI_PROJECTION_NOTE = 'More in Common’s MRP covers Great Britain only, so it has no Northern Ireland projection. Electoral Calculus’s Northern Ireland figures have been the same in every edition since April 2025, so they are close to the 2024 result rather than new polling.';
 
 /** Plain text values (latest shares), shown until the time-series chart loads or when no history exists. */
 function shareList(shares: [string, number][], pick: string | null): string {
@@ -123,8 +131,15 @@ function projectionHtml(seat: ElectionSeat, { key, provider, row }: SeatProjecti
 
 export function seatHtml(seat: ElectionSeat, data: ElectionData): string {
   const r = seat.result; const pick = seat.pick;
+  const ni = isNorthernIreland(seat.code);
   const candidate = candidateFor(seat, pick.party);
-  const candidateLine = !pick.party ? '' : candidate ? `Candidate: <strong>${link(candidate.url, candidate.name)}</strong>` : `${escapeHtml(pick.party)} candidate not yet confirmed`;
+  const niCandidates = seat.candidates?.ni_candidates?.filter(c => c.name) ?? [];
+  const candidateLine = ni
+    ? (niCandidates.length ? `Listed candidates: ${niCandidates.map(c => `<strong>${link(c.wcivf_url || c.dc_person_url, c.name!)}</strong> (${escapeHtml(canonicalParty(c.party_name ?? '', seat.code))})`).join(', ')}` : 'Democracy Club lists no candidates here for the next general election yet.')
+    : !pick.party ? '' : candidate ? `Candidate: <strong>${link(candidate.url, candidate.name)}</strong>` : `${escapeHtml(pick.party)} candidate not yet confirmed`;
+  const pickLabel = pick.noLabour
+    ? `${pick.source === 'override' ? 'Site owner pick' : pick.source === 'projection' ? 'Projected winner' : '2024 winner'} · no stop-Labour pick: Labour does not stand in Northern Ireland`
+    : 'Who to back to stop Labour';
   const sourceLinks = [
     ...seat.projections.map(p => link(p.provider.url, `${p.provider.provider} seat projection`)),
     link(data.results.source_url ?? RESULTS_URL, '2024 results (House of Commons Library)'),
@@ -132,19 +147,20 @@ export function seatHtml(seat: ElectionSeat, data: ElectionData): string {
     link('https://whocanivotefor.co.uk/', 'Who can I vote for?'),
   ];
   const pickBox = `<section class="pick-box" style="--pick:${pick.party ? partyColour(pick.party) : NO_DATA}">` +
-    `<div class="pick-label">Who to back to stop Labour</div>` +
+    `<div class="pick-label">${escapeHtml(pickLabel)}</div>` +
     `<div class="pick-party"><i></i><strong>${escapeHtml(pick.party ?? 'No pick')}</strong><span class="conf conf-${pick.confidence}">${CONFIDENCE_LABEL[pick.confidence]}</span></div>` +
     (candidateLine ? `<p class="pick-candidate">${candidateLine}</p>` : '') +
     `<p class="pick-why"><strong>Why:</strong> ${escapeHtml(pick.reason)}</p>` +
     (pick.source === 'override' ? `<p class="pick-flag">Site owner override</p>` : '') +
-    `<p class="pick-note">${escapeHtml(OWNER_NOTE)}</p></section>`;
-  const projections = seat.projections.length ? `<div class="proj-grid">${seat.projections.map(p => projectionHtml(seat, p)).join('')}</div>` : '<p>No seat projection available.</p>';
+    `<p class="pick-note">${escapeHtml(pick.noLabour ? NI_NOTE : OWNER_NOTE)}</p></section>`;
+  const projections = (seat.projections.length ? `<div class="proj-grid">${seat.projections.map(p => projectionHtml(seat, p)).join('')}</div>` : '<p>No seat projection available.</p>') +
+    (ni ? `<p class="seat-small proj-ni-note">${escapeHtml(NI_PROJECTION_NOTE)}</p>` : '');
   const result = r ? `<p><strong>${escapeHtml(partyName(data, r.winner_party))}</strong> won (${escapeHtml(r.winner_name)}) · majority ${r.majority.toLocaleString()} (${r.majority_pct}%)</p><div class="result-history" data-seat="${escapeHtml(seat.code)}">${shareList(resultParties(data.results, r), pick.party)}</div>` : '<p>Result unavailable</p>';
   return `<article class="election-seat"><h2>${escapeHtml(seat.name)}</h2><p class="seat-meta">${escapeHtml(r?.country ?? 'Nation unavailable')} · ${escapeHtml(seat.code)}</p>` +
     pickBox +
     `<h3>Seat projections</h3>${projections}` +
     `<h3>Past results</h3>${result}` +
     `<h3>Sources</h3><p class="seat-sources">${sourceLinks.join(' · ')}</p>` +
-    `<p class="seat-small">Candidate data covers Reform UK and Restore Britain only (Democracy Club, retrieved ${escapeHtml(data.candidates.retrieved_at.slice(0, 10))}). 2024 results retrieved ${escapeHtml(data.results.retrieved_at.slice(0, 10))}, Open Parliament Licence v3.0. Projections are estimates, not results.</p>` +
+    `<p class="seat-small">${ni ? 'Candidate data covers every party Democracy Club lists for Northern Ireland seats' : 'Candidate data covers Reform UK and Restore Britain only'} (Democracy Club, retrieved ${escapeHtml(data.candidates.retrieved_at.slice(0, 10))}). 2024 results retrieved ${escapeHtml(data.results.retrieved_at.slice(0, 10))}, Open Parliament Licence v3.0. Projections are estimates, not results.</p>` +
     `<button type="button" class="copy-seat" data-seat="${escapeHtml(seat.code)}">Copy seat link</button></article>`;
 }
