@@ -50,6 +50,10 @@ export const FACT_ROWS: Readonly<Record<string, Array<[key: string, label: strin
     ["town", "Town", text],
     ["nation", "Nation", text],
   ],
+  roads: [
+    ["road_class", "Class", text],
+    ["nation", "Nation", text],
+  ],
   census: [
     ["residents", "Usual residents", count],
     ["born_outside_uk_pct", "Born outside the UK", pct],
@@ -81,6 +85,8 @@ export const FACT_ROWS: Readonly<Record<string, Array<[key: string, label: strin
 
 /** Layers whose files carry an id instead of a per-feature source/url (keeps default-on files small). */
 const DERIVED_SOURCE: Readonly<Record<string, (p: Record<string, unknown>) => [source: string, url: string] | null>> = {
+  roads: (p) => ["OpenStreetMap (highway=motorway/trunk)",
+    `https://www.openstreetmap.org/search?query=${encodeURIComponent(`${String(p.name ?? "")} ${String(p.nation ?? "")}`.trim())}`],
   schools: (p) => {
     if (p.urn != null) {
       const graded = Object.keys(p).some((key) => key.startsWith("ofsted_"));

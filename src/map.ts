@@ -155,9 +155,6 @@ const STYLE: StyleSpecification = {
   ],
 };
 
-/** Preview road corridors are fake straight lines: never draw them past z7 (roast fix 7). */
-const ROADS_MAXZOOM = 7;
-
 /** One-line, deduped credit (roast fix 10); the panel's "About the data" has the full list. */
 const ATTRIBUTION =
   '© AWS Terrain Tiles · Natural Earth · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap</a>' +
@@ -474,7 +471,7 @@ export function createAtlas(container: HTMLElement): Atlas {
       paint: { "text-color": ENDORSE_COLORS.restore.fill, "text-halo-color": "#ffffff", "text-halo-width": 1.5 },
     });
   }
-  const OSM_STATIC = new Set<LayerId>(["petrol", "ev", "power", "hospitals", "fire-stations", "police", "castles", "libraries", "universities", "museums", "railway-stations", "aerodromes", "ferry-terminals", "marinas", "zoos", "theatres", "battlefields", "cinemas", "stadiums", "theme-parks", "viewpoints", "arts-centres", "aquariums", "piers", "ruins", "golf-courses", "galleries", "marketplaces", "nature-reserves", "camp-sites", "memorials", "sports-centres", "caravan-sites", "fitness-centres", "community-centres", "playgrounds", "post-offices", "beaches", "swimming-pools", "pharmacies", "townhalls", "places-of-worship", "lighthouses", "courthouses", "nightclubs", "windmills", "prisons", "clinics", "dentists", "pubs", "wind", "churches", "mosques", "other-religious", "mountains", "weather", "population", "census", "schools"]);
+  const OSM_STATIC = new Set<LayerId>(["petrol", "ev", "power", "hospitals", "fire-stations", "police", "castles", "libraries", "universities", "museums", "railway-stations", "aerodromes", "ferry-terminals", "marinas", "zoos", "theatres", "battlefields", "cinemas", "stadiums", "theme-parks", "viewpoints", "arts-centres", "aquariums", "piers", "ruins", "golf-courses", "galleries", "marketplaces", "nature-reserves", "camp-sites", "memorials", "sports-centres", "caravan-sites", "fitness-centres", "community-centres", "playgrounds", "post-offices", "beaches", "swimming-pools", "pharmacies", "townhalls", "places-of-worship", "lighthouses", "courthouses", "nightclubs", "windmills", "prisons", "clinics", "dentists", "pubs", "wind", "churches", "mosques", "other-religious", "mountains", "weather", "population", "census", "schools", "roads"]);
   const hasIcon = (layer: { kind: MarkerKind }) =>
     layer.kind === "dot" || layer.kind === "ring" || SYMBOL_KINDS.has(layer.kind);
   /** Every point layer: heat plus every point at every zoom (see point-style.ts). */
@@ -602,17 +599,19 @@ export function createAtlas(container: HTMLElement): Atlas {
         })();
       }
     } else if (layer.kind === "line") {
-      // Preview corridors are straight-line stubs: never let them outlive regional zoom (fix 2).
-      map.addLayer({ id, type: "line", source: id, maxzoom: ROADS_MAXZOOM,
+      // Real OSM motorways and trunk roads: motorways a touch heavier, fading back once the basemap's
+      // own road network takes over at city zoom.
+      const motorway: ExpressionSpecification = ["==", ["get", "road_class"], "Motorway"];
+      map.addLayer({ id, type: "line", source: id,
         layout: { ...layout, "line-cap": "round", "line-join": "round" },
-        // Context gray, not brand teal (fix 2); only drawn to z7.
-        paint: { "line-color": layer.color,
-          "line-width": ["interpolate", ["linear"], ["zoom"], 5, 0.5, 8, 1.2, 12, 2.4],
-          "line-opacity": 0.7 },
+        paint: { "line-color": ["case", motorway, layer.accent, layer.color],
+          "line-width": ["interpolate", ["linear"], ["zoom"], 5, ["case", motorway, 1.1, 0.6], 8, ["case", motorway, 1.8, 1.1], 12, ["case", motorway, 3, 2.2]],
+          "line-opacity": ["interpolate", ["linear"], ["zoom"], 5, 0.7, 9, 0.8, 13, 0.45] },
       }, before);
-      map.addLayer({ id: "roads-hit", type: "line", source: id, maxzoom: ROADS_MAXZOOM,
+      map.addLayer({ id: "roads-hit", type: "line", source: id,
         layout: { ...layout, "line-cap": "round", "line-join": "round" },
-        paint: { "line-color": "#000", "line-width": 14, "line-opacity": 0.01 },
+        // Transparent colour, not low opacity: 1% black stacked over hundreds of overlapping ways smudged cities.
+        paint: { "line-color": "rgba(0,0,0,0)", "line-width": 14 },
       }, before);
     } else if (layer.kind === "dot" || layer.kind === "ring" || layer.kind === "disc") {
       const paint: CircleLayerSpecification["paint"] = layer.kind === "disc" ? {

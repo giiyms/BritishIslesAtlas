@@ -207,72 +207,6 @@ st-helier|St Helier|Crown dependency|-2.107|49.188|34000
 st-peter-port|St Peter Port|Crown dependency|-2.537|49.455|19000
 `;
 
-const ROAD_TABLE = `
-M4|london > -0.48,51.49 > reading > swindon > -2.25,51.51 > bristol > newport > cardiff > -3.55,51.62 > swansea
-M5|birmingham > worcester > gloucester > bristol > -2.85,51.28 > -3.01,51.13 > taunton > exeter > -3.7,50.48 > plymouth
-A30|exeter > -3.85,50.72 > -4.25,50.64 > -4.72,50.47 > truro > penzance
-M1|london > luton > milton-keynes > northampton > leicester > nottingham > -1.43,53.24 > sheffield > leeds
-A1|leeds > york > -1.34,54.23 > darlington > durham > newcastle > -1.6,55.42 > -1.99,55.77 > -2.35,55.95 > edinburgh
-M6|birmingham > -2.12,52.81 > stoke > -2.35,53.23 > warrington > preston > lancaster > kendal > penrith > carlisle
-M62|liverpool > -2.7,53.45 > manchester > huddersfield > leeds > -0.85,53.74 > hull
-M56|manchester > -2.5,53.35 > chester
-A55|chester > -3.4,53.28 > -3.82,53.28 > bangor > holyhead
-A49|chester > shrewsbury > hereford > -3.05,51.85 > newport
-M40|london > high-wycombe > oxford > banbury > -1.53,52.29 > birmingham
-M69|birmingham > coventry > leicester
-A50|stoke > derby > nottingham
-A46|leicester > lincoln
-A15|lincoln > scunthorpe > hull
-A57|sheffield > doncaster > -0.95,53.55 > hull
-A64|leeds > york
-Transpennine|manchester > sheffield
-A580|liverpool > manchester
-Blackpool spur|preston > blackpool
-A69|carlisle > -2.2,54.95 > newcastle
-M74|carlisle > -3.06,55.00 > -3.36,55.12 > -3.63,55.45 > -4.04,55.77 > glasgow
-M8|edinburgh > livingston > glasgow
-M80|glasgow > -4.02,56.00 > stirling
-A9|edinburgh > falkirk > stirling > perth > -3.85,56.75 > -4.15,57.08 > inverness > -3.95,57.85 > wick > thurso
-A90|perth > dundee > -2.45,56.72 > aberdeen
-A96|aberdeen > -2.65,57.42 > -3.35,57.5 > inverness
-A82|glasgow > -4.55,56.18 > -4.72,56.40 > -4.95,56.62 > fort-william > -4.72,56.95 > -4.45,57.18 > inverness
-A85|fort-william > oban
-A77|glasgow > kilmarnock > ayr
-Skye|inverness > -4.72,57.28 > -5.25,57.28 > -5.72,57.28 > portree
-M25|-0.52,51.48 > -0.50,51.33 > -0.22,51.31 > 0.05,51.34 > 0.24,51.42 > 0.27,51.55 > 0.15,51.64 > -0.06,51.68 > -0.32,51.67 > -0.51,51.60 > -0.55,51.50 > -0.52,51.48
-A23|london > crawley > brighton
-A27|brighton > worthing > chichester > portsmouth > southampton
-M3|london > basingstoke > winchester > southampton
-A31|southampton > bournemouth > -2.44,50.71 > -2.75,50.73 > exeter
-A2|london > maidstone > canterbury > dover
-A12|london > chelmsford > colchester > ipswich > norwich
-A11|london > stevenage > cambridge > 0.45,52.36 > 0.90,52.50 > norwich
-A14|cambridge > kettering > northampton
-A127|london > basildon > southend
-A303|basingstoke > -1.65,51.20 > -2.22,51.13 > yeovil > exeter
-A417|gloucester > swindon
-Heads of the Valleys|cardiff > -3.05,51.85 > hereford > worcester > birmingham
-A44|shrewsbury > -3.43,52.52 > aberystwyth
-North Wales link|bangor > caernarfon
-M50|-6.18,53.39 > -6.24,53.32 > -6.36,53.29 > -6.43,53.34 > -6.38,53.40 > -6.27,53.42 > -6.18,53.40
-M1 Ireland|dublin > swords > drogheda > dundalk > newry > craigavon > lisburn > belfast
-A6|belfast > -6.25,54.75 > coleraine > -6.95,55.02 > derry
-A5|belfast > lisburn > craigavon > armagh > omagh > derry
-A4|omagh > enniskillen > -8.05,54.28 > sligo
-M7|dublin > naas > portlaoise > -7.85,52.95 > nenagh > limerick
-M8 Ireland|portlaoise > -7.75,52.68 > -8.15,52.35 > mallow > cork
-M6 Ireland|dublin > mullingar > athlone > -8.45,53.38 > galway
-M18|limerick > ennis > galway
-N17|galway > castlebar > sligo
-N15|sligo > -8.15,54.55 > letterkenny > derry
-N21|limerick > -9.05,52.45 > tralee
-N22|cork > killarney > tralee
-N25|cork > -8.15,51.90 > waterford > wexford > wicklow > bray > dublin
-M9 Ireland|dublin > naas > kilkenny > waterford
-N24|limerick > clonmel > waterford
-Isle of Wight|newport-iow > ryde
-`;
-
 const NAMED_POINTS: Record<string, string> = {
   cemeteries: `
 Highgate Cemetery|London|-0.147|51.567
@@ -402,42 +336,6 @@ function loadPlaces(table: string): Place[] {
 
 export const PLACES: Place[] = loadPlaces(PLACE_TABLE);
 
-const placeById = new Map(PLACES.map((place) => [place.id, place]));
-
-function at(id: string): [number, number] {
-  const place = placeById.get(id);
-  if (!place) throw new Error(`Unknown place "${id}"`);
-  return [place.lon, place.lat];
-}
-
-function loadRoads(table: string): Array<{ name: string; coords: [number, number][] }> {
-  const roads: Array<{ name: string; coords: [number, number][] }> = [];
-  for (const line of table.trim().split("\n")) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("#")) continue;
-    const bar = trimmed.indexOf("|");
-    if (bar < 0) throw new Error(`Bad road row: ${trimmed}`);
-    const name = trimmed.slice(0, bar).trim();
-    const coords = trimmed
-      .slice(bar + 1)
-      .split(">")
-      .map((token) => {
-        const value = token.trim();
-        if (value.includes(",")) {
-          const [lon, lat] = value.split(",").map(Number);
-          if (Number.isNaN(lon) || Number.isNaN(lat)) throw new Error(`Bad coord in ${name}: ${value}`);
-          return [lon, lat] as [number, number];
-        }
-        return at(value);
-      });
-    if (coords.length < 2) throw new Error(`Road ${name} is too short`);
-    roads.push({ name, coords });
-  }
-  return roads;
-}
-
-const ROADS = loadRoads(ROAD_TABLE);
-
 function collection(features: Feature[]): FeatureCollection {
   return { type: "FeatureCollection", features };
 }
@@ -470,20 +368,8 @@ function namedLayer(id: string, note: string): Feature[] {
     });
 }
 
-function roadLayer(): Feature[] {
-  return ROADS.map((road) => ({
-    type: "Feature" as const,
-    geometry: { type: "LineString" as const, coordinates: road.coords },
-    properties: {
-      name: road.name,
-      layer: "roads",
-      note: "Preview corridor, not a surveyed network",
-    },
-  }));
-}
-
 const builders: Record<LayerId, () => Feature[]> = {
-  roads: roadLayer,
+  roads: () => [],
   pubs: () => [],
   schools: () => [],
   libraries: () => [],

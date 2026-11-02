@@ -1498,6 +1498,23 @@ per local authority, from the latest census in each jurisdiction (downloaded 202
   generalised, so a school within a few hundred metres of the English border can land on either
   side.
 
+## Roads
+
+`public/data/roads.geojson` (1,020 roads) is built by `scripts/build_roads.py` from the Geofabrik
+OpenStreetMap extracts (Great Britain, Ireland and Northern Ireland, Isle of Man, Guernsey and
+Jersey; downloaded 2026-11-01) via `scripts/extract_pbf.py`. Licence: **ODbL 1.0**.
+
+- Every `highway=motorway` and `highway=trunk` way (98 motorways, the rest trunk roads; Irish
+  national primary roads are tagged trunk). Links and slip roads are not included.
+- Ways are grouped by road number (`ref`, else name), class and nation (ONS Countries December 2023
+  outlines, OGL, so the English, Northern Irish and Irish M1s stay separate), merged into continuous
+  lines and simplified to about 25 m. Junction roundabouts with no number and under 2 km are dropped.
+- Both carriageways of a dual carriageway are separate OSM ways, so they draw as two close lines at
+  city zoom; the layer fades back from z9 as the basemap's own road network takes over.
+- Card: road number, class, nation, with an OpenStreetMap search link (a merged road has no single
+  OSM id).
+- Replaces the straight-line preview corridors that were capped at z7.
+
 ## Remaining honest caveats
 
 - Constituencies layer is ONS BGC GB-only (632); NI deferred; no endorse/polling UI yet.

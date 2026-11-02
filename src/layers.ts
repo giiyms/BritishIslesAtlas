@@ -39,7 +39,7 @@ export const LAYERS = [
     color: "#9aa3ad",
     kind: "line",
     defaultOn: true,
-    blurb: "Sample motorway and trunk corridors (regional zoom only)",
+    blurb: "OpenStreetMap motorways and trunk roads (incl. Irish national primary roads), one line per road number",
     icon: ICONS.roads,
   },
   {

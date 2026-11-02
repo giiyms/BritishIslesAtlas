@@ -1804,5 +1804,13 @@
     "source": "GIAS + Ofsted MI (England); OpenStreetMap amenity=school (elsewhere)",
     "url": "https://get-information-schools.service.gov.uk/Downloads",
     "filter": "open schools; universities excluded"
+  },
+  "roads": {
+    "layer": "roads",
+    "count": 1020,
+    "license": "ODbL 1.0",
+    "source": "OpenStreetMap via Geofabrik extracts",
+    "url": "https://download.geofabrik.de/europe.html",
+    "filter": "highway=motorway|trunk, merged per ref, simplified ~25 m"
   }
 }
