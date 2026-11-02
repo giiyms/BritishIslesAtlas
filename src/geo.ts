@@ -548,18 +548,6 @@ function namedLayer(id: string, note: string): Feature[] {
     });
 }
 
-function populationLayer(): Feature[] {
-  return PLACES.map((place) =>
-    point(place.lon, place.lat, {
-      name: place.name,
-      layer: "population",
-      note: `Preview population disc · ${place.region}`,
-      pop: place.pop,
-      r: Math.round(Math.max(5, Math.min(32, Math.sqrt(place.pop) / 75)) * 10) / 10,
-    }),
-  );
-}
-
 function censusLayer(): Feature[] {
   return PLACES.filter((place) => place.pop >= 20000).map((place) =>
     point(place.lon, place.lat, {
@@ -634,7 +622,7 @@ const builders: Record<LayerId, () => Feature[]> = {
   churches: () => [],
   "post-offices": () => [],
   mosques: () => [],
-  population: populationLayer,
+  population: () => [],
   "other-religious": () => [],
   census: censusLayer,
   petrol: () => [],

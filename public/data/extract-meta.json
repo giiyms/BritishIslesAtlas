@@ -1780,5 +1780,13 @@
     "source": "Met Office historic station data",
     "url": "https://www.metoffice.gov.uk/research/climate/maps-and-data/historic-station-data",
     "stations_reporting": 31
+  },
+  "population": {
+    "layer": "population",
+    "count": 1203,
+    "license": "CC BY 4.0",
+    "source": "GeoNames cities1000",
+    "url": "https://download.geonames.org/export/dump/",
+    "filter": "population >= 10,000, not PPLX"
   }
 }

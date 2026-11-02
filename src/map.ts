@@ -474,7 +474,7 @@ export function createAtlas(container: HTMLElement): Atlas {
       paint: { "text-color": ENDORSE_COLORS.restore.fill, "text-halo-color": "#ffffff", "text-halo-width": 1.5 },
     });
   }
-  const OSM_STATIC = new Set<LayerId>(["petrol", "ev", "power", "hospitals", "fire-stations", "police", "castles", "libraries", "universities", "museums", "railway-stations", "aerodromes", "ferry-terminals", "marinas", "zoos", "theatres", "battlefields", "cinemas", "stadiums", "theme-parks", "viewpoints", "arts-centres", "aquariums", "piers", "ruins", "golf-courses", "galleries", "marketplaces", "nature-reserves", "camp-sites", "memorials", "sports-centres", "caravan-sites", "fitness-centres", "community-centres", "playgrounds", "post-offices", "beaches", "swimming-pools", "pharmacies", "townhalls", "places-of-worship", "lighthouses", "courthouses", "nightclubs", "windmills", "prisons", "clinics", "dentists", "pubs", "wind", "churches", "mosques", "other-religious", "mountains", "weather"]);
+  const OSM_STATIC = new Set<LayerId>(["petrol", "ev", "power", "hospitals", "fire-stations", "police", "castles", "libraries", "universities", "museums", "railway-stations", "aerodromes", "ferry-terminals", "marinas", "zoos", "theatres", "battlefields", "cinemas", "stadiums", "theme-parks", "viewpoints", "arts-centres", "aquariums", "piers", "ruins", "golf-courses", "galleries", "marketplaces", "nature-reserves", "camp-sites", "memorials", "sports-centres", "caravan-sites", "fitness-centres", "community-centres", "playgrounds", "post-offices", "beaches", "swimming-pools", "pharmacies", "townhalls", "places-of-worship", "lighthouses", "courthouses", "nightclubs", "windmills", "prisons", "clinics", "dentists", "pubs", "wind", "churches", "mosques", "other-religious", "mountains", "weather", "population"]);
   const hasIcon = (layer: { kind: MarkerKind }) =>
     layer.kind === "dot" || layer.kind === "ring" || SYMBOL_KINDS.has(layer.kind);
   /** Every point layer: heat plus every point at every zoom (see point-style.ts). */
@@ -663,9 +663,6 @@ export function createAtlas(container: HTMLElement): Atlas {
     const on = votingOn();
     const muteOthers = on && !showOthers;
     for (const id of VOTING_MUTED) apply(id);
-    if (map.getLayer("density-glow")) {
-      map.setLayoutProperty("density-glow", "visibility", muteOthers ? "none" : "visible");
-    }
     if (map.getLayer("dem-color-relief")) {
       map.setPaintProperty("dem-color-relief", "color-relief-opacity", on ? RELIEF_OPACITY_VOTING : RELIEF_OPACITY);
     }
@@ -916,19 +913,6 @@ export function createAtlas(container: HTMLElement): Atlas {
   map.getCanvas().addEventListener("mouseleave", () => setHovered(null));
   map.on("load", () => {
     loaded = true;
-    add("population");
-    map.addLayer({ id: "density-glow", type: "heatmap", source: "population",
-      paint: {
-        "heatmap-weight": ["interpolate", ["linear"], ["get", "pop"], 0, 0, 100000, 0.3, 1000000, 0.8, 9000000, 1],
-        "heatmap-intensity": ["interpolate", ["linear"], ["zoom"], 4, 0.7, 9, 1.3],
-        "heatmap-radius": ["interpolate", ["linear"], ["zoom"], 4, 18, 9, 36],
-        // Cool slate, max alpha 0.16: no warm blobs bleeding into the pick fills (fix 4).
-        "heatmap-color": ["interpolate", ["linear"], ["heatmap-density"],
-          0, "rgba(93,107,122,0)", 0.25, "rgba(93,107,122,0.06)",
-          0.65, "rgba(93,107,122,0.12)", 1, "rgba(93,107,122,0.16)"],
-        "heatmap-opacity": ["interpolate", ["linear"], ["zoom"], 7, 0.65, 10, 0],
-      },
-    }, "population");
     for (const layer of ordered) if (state[layer.id] && !paused(layer.id)) add(layer.id);
     applyVotingMode(false);
 

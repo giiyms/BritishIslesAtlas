@@ -24,6 +24,11 @@ export const FACT_ROWS: Readonly<Record<string, Array<[key: string, label: strin
     ["county", "County", text],
     ["summit_feature", "Summit", text],
   ],
+  population: [
+    ["pop", "Population", count],
+    ["nation", "Nation", text],
+    ["updated", "GeoNames record updated", text],
+  ],
   weather: [
     ["latest_month", "Latest month", text],
     ["latest_tmax", "Mean daily high", degrees],

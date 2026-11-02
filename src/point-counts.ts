@@ -42,6 +42,7 @@ export const POINT_COUNTS: Readonly<Record<string, number>> = {
   "places-of-worship": 43032,
   "playgrounds": 5372,
   "police": 2298,
+  "population": 1203,
   "post-offices": 9784,
   "power": 2821,
   "prisons": 203,

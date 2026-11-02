@@ -1426,6 +1426,21 @@ one text file per station. Licence: **Open Government Licence v3**; "Contains Me
 - Ireland outside Northern Ireland has no station yet: Met Éireann's monthly data endpoint
   (cli.fusio.net, CC BY 4.0) returned empty files from this box on 2026-11-01.
 
+## Population
+
+`public/data/population.geojson` (1,203 settlements) is built by `scripts/build_population.py` from
+**GeoNames** `cities1000.txt` (https://download.geonames.org/export/dump/, downloaded 2026-11-01).
+Licence: **CC BY 4.0**, "Contains data from GeoNames (geonames.org)".
+
+- Kept: populated places (feature class P) in GB, IE, IM, JE and GG with a population of 10,000 or
+  more, inside the isles (drops e.g. Dhekelia). PPLX entries (sections of a larger place) are
+  skipped so a city's districts don't stack on the city itself.
+- Disc radius: `clamp(5, sqrt(pop) / 75, 32)` px at z5.6, scaled with zoom.
+- Card: population, nation, the date GeoNames last updated the record, and a link to it.
+- Caveat: GeoNames populations are not all one census year, and a few suburbs that GeoNames keeps
+  as separate places (e.g. Worcester Park) still sit inside London's disc.
+- The old sample-driven "density glow" heatmap that sat under the map is removed.
+
 ## Remaining honest caveats
 
 - Constituencies layer is ONS BGC GB-only (632); NI deferred; no endorse/polling UI yet.

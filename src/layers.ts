@@ -689,7 +689,7 @@ export const LAYERS = [
     color: "#e2b15a",
     kind: "disc",
     defaultOn: false,
-    blurb: "Preview population discs sized by settlement",
+    blurb: "Towns and cities of 10,000+ people, disc area by population (GeoNames, CC BY 4.0)",
     icon: ICONS.population,
   },
   {
