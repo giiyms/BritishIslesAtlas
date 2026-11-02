@@ -474,7 +474,7 @@ export function createAtlas(container: HTMLElement): Atlas {
       paint: { "text-color": ENDORSE_COLORS.restore.fill, "text-halo-color": "#ffffff", "text-halo-width": 1.5 },
     });
   }
-  const OSM_STATIC = new Set<LayerId>(["petrol", "ev", "power", "hospitals", "fire-stations", "police", "castles", "libraries", "universities", "museums", "railway-stations", "aerodromes", "ferry-terminals", "marinas", "zoos", "theatres", "battlefields", "cinemas", "stadiums", "theme-parks", "viewpoints", "arts-centres", "aquariums", "piers", "ruins", "golf-courses", "galleries", "marketplaces", "nature-reserves", "camp-sites", "memorials", "sports-centres", "caravan-sites", "fitness-centres", "community-centres", "playgrounds", "post-offices", "beaches", "swimming-pools", "pharmacies", "townhalls", "places-of-worship", "lighthouses", "courthouses", "nightclubs", "windmills", "prisons", "clinics", "dentists", "pubs", "wind", "churches", "mosques", "other-religious", "mountains"]);
+  const OSM_STATIC = new Set<LayerId>(["petrol", "ev", "power", "hospitals", "fire-stations", "police", "castles", "libraries", "universities", "museums", "railway-stations", "aerodromes", "ferry-terminals", "marinas", "zoos", "theatres", "battlefields", "cinemas", "stadiums", "theme-parks", "viewpoints", "arts-centres", "aquariums", "piers", "ruins", "golf-courses", "galleries", "marketplaces", "nature-reserves", "camp-sites", "memorials", "sports-centres", "caravan-sites", "fitness-centres", "community-centres", "playgrounds", "post-offices", "beaches", "swimming-pools", "pharmacies", "townhalls", "places-of-worship", "lighthouses", "courthouses", "nightclubs", "windmills", "prisons", "clinics", "dentists", "pubs", "wind", "churches", "mosques", "other-religious", "mountains", "weather"]);
   const hasIcon = (layer: { kind: MarkerKind }) =>
     layer.kind === "dot" || layer.kind === "ring" || SYMBOL_KINDS.has(layer.kind);
   /** Every point layer: heat plus every point at every zoom (see point-style.ts). */
@@ -623,11 +623,11 @@ export function createAtlas(container: HTMLElement): Atlas {
       } : layer.kind === "ring" ? {
         "circle-radius": pointRadius(),
         "circle-color": "rgba(255,255,255,0.2)", "circle-stroke-width": ["interpolate", ["linear"], ["zoom"], 5, 0.8, 9, 1.8],
-        "circle-stroke-color": layer.color, "circle-stroke-opacity": pointOpacity(),
+        "circle-stroke-color": layer.color, "circle-stroke-opacity": pointOpacity(id),
       } : {
         "circle-radius": pointRadius(), "circle-color": layer.color,
-        "circle-opacity": pointOpacity(), "circle-stroke-width": pointStroke(),
-        "circle-stroke-color": "#ffffff", "circle-stroke-opacity": pointOpacity(),
+        "circle-opacity": pointOpacity(id), "circle-stroke-width": pointStroke(),
+        "circle-stroke-color": "#ffffff", "circle-stroke-opacity": pointOpacity(id),
       };
       // No minzoom/maxzoom: the same points are drawn at every zoom.
       map.addLayer({ id, type: "circle", source: sourceOf(id), ...viewFilter(id), layout, paint }, before);
@@ -639,7 +639,7 @@ export function createAtlas(container: HTMLElement): Atlas {
       map.addLayer({ id, type: "symbol", source: sourceOf(id), ...viewFilter(id), layout: {
         ...layout, "icon-image": `${id}-mark`, "icon-size": markerScale(),
         "icon-allow-overlap": true, "icon-ignore-placement": true,
-      }, paint: { "icon-opacity": pointOpacity() } }, before);
+      }, paint: { "icon-opacity": pointOpacity(id) } }, before);
     }
     if (hasIcon(layer) && !DENSE_LAYERS.has(id)) addIconLayer(id, undefined);
   };

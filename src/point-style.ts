@@ -32,7 +32,11 @@ const ICON_DISC_SPAN = 21;
 /** Same footprint as a dot: diameter plus the white keyline. */
 const footprint = (r: number) => 2 * r + 1;
 
-export const pointOpacity = (): ExpressionSpecification => zoomRamp(POINT_OPACITY_STOPS);
+/** Below this many points a layer has no heat to lean on nationally, so its points stay at full opacity. */
+export const SPARSE_POINTS = 600;
+const isSparse = (id?: string) => id != null && (POINT_COUNTS[id] ?? Infinity) < SPARSE_POINTS;
+export const pointOpacity = (id?: string): ExpressionSpecification | number =>
+  isSparse(id) ? POINT_MAX_OPACITY : zoomRamp(POINT_OPACITY_STOPS);
 export const pointRadius = (): ExpressionSpecification => zoomRamp(POINT_RADIUS_STOPS);
 /** Thin white keyline so overlapping dots stay separable. */
 export const pointStroke = (): ExpressionSpecification => zoomRamp([[5, 0.4], [10, 0.8], [16, 1]]);

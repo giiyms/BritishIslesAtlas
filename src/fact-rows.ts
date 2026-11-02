@@ -11,6 +11,10 @@ const text: Fmt = (v) => String(v);
 const metres: Fmt = (v) => `${Number(v).toLocaleString("en-GB")} m`;
 const count: Fmt = (v) => Number(v).toLocaleString("en-GB");
 
+const degrees: Fmt = (v) => `${Number(v).toFixed(1)} °C`;
+const mm: Fmt = (v) => `${Number(v).toLocaleString("en-GB")} mm`;
+const hours: Fmt = (v) => `${Number(v).toLocaleString("en-GB")} h`;
+
 export const FACT_ROWS: Readonly<Record<string, Array<[key: string, label: string, fmt: Fmt]>>> = {
   mountains: [
     ["alt_name", "Also called", text],
@@ -19,6 +23,20 @@ export const FACT_ROWS: Readonly<Record<string, Array<[key: string, label: strin
     ["lists", "On the lists", text],
     ["county", "County", text],
     ["summit_feature", "Summit", text],
+  ],
+  weather: [
+    ["latest_month", "Latest month", text],
+    ["latest_tmax", "Mean daily high", degrees],
+    ["latest_tmin", "Mean daily low", degrees],
+    ["latest_rain", "Rain", mm],
+    ["latest_sun", "Sunshine", hours],
+    ["avg_tmax", "1991–2020 high", degrees],
+    ["avg_tmin", "1991–2020 low", degrees],
+    ["avg_rain", "1991–2020 rain / yr", mm],
+    ["avg_sun", "1991–2020 sun / yr", hours],
+    ["since", "Records since", text],
+    ["record_ended", "Record ended", text],
+    ["elevation_m", "Station height", metres],
   ],
 };
 
@@ -37,4 +55,4 @@ export function factRows(layerId: string, props: Record<string, unknown>): strin
   return rows.length ? `<dl class="popup-rows">${rows.join("")}</dl>` : "";
 }
 
-export const formatters = { text, metres, count };
+export const formatters = { text, metres, count, degrees, mm, hours };

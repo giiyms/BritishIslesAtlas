@@ -43,3 +43,11 @@ describe("point layers: heat and points crossfade, nothing pops", () => {
     expect(src).not.toMatch(/minzoom:\s*minZoom|fill-extrusion|density-hex/);
   });
 });
+
+describe("sparse layers", () => {
+  it("draw at full point opacity from national zoom, dense layers keep the crossfade", async () => {
+    const { pointOpacity, POINT_MAX_OPACITY } = await import("./point-style");
+    expect(pointOpacity("weather")).toBe(POINT_MAX_OPACITY);
+    expect(Array.isArray(pointOpacity("pubs"))).toBe(true);
+  });
+});

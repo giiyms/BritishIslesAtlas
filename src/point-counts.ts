@@ -56,6 +56,7 @@ export const POINT_COUNTS: Readonly<Record<string, number>> = {
   "townhalls": 1330,
   "universities": 986,
   "viewpoints": 5823,
+  "weather": 37,
   "wind": 18471,
   "windmills": 571,
   "zoos": 309,

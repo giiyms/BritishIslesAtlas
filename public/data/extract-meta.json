@@ -1772,5 +1772,13 @@
     "source": "Database of British and Irish Hills v18.6",
     "url": "https://www.hill-bagging.co.uk/dobih/downloads/",
     "filter": "Marilyn, Munro, Hewitt, Arderin or Wainwright"
+  },
+  "weather": {
+    "layer": "weather",
+    "count": 37,
+    "license": "OGL v3",
+    "source": "Met Office historic station data",
+    "url": "https://www.metoffice.gov.uk/research/climate/maps-and-data/historic-station-data",
+    "stations_reporting": 31
   }
 }

@@ -313,18 +313,6 @@ Health preview|Cork|-8.47|51.90
 Health preview|Galway|-9.05|53.27
 Health preview|Southampton|-1.40|50.91
 `,
-  weather: `
-Heathrow station|London|-0.451|51.479
-Eskdalemuir station|Eskdalemuir|-3.206|55.311
-Lerwick station|Lerwick|-1.183|60.139
-Valley station|Anglesey|-4.535|53.252
-Aldergrove station|Aldergrove|-6.216|54.664
-Shannon station|Shannon|-8.919|52.702
-Aberdeen station|Aberdeen|-2.205|57.205
-Valentia station|Valentia|-10.243|51.938
-Malin Head station|Malin Head|-7.339|55.372
-Camborne station|Camborne|-5.327|50.218
-`,
   power: `
 Drax|Drax|-0.996|53.737
 Ratcliffe|Ratcliffe-on-Soar|-1.255|52.866
@@ -655,7 +643,7 @@ const builders: Record<LayerId, () => Feature[]> = {
   immigration: () => namedLayer("immigration", "Preview checkpoint"),
   crime: () => namedLayer("crime", "Preview only, not an offence record"),
   health: () => namedLayer("health", "Preview health marker"),
-  weather: () => namedLayer("weather", "Preview weather station"),
+  weather: () => [],
   power: () => [],
   wind: () => [],
   nuclear: () => namedLayer("nuclear", "Preview nuclear site"),

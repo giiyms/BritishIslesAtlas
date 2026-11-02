@@ -1410,6 +1410,22 @@ attribution "Contains data from The Database of British and Irish Hills v18.6".
   hill-bagging.co.uk page. Positions are the DoBIH summit coordinates (WGS84).
 - Gaelic/Welsh/Irish alternative names in square brackets become `alt_name`.
 
+## Weather stations
+
+`public/data/weather.geojson` (37 stations) is built by `scripts/build_weather.py` from the
+**Met Office historic station data** (https://www.metoffice.gov.uk/research/climate/maps-and-data/historic-station-data),
+one text file per station. Licence: **Open Government Licence v3**; "Contains Met Office data © Crown copyright".
+
+- Card: the latest month in the file (provisional values are flagged as such), its mean daily
+  high/low, rain and sunshine; the station's 1991–2020 averages (temperatures from at least 300 of
+  the 360 months; rain and sunshine from years with all 12 months, at least 20 years); first year
+  of record, station height and a link to the station's file.
+- Stations the Met Office no longer updates (Cwmystwyth, Lowestoft, Nairn, Paisley, Ringway,
+  Southampton) keep their pin and show "Record ended".
+- Position: the station's current site from the file header (several stations have moved).
+- Ireland outside Northern Ireland has no station yet: Met Éireann's monthly data endpoint
+  (cli.fusio.net, CC BY 4.0) returned empty files from this box on 2026-11-01.
+
 ## Remaining honest caveats
 
 - Constituencies layer is ONS BGC GB-only (632); NI deferred; no endorse/polling UI yet.
