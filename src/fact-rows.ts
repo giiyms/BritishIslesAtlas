@@ -73,6 +73,17 @@ export const FACT_ROWS: Readonly<Record<string, Array<[key: string, label: strin
     ["cqc_date", "Rating published", text],
     ["updated", "Register entry updated", text],
   ],
+  nuclear: [
+    ["category", "Site", text],
+    ["status", "Status", text],
+    ["operator", "Licensee / operator", text],
+    ["capacity_mw", "Capacity", (v) => `${Number(v).toLocaleString("en-GB")} MW`],
+    ["established", "Established", text],
+    ["opened", "Opened", text],
+    ["closed", "Stopped generating", text],
+    ["licence", "ONR site licence", text],
+    ["licence_granted", "Licence granted", text],
+  ],
   roads: [
     ["road_class", "Class", text],
     ["nation", "Nation", text],

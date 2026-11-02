@@ -46,7 +46,7 @@ export const LAYER_SECTIONS: readonly LayerSection[] = [
   {
     id: "services",
     label: "Services",
-    layers: ["weather", "schools", "universities", "libraries", "post-offices", "marketplaces", "ev", "power", "wind", "census"],
+    layers: ["weather", "schools", "universities", "libraries", "post-offices", "marketplaces", "ev", "power", "wind", "nuclear", "census"],
   },
 ];
 

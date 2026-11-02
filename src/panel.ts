@@ -228,6 +228,13 @@ export function mountPanel(
     refreshStatus();
   });
 
+  window.addEventListener("atlas:layer", (event) => {
+    const id = (event as CustomEvent<{ id: string; on: boolean }>).detail?.id;
+    const chip = chips().find((c) => c.dataset.layer === id);
+    if (chip && isLayerId(id)) chip.setAttribute("aria-pressed", options.isOn(id) ? "true" : "false");
+    refreshStatus();
+  });
+
   // Voting view pauses context layers on the map; dim their chips so state stays honest.
   window.addEventListener("atlas:voting-mode", (event) => {
     const paused = new Set((event as CustomEvent<{ paused: string[] }>).detail?.paused ?? []);

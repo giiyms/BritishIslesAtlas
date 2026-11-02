@@ -1581,6 +1581,25 @@ nation's official register, geocoded by postcode with postcodes.io (ONS Postcode
 - 9 UK practices whose postcode does not geocode are omitted.
 - Replaces the eight-point preview.
 
+## Nuclear
+
+`public/data/nuclear.geojson` (46 sites) is built by `scripts/build_nuclear.py`.
+
+- The site list is the Office for Nuclear Regulation's register of nuclear site licences (37 licensed
+  sites; OGL v3.0) plus the Ministry of Defence-authorised sites on ONR's March 2026 map of regulated
+  sites (Clyde, Coulport, Devonport naval base, Loch Goil, Loch Ewe, Vulcan, Portsmouth, Portland,
+  Southampton). Calder Hall is shown separately inside the Sellafield licence.
+- Coordinates, capacity, and established, opened and closed years come from Wikidata (CC0). Six sites
+  with no Wikidata coordinate are placed at the postcode in the ONR register (postcodes.io, OGL);
+  Sizewell B uses its OpenStreetMap outline (way 27625744, ODbL) and Sizewell C its Wikipedia
+  coordinate, because Wikidata gives all three Sizewell stations one point.
+- Status (generating, defuelling, decommissioning, under construction) follows the licensee and
+  the Wikidata closure date; "Stopped generating" is Wikidata's end-of-service year.
+- MOD berths and naval bases are regulated, not licensed, so their cards cite the ONR map instead
+  of a licence number. Wikidata places Loch Goil and Loch Ewe at the loch, not the berth.
+- Ireland, the Isle of Man and the Channel Islands have no nuclear installations.
+- Replaces the nine-point preview.
+
 ## Remaining honest caveats
 
 - Constituencies layer is ONS BGC GB-only (632); NI deferred; no endorse/polling UI yet.

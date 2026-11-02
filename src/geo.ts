@@ -242,17 +242,6 @@ Aghada|Aghada|-8.182|51.834
 Kilroot|Kilroot|-5.767|54.725
 Grain|Isle of Grain|0.714|51.444
 `,
-  nuclear: `
-Hinkley Point|Hinkley|-3.128|51.209
-Sizewell|Sizewell|1.620|52.215
-Heysham|Heysham|-2.916|54.029
-Torness|Torness|-2.408|55.968
-Hunterston|Hunterston|-4.896|55.722
-Hartlepool Nuclear|Hartlepool|-1.192|54.635
-Dungeness|Dungeness|0.959|50.913
-Wylfa|Wylfa|-4.483|53.416
-Sellafield|Sellafield|-3.498|54.421
-`,
   castles: `
 Tower of London|London|-0.076|51.508
 Windsor Castle|Windsor|-0.604|51.484
@@ -393,7 +382,7 @@ const builders: Record<LayerId, () => Feature[]> = {
   weather: () => [],
   power: () => [],
   wind: () => [],
-  nuclear: () => namedLayer("nuclear", "Preview nuclear site"),
+  nuclear: () => [],
   castles: () => [],
   historic: () => [],
   legends: () => [],

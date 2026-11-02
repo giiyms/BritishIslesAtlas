@@ -1843,5 +1843,12 @@
     "count": 10099,
     "method": "NHS ODS epraccur + PHS + BSO registers geocoded by postcode; HSE Service Directory (Ireland, May 2022); OSM amenity=doctors for the Isle of Man and Channel Islands",
     "license": "OGL v3 (UK registers, CQC, ONSPD); CC BY 4.0 (HSE); ODbL 1.0 (OSM part)"
+  },
+  "nuclear": {
+    "extracted_at": "2026-11-01",
+    "layer": "nuclear",
+    "count": 46,
+    "method": "ONR register of nuclear site licences and ONR regulated-sites map; Wikidata coordinates and reactor facts",
+    "license": "OGL v3 (ONR); CC0 (Wikidata); OGL v3 (ONSPD postcodes)"
   }
 }
