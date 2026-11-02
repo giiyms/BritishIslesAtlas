@@ -279,18 +279,6 @@ Eilean Donan|Dornie|-5.516|57.274
 Bunratty Castle|Bunratty|-8.812|52.697
 Dunluce Castle|Dunluce|-6.578|55.211
 `,
-  historic: `
-Stonehenge|Amesbury|-1.826|51.179
-Roman Baths|Bath|-2.360|51.381
-Giant's Causeway|Bushmills|-6.511|55.240
-Newgrange|Boyne Valley|-6.475|53.694
-Skara Brae|Sandwick|-3.340|59.049
-Housesteads|Hadrian's Wall|-2.331|55.013
-Canterbury Cathedral|Canterbury|1.083|51.280
-Clonmacnoise|Shannonbridge|-7.986|53.326
-Tintagel|Tintagel|-4.760|50.668
-Skellig Michael|Skellig|-10.538|51.771
-`,
   legends: `
 Glastonbury|Glastonbury|-2.714|51.147
 Loch Ness|Drumnadrochit|-4.424|57.322
@@ -427,7 +415,7 @@ const builders: Record<LayerId, () => Feature[]> = {
   wind: () => [],
   nuclear: () => namedLayer("nuclear", "Preview nuclear site"),
   castles: () => [],
-  historic: () => namedLayer("historic", "Preview historic site"),
+  historic: () => [],
   legends: () => namedLayer("legends", "Preview legend"),
   mountains: () => [],
 };

@@ -1820,5 +1820,13 @@
     "layer": "cemeteries",
     "count": 27964,
     "filter": "landuse=cemetery or amenity=grave_yard (nodes and areas, area centre points)"
+  },
+  "historic": {
+    "extracted_at": "2026-11-01",
+    "method": "Geofabrik PBF extracts (great-britain, ireland-and-northern-ireland, isle-of-man, guernsey-jersey) via scripts/extract_pbf.py",
+    "license": "ODbL 1.0",
+    "layer": "historic",
+    "count": 40871,
+    "filter": "historic=archaeological_site (nodes and areas)"
   }
 }

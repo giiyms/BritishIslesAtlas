@@ -1528,6 +1528,20 @@ Licence: **ODbL 1.0**.
 - About three quarters of churchyards carry no name in OSM; those cards read "Churchyard".
 - Replaces the five-point preview.
 
+## Historic (archaeological sites)
+
+`public/data/historic.geojson` (40,871 sites) is built by `scripts/build_pbf_layers.py historic` from
+the Geofabrik OpenStreetMap extracts (downloaded 2026-11-01). Licence: **ODbL 1.0**.
+
+- Every `historic=archaeological_site` node or area (areas at their centre): hillforts and Irish
+  ringforts (about half the set, largely from the National Monuments Service import), barrows,
+  standing stones and circles, crannogs, brochs, settlements and Roman forts.
+- Card: site type, fortification type and period when tagged, then the live OSM tags.
+- Unnamed sites (about two thirds) are titled by their type, e.g. "Fortification".
+- Castles, battlefields and memorials stay in their own layers. The Stonehenge stone circle itself is not
+  tagged `historic=archaeological_site` in the extract, so only its surrounding barrows appear.
+- Replaces the ten-point preview.
+
 ## Remaining honest caveats
 
 - Constituencies layer is ONS BGC GB-only (632); NI deferred; no endorse/polling UI yet.

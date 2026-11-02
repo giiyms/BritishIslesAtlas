@@ -54,6 +54,11 @@ export const FACT_ROWS: Readonly<Record<string, Array<[key: string, label: strin
     ["cemetery_kind", "Kind", text],
     ["area_ha", "Area", (v) => `${Number(v).toLocaleString("en-GB")} ha`],
   ],
+  historic: [
+    ["site_type", "Site type", text],
+    ["fortification_type", "Fortification", text],
+    ["civilization", "Period", text],
+  ],
   roads: [
     ["road_class", "Class", text],
     ["nation", "Nation", text],

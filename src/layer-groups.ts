@@ -26,7 +26,7 @@ export const LAYER_SECTIONS: readonly LayerSection[] = [
     id: "culture",
     label: "Culture & heritage",
     layers: [
-      "museums", "galleries", "theatres", "cinemas", "arts-centres", "castles", "ruins",
+      "historic", "museums", "galleries", "theatres", "cinemas", "arts-centres", "castles", "ruins",
       "battlefields", "memorials", "windmills", "lighthouses", "piers", "townhalls", "nightclubs",
     ],
   },
