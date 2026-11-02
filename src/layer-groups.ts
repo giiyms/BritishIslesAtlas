@@ -20,7 +20,7 @@ export const LAYER_SECTIONS: readonly LayerSection[] = [
   {
     id: "health",
     label: "Health & emergency",
-    layers: ["hospitals", "health", "clinics", "dentists", "pharmacies", "fire-stations", "police", "prisons", "courthouses"],
+    layers: ["hospitals", "health", "clinics", "dentists", "pharmacies", "fire-stations", "police", "crime", "prisons", "courthouses"],
   },
   {
     id: "culture",
@@ -58,9 +58,9 @@ const SINGULAR_OVERRIDES: Record<string, string> = {
   "EV charging": "EV charger",
   "Other religious": "Religious site",
   Population: "Settlement",
-  Census: "Census marker",
+  Census: "Council area",
   Roads: "Road",
-  Crime: "Crime marker",
+  Crime: "Recorded crime",
   Health: "GP practice",
   Weather: "Weather station",
   Immigration: "Immigration",

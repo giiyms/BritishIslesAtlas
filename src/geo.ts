@@ -207,47 +207,6 @@ st-helier|St Helier|Crown dependency|-2.107|49.188|34000
 st-peter-port|St Peter Port|Crown dependency|-2.537|49.455|19000
 `;
 
-const NAMED_POINTS: Record<string, string> = {
-  crime: `
-Crime preview|London|-0.10|51.52
-Crime preview|Birmingham|-1.90|52.49
-Crime preview|Manchester|-2.24|53.48
-Crime preview|Glasgow|-4.25|55.86
-Crime preview|Cardiff|-3.18|51.48
-Crime preview|Belfast|-5.93|54.60
-Crime preview|Dublin|-6.26|53.35
-Crime preview|Edinburgh|-3.19|55.95
-`,
-  power: `
-Drax|Drax|-0.996|53.737
-Ratcliffe|Ratcliffe-on-Soar|-1.255|52.866
-Pembroke Power|Pembroke|-4.991|51.684
-Peterhead Power|Peterhead|-1.789|57.477
-Moneypoint|Moneypoint|-9.424|52.607
-Didcot|Didcot|-1.268|51.623
-West Burton|West Burton|-0.810|53.361
-Aghada|Aghada|-8.182|51.834
-Kilroot|Kilroot|-5.767|54.725
-Grain|Isle of Grain|0.714|51.444
-`,
-  castles: `
-Tower of London|London|-0.076|51.508
-Windsor Castle|Windsor|-0.604|51.484
-Edinburgh Castle|Edinburgh|-3.200|55.948
-Stirling Castle|Stirling|-3.948|56.124
-Caernarfon Castle|Caernarfon|-4.277|53.139
-Conwy Castle|Conwy|-3.826|53.280
-Warwick Castle|Warwick|-1.585|52.279
-Dover Castle|Dover|1.325|51.129
-Blarney Castle|Blarney|-8.571|51.929
-Kilkenny Castle|Kilkenny|-7.249|52.650
-Carrickfergus Castle|Carrickfergus|-5.806|54.713
-Eilean Donan|Dornie|-5.516|57.274
-Bunratty Castle|Bunratty|-8.812|52.697
-Dunluce Castle|Dunluce|-6.578|55.211
-`,
-};
-
 function loadPlaces(table: string): Place[] {
   const places: Place[] = [];
   for (const line of table.trim().split("\n")) {
@@ -276,34 +235,6 @@ export const PLACES: Place[] = loadPlaces(PLACE_TABLE);
 
 function collection(features: Feature[]): FeatureCollection {
   return { type: "FeatureCollection", features };
-}
-
-function point(
-  lon: number,
-  lat: number,
-  properties: Record<string, string | number | boolean>,
-): Feature {
-  return {
-    type: "Feature",
-    geometry: { type: "Point", coordinates: [lon, lat] },
-    properties,
-  };
-}
-
-function namedLayer(id: string, note: string): Feature[] {
-  const table = NAMED_POINTS[id];
-  if (!table) return [];
-  return table
-    .trim()
-    .split("\n")
-    .map((line) => {
-      const [name, where, lon, lat] = line.split("|").map((part) => part.trim());
-      return point(Number(lon), Number(lat), {
-        name,
-        layer: id,
-        note: `${note} · ${where}`,
-      });
-    });
 }
 
 const builders: Record<LayerId, () => Feature[]> = {
@@ -365,7 +296,7 @@ const builders: Record<LayerId, () => Feature[]> = {
   ev: () => [],
   cemeteries: () => [],
   immigration: () => [],
-  crime: () => namedLayer("crime", "Preview only, not an offence record"),
+  crime: () => [],
   health: () => [],
   weather: () => [],
   power: () => [],

@@ -1606,6 +1606,40 @@ nation's official register, geocoded by postcode with postcodes.io (ONS Postcode
   Isle of Man and the Channel Islands, so passenger counts are traffic, not immigration checks.
 - Replaces the ten-point preview.
 
+## Crime
+
+`public/data/crime.geojson` (918 points) is built by `scripts/build_crime.py`. Every point is an area
+the police publish recorded-crime counts for, with the total, the main offence groups and, in the UK, a rate.
+
+- England and Wales: Home Office police recorded crime open data tables, Community Safety Partnership
+  file for April 2025 to March 2026 (updated 22 October 2026, OGL). One point per partnership (312);
+  fraud is recorded nationally by Action Fraud and is not in these figures.
+  - Kent Police records Maidstone, Medway, Tonbridge and Malling and Tunbridge Wells together (Home
+    Office force note); they are one point with the force's other unplaced crime.
+  - Forces that could not place more than 3% of their crime in a partnership (Greater Manchester,
+    Humberside) say so on each card; that crime is only in the force total.
+  - Manchester Airport is its own partnership and sits on the airport, without a rate.
+  - Partnerships are matched to councils with the ONS LAD25-CSP25-PFA25 lookup (OGL). Partnerships that
+    are former districts of a merged council (Cumbria, Northamptonshire, Buckinghamshire, East Suffolk,
+    Bournemouth and Poole) are rebuilt from Census 2021 MSOA residents (Nomis) inside the ONS
+    December 2018 district boundary, using ONS MSOA population-weighted centroids.
+- Scotland: Scottish Government, Recorded Crime in Scotland 2025-26, tables 1 and 4 (OGL), one point
+  per council area. Rates are the published ones (NRS mid-2024 population). Scotland counts crimes,
+  not offences such as speeding, under Scots law, so totals are not directly comparable with England.
+- Northern Ireland: PSNI police recorded crime tables to 31 March 2026, district summaries (OGL), one
+  point per policing district (the eleven council areas).
+- Rates in England, Wales and Northern Ireland are per 1,000 Census 2021 residents; Scotland uses its published rate.
+  The City of London and Westminster rates are high because few people live where many work and visit.
+- Ireland: CSO table CJA07, recorded crime incidents by Garda station, 2025 (CC BY 4.0). CSO publishes
+  Garda crime statistics "under reservation" while recording quality is reviewed, and each card says
+  so. Stations have no population, so there is no rate. One station recorded nothing and is left out.
+  - Positions: the OSM police station of that name (398), else an unnamed OSM police station within
+    1.5 km of the village (30), else the village from OSM or GeoNames (129), else the townland or
+    street from OSM (7). Each card says which. Irish-language station names are matched through
+    their English forms (logainm.ie), and same-named villages are kept to their Garda division.
+- Placed on the census layer's council markers (ONS LAD BGC centroids) where an area is one council.
+- Replaces the preview markers.
+
 ## Nuclear
 
 `public/data/nuclear.geojson` (46 sites) is built by `scripts/build_nuclear.py`.

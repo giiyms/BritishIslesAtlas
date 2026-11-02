@@ -1857,5 +1857,12 @@
     "count": 70,
     "method": "CAA 2025 and CSO airport passengers, DfT SPAS0101 and CSO port traffic, Home Office Det_03a detention; Wikidata, OSM and postcodes.io coordinates",
     "license": "CAA statistics (cited); OGL v3 (DfT, Home Office, ONSPD); CC BY 4.0 (CSO); CC0 (Wikidata); ODbL (OSM)"
+  },
+  "crime": {
+    "extracted_at": "2026-11-01",
+    "layer": "crime",
+    "count": 918,
+    "method": "Home Office CSP open data and PSNI tables (Apr 2025 to Mar 2026), Scottish Government council tables 2025-26, CSO CJA07 Garda stations 2025; ONS council centroids, OSM and GeoNames station positions",
+    "license": "OGL v3 (Home Office, ONS, Scottish Government, PSNI); CC BY 4.0 (CSO, GeoNames); ODbL (OSM)"
   }
 }

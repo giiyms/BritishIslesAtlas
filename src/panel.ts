@@ -152,10 +152,6 @@ export function mountPanel(
     for (const layer of layers) group.grid.append(chipButton(layer, options.isOn(layer.id)));
     groups.push(group.details);
   }
-  const upcomingLayers = LAYERS.filter((layer) => layer.group === "upcoming");
-  const upcoming = section("Upcoming", upcomingLayers, false, "group-upcoming");
-  for (const layer of upcomingLayers) upcoming.grid.append(chipButton(layer, options.isOn(layer.id)));
-  groups.push(upcoming.details);
 
   // About the data (fix 10): one link instead of a 90-word credits paragraph.
   const about = document.createElement("button");
