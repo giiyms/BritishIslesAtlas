@@ -1764,5 +1764,13 @@
         "rated": 1
       }
     }
+  },
+  "mountains": {
+    "layer": "mountains",
+    "count": 2651,
+    "license": "CC BY 4.0",
+    "source": "Database of British and Irish Hills v18.6",
+    "url": "https://www.hill-bagging.co.uk/dobih/downloads/",
+    "filter": "Marilyn, Munro, Hewitt, Arderin or Wainwright"
   }
 }

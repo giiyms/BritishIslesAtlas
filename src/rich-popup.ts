@@ -6,6 +6,7 @@
  */
 import { minuteOfWeek, openState, parseOpeningHours } from "./opening-hours";
 import { turbineRows } from "./turbine";
+import { factRows } from "./fact-rows";
 
 export const escapeHtml = (value: string) =>
   value.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
@@ -311,7 +312,7 @@ export function poiCardHtml(card: PoiCard): string {
     `<strong class="popup-title popup-title-poi">${escapeHtml(card.name)}</strong>` +
     `<div class="popup-meta">${escapeHtml(card.typeLine)}</div></div></header>` +
     `<figure class="poi-photo is-loading" aria-busy="true"><div class="poi-skeleton"></div></figure>` +
-    turbineRows(card.props) +
+    turbineRows(card.props) + factRows(card.layerId, card.props) +
     `<div class="poi-rating" hidden></div>` +
     `<dl class="poi-rows"><div class="poi-row poi-row-loading"><dt>${ROW_ICONS.info}</dt><dd><span class="poi-line"></span></dd></div></dl>` +
     `<div class="poi-actions"><button type="button" class="poi-copy" data-coords="${coords}">Copy ${coords}</button>` +
@@ -346,7 +347,8 @@ export async function hydratePoiCard(root: HTMLElement, card: PoiCard, signal: A
   const rows = tagRows(tags);
   const extra = otherTags(tags, rows);
   const dl = root.querySelector<HTMLElement>(".poi-rows");
-  if (dl) {
+  if (dl && !osmId && root.querySelector(".popup-rows")) dl.remove();
+  else if (dl) {
     dl.innerHTML = rows.length || extra.length ? rowsHtml(rows, extra)
       : `<div class="poi-row"><dt>${ROW_ICONS.info}</dt><dd class="poi-empty">${osmId ? "No further details recorded in OpenStreetMap yet." : "No details available."}</dd></div>`;
   }
@@ -355,6 +357,7 @@ export async function hydratePoiCard(root: HTMLElement, card: PoiCard, signal: A
   const photoTask = findPhoto(tags, signal).then((photo) => {
     if (!figure || signal.aborted) return;
     figure.classList.remove("is-loading"); figure.removeAttribute("aria-busy");
+    if (!photo && !osmId) { figure.remove(); onResize(); return; }
     if (!photo) { figure.classList.add("is-empty"); figure.innerHTML = `<div class="poi-nophoto">No open-licence photo linked yet</div>`; onResize(); return; }
     const ratio = photo.width && photo.height ? `aspect-ratio:${photo.width}/${photo.height};` : "";
     figure.innerHTML = `<div class="poi-skeleton"></div><img loading="lazy" decoding="async" alt="${escapeHtml(card.name)}" src="${escapeHtml(photo.src)}" style="${ratio}">` +

@@ -34,7 +34,7 @@ export const LAYER_SECTIONS: readonly LayerSection[] = [
     id: "leisure",
     label: "Leisure & outdoors",
     layers: [
-      "zoos", "aquariums", "theme-parks", "stadiums", "viewpoints", "golf-courses", "nature-reserves",
+      "mountains", "zoos", "aquariums", "theme-parks", "stadiums", "viewpoints", "golf-courses", "nature-reserves",
       "camp-sites", "caravan-sites", "sports-centres", "fitness-centres", "playgrounds", "beaches", "swimming-pools",
     ],
   },

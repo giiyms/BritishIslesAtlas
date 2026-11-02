@@ -386,19 +386,6 @@ Arthur's Seat|Edinburgh|-3.162|55.944
 Croagh Patrick|Murrisk|-9.659|53.760
 The Burren|Ballyvaughan|-9.150|53.050
 `,
-  mountains: `
-Ben Nevis|Highland|-5.004|56.797
-Ben Macdui|Cairngorms|-3.640|57.070
-Snowdon|Eryri|-4.076|53.068
-Scafell Pike|Cumbria|-3.212|54.454
-Helvellyn|Cumbria|-3.017|54.527
-Pen y Fan|Brecon|-3.436|51.884
-Slieve Donard|Mourne|-5.920|54.180
-Carrauntoohil|Kerry|-9.743|51.999
-Lugnaquilla|Wicklow|-6.465|52.966
-Goat Fell|Arran|-5.243|55.626
-Croagh Patrick|Mayo|-9.659|53.760
-`,
 };
 
 function loadPlaces(table: string): Place[] {
@@ -675,7 +662,7 @@ const builders: Record<LayerId, () => Feature[]> = {
   castles: () => [],
   historic: () => namedLayer("historic", "Preview historic site"),
   legends: () => namedLayer("legends", "Preview legend"),
-  mountains: () => namedLayer("mountains", "Preview summit"),
+  mountains: () => [],
 };
 
 export function buildCollection(id: LayerId): FeatureCollection {

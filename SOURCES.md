@@ -1396,6 +1396,20 @@ Source: the OpenStreetMap places-of-worship extract already used by the Places o
 
 Caveats: OSM coverage of places of worship is very good for churches and uneven for house mosques, small gurdwaras and temples in rented rooms; a site missing a `religion` tag lands in Other religious. Check: `src/religion-views.test.ts` verifies every place of worship falls in exactly one view and the counts match.
 
+## Mountains
+
+`public/data/mountains.geojson` (2,651 summits) is built by `scripts/build_mountains.py` from the
+**Database of British and Irish Hills v18.6** (DoBIH, www.hills-database.co.uk), downloaded as
+`hillcsv.zip` from https://www.hill-bagging.co.uk/dobih/downloads/. Licence: **CC BY 4.0**;
+attribution "Contains data from The Database of British and Irish Hills v18.6".
+
+- Kept: every hill on the Marilyn (150 m drop), Munro, Hewitt, Arderin or Wainwright lists.
+  The card also names any other DoBIH list the hill is on (Corbett, Graham, Donald, Nuttall,
+  Vandeleur-Lynam, Furth).
+- Card: height, prominence (drop), lists, county, summit feature, and a link to the hill's
+  hill-bagging.co.uk page. Positions are the DoBIH summit coordinates (WGS84).
+- Gaelic/Welsh/Irish alternative names in square brackets become `alt_name`.
+
 ## Remaining honest caveats
 
 - Constituencies layer is ONS BGC GB-only (632); NI deferred; no endorse/polling UI yet.
