@@ -791,6 +791,12 @@ export function createAtlas(container: HTMLElement): Atlas {
         return;
       }
       popup.setLngLat(at).setMaxWidth("380px").setHTML(seatHtml(seat, electionData)).addTo(map);
+      // Desktop: the seat panel docks on the right, so keep the tapped seat out from under it.
+      if (window.matchMedia("(min-width: 861px)").matches) {
+        const px = map.project(at);
+        const edge = window.innerWidth - 420 - 24;
+        if (px.x > edge) map.panBy([px.x - edge, 0], { duration: motionDuration(400) });
+      }
       popup.getElement()?.querySelector<HTMLButtonElement>(".copy-seat")?.addEventListener("click", (event) => {
         const url = new URL(location.href); url.searchParams.set("seat", code);
         void navigator.clipboard.writeText(url.href).then(() => { (event.target as HTMLButtonElement).textContent = "Link copied"; });

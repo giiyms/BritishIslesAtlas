@@ -232,11 +232,39 @@ def rolling_average(polls: list[dict], n: int = ROLLING_N) -> dict:
     }
 
 
+MONTHS = {m: i for i, m in enumerate("jan feb mar apr may jun jul aug sep oct nov dec".split(), 1)}
+
+
+def add_iso_dates(rows: list[dict], newest_year: int) -> None:
+    """Add `date` (ISO, last fieldwork day) to newest-first rows whose fieldwork has no year.
+
+    Wikipedia lists the current year's polls newest first; when the month number
+    goes UP while walking down the list we have crossed into the previous year.
+    """
+    year, prev_month = newest_year, 13
+    for row in rows:
+        hits = re.findall(r"(\d{1,2})\s*([A-Za-z]{3})", row.get("fieldwork") or "")
+        if not hits:
+            row["date"] = None
+            continue
+        day, mon = hits[-1]
+        month = MONTHS.get(mon.casefold())
+        if month is None:
+            row["date"] = None
+            continue
+        if month > prev_month:
+            year -= 1
+        prev_month = month
+        row["date"] = f"{year:04d}-{month:02d}-{int(day):02d}"
+
+
 def main() -> int:
     html = fetch_html()
     rows = extract_main_table(html)
-    # Keep a generous recent slice for the file; UI uses rolling avg + latest few
-    polls = rows[:40]
+    add_iso_dates(rows, datetime.now(timezone.utc).year)
+    # Keep the whole table (it is the history behind the trend chart); the UI
+    # draws a time series and uses the rolling average for the headline numbers.
+    polls = rows[:500]
     retrieved_at = now_iso()
     out = {
         "retrieved_at": retrieved_at,

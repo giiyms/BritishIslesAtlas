@@ -3,6 +3,7 @@ import {
   candidateFor, escapeHtml, loadElection, partyColour, partyName, seatColour, seatProjectedWinner,
   type ElectionData, type ElectionSeat, type Measure, type NationalPoll,
 } from './election';
+import { attachTrend, trendHtml } from './poll-trend';
 import { CLEAR_2024_MARGIN, CONFIDENCE_RANK } from './tactical';
 
 const NATIONAL_PARTIES: [string, string][] = [['lab', 'Labour'], ['con', 'Conservative'], ['ref', 'Reform UK'], ['ld', 'Liberal Democrat'], ['grn', 'Green'], ['rb', 'Restore Britain'], ['snp', 'SNP'], ['pc', 'Plaid Cymru']];
@@ -14,19 +15,14 @@ export function countBy(values: string[]): [string, number][] {
   return Object.entries(values.reduce<Record<string, number>>((acc, p) => { acc[p] = (acc[p] ?? 0) + 1; return acc; }, {})).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
 }
 
-function bars(rows: [string, number][], unit: string): string {
-  const max = Math.max(1, ...rows.map(([, v]) => v));
-  return `<ul class="share-bars">${rows.map(([p, v]) => `<li><span>${escapeHtml(p)}</span><b><i style="width:${(v / max * 100).toFixed(1)}%;background:${partyColour(p)}"></i></b><em>${v}${unit}</em></li>`).join('')}</ul>`;
-}
-
 function nationalHtml(d: ElectionData): string {
   const avg = d.national.rolling_average;
   const span = avg?.fieldwork_span;
-  const average = avg ? bars(NATIONAL_PARTIES.flatMap(([k, p]) => { const v = num(avg[k]); return v === null ? [] : [[p, v] as [string, number]]; }).sort((a, b) => b[1] - a[1]), '%') : '<p>No poll average available.</p>';
+  const trend = trendHtml(d.national.polls ?? []);
   const polls: NationalPoll[] = (d.national.polls ?? []).slice(0, avg?.n ?? 7);
   const table = polls.length ? `<div class="mini-scroll"><table class="mini-table"><thead><tr><th>Pollster</th><th>Fieldwork</th>${NATIONAL_PARTIES.slice(0, 6).map(([k]) => `<th>${SHORT[k]}</th>`).join('')}</tr></thead><tbody>${polls.map(p => `<tr><td>${escapeHtml(p.pollster)}</td><td>${escapeHtml(p.fieldwork)}</td>${NATIONAL_PARTIES.slice(0, 6).map(([k]) => { const v = num(p[k]); return `<td>${v === null ? '–' : v}</td>`; }).join('')}</tr>`).join('')}</tbody></table></div>` : '';
-  return `<p class="summary-head">${avg?.n ?? 0}-poll average · fieldwork ${escapeHtml(span?.oldest ?? '?')} to ${escapeHtml(span?.newest ?? '?')}</p>${average}` +
-    `<p class="summary-head">Latest polls (GB, %)</p>${table}` +
+  return `<p class="summary-head">Voting intention over time (GB, %)</p>${trend}` +
+    `<p class="summary-head">Latest polls (GB, %), plus the ${avg?.n ?? 0}-poll average ${escapeHtml(span?.oldest ?? '?')} to ${escapeHtml(span?.newest ?? '?')}: ${NATIONAL_PARTIES.slice(0, 6).map(([k]) => `${SHORT[k]} ${num(avg?.[k]) ?? '–'}`).join(', ')}</p>${table}` +
     `<p class="seat-small">${escapeHtml(avg?.method ?? '')} Source: <a href="${escapeHtml(d.national.source_url)}"${EXT}>${escapeHtml(d.national.source ?? 'opinion polling table')}</a> · retrieved ${escapeHtml(d.national.retrieved_at.slice(0, 10))}. National polls are shown for context and do not change seat picks.</p>`;
 }
 
@@ -146,6 +142,7 @@ export function mountElectionUI(openSeat: (code: string) => void): void {
     buildColumns(d);
     updateLegend(d);
     root.querySelector('.national-summary')!.innerHTML = nationalHtml(d);
+    attachTrend(root);
     root.querySelector('.seat-counts')!.innerHTML = seatCountsHtml(d);
   }).catch(() => { legend.textContent = 'Election data unavailable'; });
 }
