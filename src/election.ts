@@ -49,6 +49,11 @@ export function loadElection(): Promise<ElectionData> {
     getJson('overrides.json').catch(() => ({ overrides: [] })),
   ]).then(([geo, results, candidates, projections, national, overrides]) => ({ geo, seats: joinSeats(geo, results, candidates, projections, overrides), results, candidates, projections, national, overrides }));
 }
+let seatHistory: Promise<import('./poll-trend').SeatHistory> | undefined;
+/** Per-seat projection history: fetched only when a seat panel first opens. A failed fetch can be retried. */
+export function loadSeatHistory(): Promise<import('./poll-trend').SeatHistory> {
+  return seatHistory ??= getJson('polls-seats-history.json').catch((err: unknown) => { seatHistory = undefined; throw err; });
+}
 export function escapeHtml(value: unknown): string { return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c] ?? c)); }
 export function partyName(data: Pick<ElectionData, 'results'>, code: string): string { return canonicalParty(data.results.parties[code] ?? code); }
 
@@ -97,7 +102,7 @@ function shareBars(shares: [string, number][], pick: string | null): string {
   return `<ul class="share-bars">${shares.map(([p, v]) => `<li${p === pick ? ' class="is-pick"' : ''}><span>${escapeHtml(p)}</span><b><i style="width:${(v / max * 100).toFixed(1)}%;background:${partyColour(p)}"></i></b><em>${fmt(v)}</em></li>`).join('')}</ul>`;
 }
 
-function projectionHtml(seat: ElectionSeat, { provider, row }: SeatProjection): string {
+function projectionHtml(seat: ElectionSeat, { key, provider, row }: SeatProjection): string {
   const winner = projectedWinner(row, seat.code) || 'Unavailable';
   const shares = projectedShares(row, seat.code).filter(([, v]) => v > 0);
   const other = projectedShare(row, 'Other', seat.code);
@@ -106,7 +111,7 @@ function projectionHtml(seat: ElectionSeat, { provider, row }: SeatProjection): 
     ? Object.entries(row.chances).filter(([, v]) => typeof v === 'number').sort((a, b) => b[1] - a[1]).map(([k, v]) => `${escapeHtml(canonicalParty(CHANCE_LABEL[k] ?? k, seat.code))} ${Math.round(v * 100)}%`).join(' · ')
     : '';
   return `<div class="proj-card"><div class="proj-head">${link(provider.url, provider.provider)} projects <strong style="--party:${partyColour(winner)}">${escapeHtml(winner)}</strong></div>` +
-    shareBars(shares, seat.pick.party) +
+    `<div class="proj-shares" data-provider="${escapeHtml(key)}">${shareBars(shares, seat.pick.party)}</div>` +
     (chances ? `<p class="proj-chances">Win probability: ${chances}</p>` : '') +
     `<p class="proj-meta">Fieldwork ${escapeHtml(provider.fieldwork ?? 'not stated')} · retrieved ${escapeHtml(provider.retrieved_at.slice(0, 10))}${provider.status !== 'loaded' ? ` · ${escapeHtml(provider.status)}` : ''}</p></div>`;
 }

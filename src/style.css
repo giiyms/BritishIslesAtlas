@@ -900,6 +900,9 @@ html, body { touch-action: manipulation; }
 .tr-legend { list-style:none; margin:2px 0 0; padding:0 !important; display:grid; grid-template-columns:1fr 1fr; gap:2px 8px; font-size:11px; }
 .tr-legend b { font-variant-numeric:tabular-nums; }
 .tr-legend small { color:#66727c; display:block; margin-left:14px; }
+.tr-note { font-size:10px; fill:#4a5762; font-style:italic; }
+.proj-shares .poll-trend { margin:2px 0 4px; }
+.proj-hist-cap { font-size:11px; color:#4a5762; margin:6px 0 0 !important; }
 
 /* Desktop: the seat details dock as a side panel on the right instead of a popup floating over the map. */
 @media (min-width: 861px) {

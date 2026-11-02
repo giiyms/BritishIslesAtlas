@@ -852,3 +852,19 @@ in the URL. Auto is the default and removes that parameter. Only active dense
 layers load artifacts, and each style loads only its required files. Hex,
 column, contour and spike bands load near their zoom window; points and
 heatmap need no density artifacts. One legend describes the selected mode.
+
+## `build_seat_history.py`
+
+Backfills `public/data/polls-seats-history.json`: per-seat projected vote share
+for every past edition of the Electoral Calculus seat file (Internet Archive
+captures on 2024 boundaries) and each More in Common MRP that parses cleanly.
+Editions, their dates and the reasons for skipped files are listed in the script.
+Re-running merges into the existing file (same date replaces, other dates kept).
+Needs `openpyxl`.
+
+```bash
+python3 scripts/build_seat_history.py
+```
+
+`fetch_polls_seats.py` (run by the daily refresh) appends the current editions
+to the same file, so history grows over time and is never overwritten.

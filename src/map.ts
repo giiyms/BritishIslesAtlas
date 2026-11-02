@@ -21,7 +21,8 @@ import {
   type FeatureCollection as VotingFeatureCollection,
 } from "./voting";
 import { ENDORSE_COLORS } from "./endorse";
-import { DEFAULT_MEASURE, loadElection, seatColour, seatHtml, type ElectionData, type Measure } from "./election";
+import { DEFAULT_MEASURE, loadElection, loadSeatHistory, seatColour, seatHtml, type ElectionData, type Measure } from "./election";
+import { attachSeatHistory } from "./poll-trend";
 import { singularLabel } from "./layer-groups";
 import { PLACES } from "./geo";
 import { mountVotingLegend, showVotingToast, hideVotingToast } from "./voting-ui";
@@ -804,6 +805,11 @@ export function createAtlas(container: HTMLElement): Atlas {
         const edge = window.innerWidth - 420 - 24;
         if (px.x > edge) map.panBy([px.x - edge, 0], { duration: motionDuration(400) });
       }
+      void loadSeatHistory().then((history) => {
+        const el = popup.getElement();
+        // Only fill the panel if it still shows this seat (the user may have tapped another meanwhile).
+        if (el?.querySelector(`.copy-seat[data-seat="${code}"]`)) attachSeatHistory(el, code, history);
+      }).catch(() => { /* keep the latest-share bars */ });
       popup.getElement()?.querySelector<HTMLButtonElement>(".copy-seat")?.addEventListener("click", (event) => {
         const url = new URL(location.href); url.searchParams.set("seat", code);
         void navigator.clipboard.writeText(url.href).then(() => { (event.target as HTMLButtonElement).textContent = "Link copied"; });

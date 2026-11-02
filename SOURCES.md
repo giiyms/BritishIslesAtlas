@@ -2005,6 +2005,16 @@ Democracy Club is **sparse** — most seats are presumed Reform under locked ant
 | **Script** | `scripts/fetch_polls_seats.py` |
 | **Caveats** | If a provider cannot be fetched, **keep the last good provider block** and set `status=stale` (with `stale_error`); only use `link_out` + empty `seats` when there is no prior good block — **never invent numbers**, never blank a loaded strip on a transient failure. Projections ≠ results. |
 
+### Seat projection history (`polls-seats-history`)
+
+| Field | Value |
+|---|---|
+| **File** | `public/data/polls-seats-history.json` (fetched only when a seat panel opens) |
+| **Shape** | `seats[code][provider] = [[date, con, lab, ld, ref, grn, snp, pc, rb, oth], …]`, shares in %, 0.1 dp, `null` = not published. `providers[key].editions` lists each point's date, fieldwork, date basis and source URL; `skipped` says what was left out and why. |
+| **Electoral Calculus** | Earlier editions of `electdata_pred.txt` from Internet Archive (Wayback) captures, plus the live file. Only captures on 2024 boundaries (all 632 seats match) are used; captures up to 2024-06 are on 2019 boundaries and are skipped. Each point is dated by the EC "Updated" date on the archived/live prediction page, checked by comparing the page's headline seat totals with the file. |
+| **More in Common** | Each published MRP edition (XLSX/CSV under moreincommon.org.uk uploads) that parses cleanly, dated by publication date. Non-vote-share MRPs (e.g. leader ratings) are skipped. |
+| **Scripts** | `scripts/build_seat_history.py` (one-off backfill; re-runnable), `scripts/fetch_polls_seats.py` (daily refresh appends a point for a new edition date, replaces a same-date point, never deletes history). |
+
 ### Overrides (`overrides`)
 
 | Field | Value |

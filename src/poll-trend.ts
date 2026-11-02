@@ -1,4 +1,5 @@
-// National voting-intention trend: every poll as a faint dot, plus a smoothed line per party.
+// National voting-intention trend (every poll as a faint dot, plus a smoothed line per party) and
+// per-seat projection history (one point per published edition, joined by straight lines).
 // Pure functions (tested) plus one DOM hook for the hover readout.
 import { escapeHtml, partyColour } from './election';
 
@@ -47,24 +48,53 @@ const MONTH = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'O
 const fmtDate = (t: number) => { const d = new Date(t); return `${d.getUTCDate()} ${MONTH[d.getUTCMonth()]} ${d.getUTCFullYear()}`; };
 const fmt1 = (v: number) => v.toFixed(1);
 
+type ChartSpec = {
+  series: Series[];
+  /** Points joined by each party's line. */
+  lineOf: (s: Series) => Pt[];
+  dotClass: string;
+  dotR: number;
+  aria: string;
+  legend: string;
+  read: string;
+  /** Seat history: hover snaps to these edition dates; `label` is shown in the readout. */
+  snaps?: { t: number; label: string }[];
+  note?: string;
+};
+
+function chartHtml({ series, lineOf, dotClass, dotR, aria, legend, read, snaps, note }: ChartSpec): string {
+  const all = series.flatMap(s => s.raw);
+  let t0 = Math.min(...all.map(p => p.t)), t1 = Math.max(...all.map(p => p.t));
+  if (t1 - t0 < 30 * DAY) { const mid = (t0 + t1) / 2; t0 = mid - 30 * DAY; t1 = mid + 30 * DAY; } // single edition: centre it
+  const [lo, hi] = niceBounds(Math.min(...all.map(p => p.v)), Math.max(...all.map(p => p.v)));
+  const x = (t: number) => L + (t - t0) / Math.max(1, t1 - t0) * (W - L - R);
+  const y = (v: number) => T + (hi - v) / (hi - lo) * (H - T - B);
+  const step = (hi - lo) > 40 ? 10 : 5;
+  const grid = Array.from({ length: Math.floor((hi - lo) / step) + 1 }, (_, i) => lo + i * step)
+    .map(v => `<line x1="${L}" x2="${W - R}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}" class="tr-grid"/><text x="${L - 4}" y="${(y(v) + 3).toFixed(1)}" class="tr-tick" text-anchor="end">${v}</text>`).join('');
+  const months: string[] = [];
+  const spanMonths = (t1 - t0) / (30.4 * DAY);
+  const every = spanMonths > 12 ? 3 : spanMonths > 6 ? 2 : 1; // keep month labels from colliding on long histories
+  const cursor = new Date(t0); cursor.setUTCDate(1); cursor.setUTCHours(12);
+  for (cursor.setUTCMonth(cursor.getUTCMonth() + 1); cursor.getTime() <= t1; cursor.setUTCMonth(cursor.getUTCMonth() + 1)) {
+    const m = cursor.getUTCMonth();
+    if (m % every) continue;
+    const label = every > 1 && m === 0 ? `${MONTH[m]} ’${String(cursor.getUTCFullYear()).slice(2)}` : MONTH[m];
+    months.push(`<text x="${x(cursor.getTime()).toFixed(1)}" y="${H - 6}" class="tr-tick" text-anchor="middle">${label}</text>`);
+  }
+  const dots = series.map(s => `<g fill="${partyColour(s.name)}" class="${dotClass}">${s.raw.map(p => `<circle cx="${x(p.t).toFixed(1)}" cy="${y(p.v).toFixed(1)}" r="${dotR}"/>`).join('')}</g>`).join('');
+  const lines = series.map(s => [s, lineOf(s)] as const).filter(([, pts]) => pts.length > 1).map(([s, pts]) => `<polyline fill="none" stroke="${partyColour(s.name)}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" points="${pts.map(p => `${x(p.t).toFixed(1)},${y(p.v).toFixed(1)}`).join(' ')}"/>`).join('');
+  const noteSvg = note ? `<text x="${((L + W - R) / 2).toFixed(1)}" y="${H - B - 6}" class="tr-note" text-anchor="middle">${escapeHtml(note)}</text>` : '';
+  const data = escapeHtml(JSON.stringify({ t0, t1, lo, hi, snaps, series: series.map(s => ({ name: s.name, colour: partyColour(s.name), smooth: s.smooth })) }));
+  return `<div class="poll-trend" data-trend="${data}"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${escapeHtml(aria)}" class="tr-svg">${grid}${months.join('')}${dots}${lines}${noteSvg}<line class="tr-cursor" y1="${T}" y2="${H - B}" x1="0" x2="0" hidden/></svg>` +
+    `<p class="tr-read" aria-live="polite">${read}</p><ul class="tr-legend">${legend}</ul></div>`;
+}
+
 export function trendHtml(polls: TrendPoll[]): string {
   const series = buildSeries(polls);
   const all = series.flatMap(s => s.raw);
   if (all.length < 3) return '<p>Not enough dated polls for a trend.</p>';
-  const t0 = Math.min(...all.map(p => p.t)), t1 = Math.max(...all.map(p => p.t));
-  const [lo, hi] = niceBounds(Math.min(...all.map(p => p.v)), Math.max(...all.map(p => p.v)));
-  const x = (t: number) => L + (t - t0) / Math.max(1, t1 - t0) * (W - L - R);
-  const y = (v: number) => T + (hi - v) / (hi - lo) * (H - T - B);
-  const grid = Array.from({ length: (hi - lo) / 5 + 1 }, (_, i) => lo + i * 5)
-    .map(v => `<line x1="${L}" x2="${W - R}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}" class="tr-grid"/><text x="${L - 4}" y="${(y(v) + 3).toFixed(1)}" class="tr-tick" text-anchor="end">${v}</text>`).join('');
-  const months: string[] = [];
-  const cursor = new Date(t0); cursor.setUTCDate(1); cursor.setUTCHours(12);
-  for (cursor.setUTCMonth(cursor.getUTCMonth() + 1); cursor.getTime() <= t1; cursor.setUTCMonth(cursor.getUTCMonth() + 1)) {
-    const t = cursor.getTime();
-    months.push(`<text x="${x(t).toFixed(1)}" y="${H - 6}" class="tr-tick" text-anchor="middle">${MONTH[cursor.getUTCMonth()]}</text>`);
-  }
-  const dots = series.map(s => `<g fill="${partyColour(s.name)}" class="tr-dots">${s.raw.map(p => `<circle cx="${x(p.t).toFixed(1)}" cy="${y(p.v).toFixed(1)}" r="1.4"/>`).join('')}</g>`).join('');
-  const lines = series.filter(s => s.smooth.length > 1).map(s => `<polyline fill="none" stroke="${partyColour(s.name)}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" points="${s.smooth.map(p => `${x(p.t).toFixed(1)},${y(p.v).toFixed(1)}`).join(' ')}"/>`).join('');
+  const t1 = Math.max(...all.map(p => p.t));
   const legend = series.map(s => {
     const last = s.smooth[s.smooth.length - 1];
     const before = last ? valueAt(s, last.t - 28 * DAY) : null;
@@ -72,26 +102,96 @@ export function trendHtml(polls: TrendPoll[]): string {
     const dtxt = delta === null ? '' : ` <small>${Math.abs(delta) < 0.05 ? 'no change' : `${delta > 0 ? '+' : '−'}${Math.abs(delta).toFixed(1)}`} in 4 wks</small>`;
     return `<li><i class="swatch" style="background:${partyColour(s.name)}"></i>${escapeHtml(s.name)} <b>${last ? fmt1(last.v) : '–'}%</b>${dtxt}</li>`;
   }).join('');
-  const data = escapeHtml(JSON.stringify({ t0, t1, lo, hi, series: series.map(s => ({ name: s.name, colour: partyColour(s.name), smooth: s.smooth })) }));
-  return `<div class="poll-trend" data-trend="${data}"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Voting intention over time, one line per party" class="tr-svg">${grid}${months.join('')}${dots}${lines}<line class="tr-cursor" y1="${T}" y2="${H - B}" x1="0" x2="0" hidden/></svg>` +
-    `<p class="tr-read" aria-live="polite">Latest ${escapeHtml(fmtDate(t1))}. Touch or hover the chart to read a date.</p><ul class="tr-legend">${legend}</ul></div>`;
+  return chartHtml({
+    series, lineOf: s => s.smooth, dotClass: 'tr-dots', dotR: 1.4, aria: 'Voting intention over time, one line per party', legend,
+    read: `Latest ${escapeHtml(fmtDate(t1))}. Touch or hover the chart to read a date.`,
+  });
+}
+
+/* ---------- Per-seat projection history (public/data/polls-seats-history.json) ---------- */
+
+export type SeatHistoryEdition = { date: string; fieldwork?: string | null; date_basis: string; source_url: string; page_url?: string };
+export type SeatHistoryPoint = [date: string, ...values: (number | null)[]];
+export type SeatHistory = {
+  generated_at: string;
+  notes?: string[];
+  parties: string[];
+  providers: Record<string, { provider: string; editions: SeatHistoryEdition[]; skipped?: string[] }>;
+  seats: Record<string, Record<string, SeatHistoryPoint[]>>;
+};
+const SEAT_PARTY_NAMES: Record<string, string> = {
+  con: 'Conservative', lab: 'Labour', ld: 'Liberal Democrat', ref: 'Reform UK', grn: 'Green', snp: 'SNP', pc: 'Plaid Cymru', rb: 'Restore Britain', oth: 'Other',
+};
+export const SEAT_MIN_SHARE = 1; // parties never reaching this share in any edition are left off the chart
+export const ONE_POINT_NOTE = 'Only one projection published';
+
+/** One series per party, straight from the published editions (no smoothing), oldest first. */
+export function buildSeatSeries(points: SeatHistoryPoint[], parties: string[]): Series[] {
+  const sorted = [...points].sort((a, b) => a[0].localeCompare(b[0]));
+  return parties.map((key, i) => {
+    const raw = sorted.flatMap((p): Pt[] => (finite(p[i + 1]) ? [{ t: toTime(p[0]), v: p[i + 1] as number }] : []));
+    return { key, name: SEAT_PARTY_NAMES[key] ?? key, raw, smooth: raw };
+  }).filter(s => s.raw.length > 0 && Math.max(...s.raw.map(p => p.v)) >= SEAT_MIN_SHARE)
+    .sort((a, b) => b.raw[b.raw.length - 1].v - a.raw[a.raw.length - 1].v);
+}
+
+export function seatTrendHtml(points: SeatHistoryPoint[], parties: string[], editions: SeatHistoryEdition[] = []): string {
+  const series = buildSeatSeries(points, parties);
+  if (!series.length) return '';
+  const dates = [...new Set(points.map(p => p[0]))].sort();
+  const single = dates.length === 1;
+  const prevT = single ? null : toTime(dates[dates.length - 2]);
+  const legend = series.map(s => {
+    const last = s.raw[s.raw.length - 1];
+    const before = prevT === null ? null : s.raw.find(p => p.t === prevT)?.v ?? null;
+    const delta = before === null ? null : last.v - before;
+    const dtxt = delta === null ? '' : ` <small>${Math.abs(delta) < 0.05 ? 'no change' : `${delta > 0 ? '+' : '−'}${Math.abs(delta).toFixed(1)}`} vs previous</small>`;
+    return `<li><i class="swatch" style="background:${partyColour(s.name)}"></i>${escapeHtml(s.name)} <b>${fmt1(last.v)}%</b>${dtxt}</li>`;
+  }).join('');
+  const byDate = new Map(editions.map(e => [e.date, e]));
+  const snaps = dates.map(d => ({ t: toTime(d), label: byDate.get(d)?.fieldwork ? `fieldwork ${byDate.get(d)!.fieldwork}` : '' }));
+  const latest = escapeHtml(fmtDate(toTime(dates[dates.length - 1])));
+  return chartHtml({
+    series, lineOf: s => s.raw, dotClass: 'tr-pts', dotR: single ? 4 : 2.2,
+    aria: single ? `Projected vote share, ${ONE_POINT_NOTE.toLowerCase()}` : `Projected vote share across ${dates.length} published projections, one line per party`,
+    legend, snaps, note: single ? ONE_POINT_NOTE : undefined,
+    read: single ? `${ONE_POINT_NOTE} (${latest}).` : `${dates.length} projections, latest ${latest}. Touch or hover the chart to read an edition.`,
+  });
+}
+
+/** Swap each provider's latest-share bars for its history chart. Providers without history keep their bars. */
+export function attachSeatHistory(root: ParentNode, code: string, history: SeatHistory): void {
+  const seat = history.seats[code];
+  if (!seat) return;
+  root.querySelectorAll<HTMLElement>('.proj-shares[data-provider]').forEach(el => {
+    const key = el.dataset.provider ?? '';
+    const points = seat[key];
+    if (!points?.length || el.dataset.history) return;
+    const html = seatTrendHtml(points, history.parties, history.providers[key]?.editions);
+    if (!html) return;
+    el.dataset.history = '1';
+    el.innerHTML = `<p class="proj-hist-cap">Projected vote share (%), one point per published projection</p>${html}`;
+  });
+  attachTrend(root);
 }
 
 /** Hover/touch readout: finds the nearest date and lists each party's smoothed value. */
 export function attachTrend(root: ParentNode): void {
   root.querySelectorAll<HTMLElement>('.poll-trend').forEach(el => {
     if (el.dataset.bound) return; el.dataset.bound = '1';
-    const d = JSON.parse(el.dataset.trend ?? '{}') as { t0: number; t1: number; series: { name: string; colour: string; smooth: Pt[] }[] };
+    const d = JSON.parse(el.dataset.trend ?? '{}') as { t0: number; t1: number; snaps?: { t: number; label: string }[]; series: { name: string; colour: string; smooth: Pt[] }[] };
     const svg = el.querySelector('svg')!, cursor = el.querySelector<SVGLineElement>('.tr-cursor')!, read = el.querySelector('.tr-read')!;
     const show = (clientX: number) => {
       const r = svg.getBoundingClientRect();
       const px = (clientX - r.left) / r.width * W;
-      const t = d.t0 + Math.min(1, Math.max(0, (px - L) / (W - L - R))) * (d.t1 - d.t0);
+      let t = d.t0 + Math.min(1, Math.max(0, (px - L) / (W - L - R))) * (d.t1 - d.t0);
+      const snap = d.snaps?.length ? d.snaps.reduce((a, b) => (Math.abs(b.t - t) < Math.abs(a.t - t) ? b : a)) : null;
+      if (snap) t = snap.t;
       const cx = L + (t - d.t0) / Math.max(1, d.t1 - d.t0) * (W - L - R);
       cursor.setAttribute('x1', String(cx)); cursor.setAttribute('x2', String(cx)); cursor.removeAttribute('hidden');
       const parts = d.series.map(s => { const v = valueAt({ key: '', name: s.name, raw: [], smooth: s.smooth }, t); return v === null ? null : { name: s.name, v, c: s.colour }; })
         .filter((p): p is { name: string; v: number; c: string } => p !== null).sort((a, b) => b.v - a.v);
-      read.innerHTML = `<strong>${escapeHtml(fmtDate(t))}</strong> ` + parts.map(p => `<span style="color:${p.c}">${escapeHtml(p.name)} ${fmt1(p.v)}%</span>`).join(' · ');
+      read.innerHTML = `<strong>${escapeHtml(fmtDate(t))}</strong>${snap?.label ? ` <small>(${escapeHtml(snap.label)})</small>` : ''} ` + parts.map(p => `<span style="color:${p.c}">${escapeHtml(p.name)} ${fmt1(p.v)}%</span>`).join(' · ');
     };
     svg.addEventListener('pointermove', e => show(e.clientX));
     svg.addEventListener('pointerdown', e => show(e.clientX));

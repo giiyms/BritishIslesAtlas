@@ -33,6 +33,8 @@ EC_PAGE = "https://www.electoralcalculus.co.uk/prediction_main.html"
 EC_FAQ = "https://www.electoralcalculus.co.uk/faq.html"
 MIC_XLSX = "https://www.moreincommon.org.uk/wp-content/uploads/2026/09/Sep26-MRP.xlsx"
 MIC_PAGE = "https://www.moreincommon.org.uk/research/more-in-commons-september-2026-mrp/"
+MIC_PUBLISHED = "2026-09-26"  # history point date for MIC_XLSX (MiC publication date)
+MIC_FIELDWORK = "21 Aug 2026 – 21 Sep 2026"
 UA = "BritishIslesAtlas/fetch_polls_seats (https://github.com/giiyms/BritishIslesAtlas)"
 
 
@@ -263,8 +265,10 @@ def load_electoral_calculus(by_norm: dict[str, str], previous: dict | None = Non
             fieldwork = f"{m.group(1)} – {m.group(2)}"
         um = re.search(r"Updated\s+([0-9]{1,2}\s+\w+\s+20\d{2})", page, flags=re.I)
         updated = um.group(1) if um else None
+        page_seats = ec_page_pred_seats(page)
     except Exception:
         updated = None
+        page_seats = {}
 
     reader = csv.DictReader(io.StringIO(text), delimiter=";")
     seats: dict[str, dict] = {}
@@ -347,7 +351,20 @@ def load_electoral_calculus(by_norm: dict[str, str], previous: dict | None = Non
             "EC FAQ: Overview extracts may be republished with attribution + retrieval date.",
         ],
         "seats": seats,
+        "_page_seats": page_seats,  # internal: headline seat totals, used to date the history point
     }
+
+
+def ec_page_pred_seats(page: str) -> dict[str, int]:
+    """Headline 'Pred Seats' per party from prediction_main.html (CON/LAB/Reform)."""
+    import html as _html
+    text = re.sub(r"\s+", " ", _html.unescape(re.sub(r"<[^>]+>", " ", page)))
+    out = {}
+    for party in ("CON", "LAB", "Reform"):
+        m = re.search(rf"\b{party} [\d.]+% \d+ [\d.]+% \d+ (\d+) \d+", text)
+        if m:
+            out[party] = int(m.group(1))
+    return out
 
 
 def load_more_in_common(by_norm: dict[str, str], previous: dict | None = None) -> dict:
@@ -493,6 +510,12 @@ def main() -> int:
     previous = load_previous_providers()
     ec = load_electoral_calculus(by_norm, previous.get("electoral_calculus"))
     mic = load_more_in_common(by_norm, previous.get("more_in_common"))
+    page_seats = ec.pop("_page_seats", {})
+    try:
+        from build_seat_history import append_live
+        print(append_live(ec, mic, page_seats, mic_date=MIC_PUBLISHED, mic_fieldwork=MIC_FIELDWORK))
+    except Exception as exc:  # history is additive; never block the seat refresh
+        print(f"Seat history not updated: {exc}", file=sys.stderr)
     out = {
         "retrieved_at": retrieved_at,
         "notes": [
