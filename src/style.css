@@ -1,5 +1,12 @@
 :root {
   color-scheme: light;
+  /* Right rail (info panel, docked seat panel): starts 12px under the 48px search box at top 16px,
+     and keeps the same 12px gap above the bottom edge (plus the iPhone home-indicator inset). */
+  --edge: 16px;
+  --rail-top: 76px;
+  --rail-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  --rail-w: 380px;
+  --rail-clear: 0px;
   --ink: #1d232c;
   --muted: #6b7280;
   --faint: #5d6572;
@@ -301,7 +308,8 @@ button { cursor: pointer; }
 
 .search {
   position: absolute;
-  z-index: 2;
+  /* Above the right rail and seat sheet so search results drop down over them. */
+  z-index: 6;
   top: 16px;
   right: 16px;
   display: flex;
@@ -836,9 +844,9 @@ button { cursor: pointer; }
 .density-picker select { max-width: 170px; min-height: 30px; border: 1px solid #aab4bd; border-radius: 6px; padding: 3px 6px; background: #fff; color: #263442; font: inherit; }
 .density-picker select:focus-visible { outline: 2px solid #247b91; outline-offset: 2px; }
 .panel.collapsed .density-picker { display: none; }
-.election-controls { position:absolute; z-index:3; top:16px; right:16px; width:310px; max-height:calc(100vh - 32px); overflow:auto; padding:16px; border-radius:14px; background:#fff; box-shadow:0 4px 22px #26354533; color:#25323d; font-size:12px; }
+.election-controls { position:absolute; z-index:3; top:var(--rail-top); right:var(--edge); width:var(--rail-w); max-height:calc(100vh - var(--rail-top) - var(--rail-bottom)); max-height:calc(100dvh - var(--rail-top) - var(--rail-bottom)); overflow:auto; overscroll-behavior:contain; padding:16px; border-radius:18px; background:rgba(255,255,255,0.96); border:1px solid rgba(255,255,255,0.72); box-shadow:var(--shadow); color:#25323d; font-size:12px; }
 .election-controls h1 { font-size:20px; margin:0 0 4px; }.election-controls p { margin:5px 0 10px; line-height:1.4; }.election-controls select { display:block; width:100%; margin:5px 0 10px; padding:7px; }.election-controls button,.election-seat button,.table-tools button { cursor:pointer; padding:8px; border:1px solid #c8d2d9; border-radius:6px; background:#f5f8fa; }.election-legend { display:flex; flex-wrap:wrap; gap:6px 10px; margin:8px 0; }.election-legend span { white-space:nowrap; }.election-legend i { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:4px; }.election-controls details { margin:10px 0; }.election-controls summary { cursor:pointer; font-weight:600; }.election-seat { font-size:12px; line-height:1.4; max-height:65vh; overflow:auto; }.election-seat h2 { font-size:18px; margin:0 22px 5px 0; }.election-seat h3 { font-size:13px; margin:12px 0 4px; }.election-seat p,.election-seat ul { margin:4px 0; }.election-seat ul { padding-left:18px; }.election-table { width:min(1000px,95vw); max-height:85vh; border:0; border-radius:12px; padding:18px; }.election-table::backdrop { background:#17253377; }.election-table header,.table-tools { display:flex; justify-content:space-between; gap:12px; align-items:center; }.election-table header h2 { margin:0 0 12px; }.close-table { font-size:24px; border:0; background:none; cursor:pointer; }.table-tools input { padding:9px; flex:1; }.table-scroll { overflow:auto; max-height:65vh; }.election-table table { border-collapse:collapse; width:100%; font-size:13px; text-align:left; }.election-table th,.election-table td { padding:10px; border-bottom:1px solid #e4e8eb; }.election-table th button,.election-table td button { background:none; border:0; text-align:left; cursor:pointer; color:#245e87; }.election-table th button { font-weight:bold; }
-@media(max-width:860px) { .election-controls { top:auto; bottom:12px; right:12px; left:12px; width:auto; max-height:35vh; padding:10px 12px; }.election-controls h1 { font-size:16px; }.election-controls p { margin:3px 0; }.election-controls select { margin:3px 0; }.election-controls details { margin:4px 0; } body.seat-sheet-open .election-controls { display:none; }.election-seat { max-height:60vh; } }
+@media(max-width:860px) { .election-controls { top:auto; bottom:12px; right:12px; left:12px; width:auto; max-height:35vh; padding:10px 12px; }.election-controls h1 { font-size:16px; }.election-controls p { margin:3px 0; }.election-controls select { margin:3px 0; }.election-controls details { margin:4px 0; }.election-seat { max-height:60vh; } }
 .election-controls .lede { color:#4a5762; }
 .owner-note, .pick-note { padding:6px 8px; border-left:3px solid #8a96a1; background:#f3f5f7; color:#3c4955; font-size:11px; line-height:1.4; border-radius:0 6px 6px 0; }
 .election-controls .open-table { width:100%; font-weight:600; }
@@ -904,17 +912,16 @@ html, body { touch-action: manipulation; }
 .proj-shares .poll-trend { margin:2px 0 4px; }
 .proj-hist-cap { font-size:11px; color:#4a5762; margin:6px 0 0 !important; }
 
-/* Wider than a phone: the seat details dock as a full-height side panel on the right instead of a popup over the map. */
+/* Wider than a phone: the seat details dock as a floating card on the right, below the search box,
+   with the same gap above and below so the search and other top controls stay visible. */
 @media (min-width: 521px) {
   .atlas-popup.is-seat {
     position: fixed !important;
-    top: 12px !important;
-    right: 12px !important;
-    bottom: 0 !important;
+    top: var(--rail-top) !important;
+    right: var(--edge) !important;
+    bottom: var(--rail-bottom) !important;
     left: auto !important;
-    width: min(380px, calc(100vw - 120px));
-    max-height: calc(100vh - 12px);
-    max-height: calc(100dvh - 12px);
+    width: min(var(--rail-w), calc(100vw - 120px));
     max-width: none !important;
     transform: none !important;
     z-index: 4;
@@ -926,13 +933,13 @@ html, body { touch-action: manipulation; }
     box-sizing: border-box;
     overflow: auto;
     overscroll-behavior: contain;
-    padding: 16px 40px calc(28px + env(safe-area-inset-bottom, 0px)) 16px;
-    border-radius: 14px 14px 0 0;
-    box-shadow: 0 4px 22px #26354533;
+    padding: 16px 40px 20px 16px;
+    border-radius: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.72);
+    box-shadow: var(--shadow);
   }
   .atlas-popup.is-seat .vote-popup { min-width: 0; }
-  .atlas-popup.is-seat .maplibregl-popup-close-button { font-size: 22px; width: 32px; height: 32px; }
-  body.seat-sheet-open .election-controls { right: 404px; }
+  .atlas-popup.is-seat .maplibregl-popup-close-button { font-size: 22px; width: 32px; height: 32px; top: 6px; right: 6px; }
 }
 @media (min-width: 521px) and (max-width: 860px) {
   body.seat-sheet-open .nav,
@@ -941,3 +948,28 @@ html, body { touch-action: manipulation; }
 }
 /* The panel itself is the only scroller: no nested height cap on the seat article. */
 .atlas-popup.is-seat .election-seat { max-height: none; overflow: visible; }
+
+/* The seat panel owns the right rail while open: the info panel steps aside rather than sitting beside it. */
+body.seat-sheet-open .election-controls { display: none; }
+/* Tablet: search and the Layers bar span the width (16px + 48px, 8px, 48px), so the rail starts under the Layers bar. */
+@media (max-width: 860px) {
+  :root { --edge: 12px; --rail-top: 132px; }
+}
+/* Desktop: keep the attribution and density key clear of whichever panel holds the right rail. */
+@media (min-width: 861px) {
+  body:has(.election-controls:not([hidden])), body.seat-sheet-open { --rail-clear: calc(var(--rail-w) + var(--edge) + 12px); }
+  .maplibregl-ctrl-bottom-right { right: var(--rail-clear); }
+  .density-legend { right: calc(12px + var(--rail-clear)); }
+  /* Centre the scale bar in the map area left of the rail, so the ⓘ credit never lands on it. */
+  .scale { left: calc((100vw - var(--rail-clear)) / 2); }
+  /* Leave room for the zoom stack (20px + 130px) and a 12px gap on short screens. */
+  .panel { max-height: min(560px, calc(100vh - 178px)); }
+}
+/* Tablet and phone: the info panel is a bottom card, so lift the ⓘ credit into the scale-bar row above it. */
+@media (max-width: 860px) {
+  body:not(.seat-sheet-open):has(.election-controls:not([hidden])) .maplibregl-ctrl-bottom-right { bottom: calc(35vh + 20px); }
+}
+/* Tablet with a seat open: put the ⓘ credit just left of the docked seat panel. */
+@media (min-width: 521px) and (max-width: 860px) {
+  body.seat-sheet-open .maplibregl-ctrl-bottom-right { bottom: 0; right: calc(min(var(--rail-w), 100vw - 120px) + var(--edge) + 4px); }
+}

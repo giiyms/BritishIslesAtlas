@@ -396,16 +396,14 @@ export function createAtlas(container: HTMLElement): Atlas {
     },
   });
 
-  const compactAttribution = window.matchMedia("(max-width: 860px)").matches;
-  map.addControl(new AttributionControl({ compact: compactAttribution, customAttribution: ATTRIBUTION }), "bottom-right");
-  if (compactAttribution) {
-    // MapLibre opens the compact ⓘ on load; start collapsed so it never covers the scale bar.
-    map.once("load", () => {
-      const attrib = container.querySelector<HTMLDetailsElement>(".maplibregl-ctrl-attrib.maplibregl-compact");
-      attrib?.classList.remove("maplibregl-compact-show");
-      attrib?.removeAttribute("open");
-    });
-  }
+  // Compact ⓘ attribution at every width: the full one-line credit would run under the right-hand panel or the scale bar.
+  map.addControl(new AttributionControl({ compact: true, customAttribution: ATTRIBUTION }), "bottom-right");
+  // MapLibre opens the compact ⓘ on load; start collapsed so it never covers the scale bar.
+  map.once("load", () => {
+    const attrib = container.querySelector<HTMLDetailsElement>(".maplibregl-ctrl-attrib.maplibregl-compact");
+    attrib?.classList.remove("maplibregl-compact-show");
+    attrib?.removeAttribute("open");
+  });
 
   let loaded = false;
   let electionData: ElectionData | null = null;
@@ -802,7 +800,7 @@ export function createAtlas(container: HTMLElement): Atlas {
       // Wider than a phone: the seat panel docks on the right, so keep the tapped seat out from under it.
       if (window.matchMedia("(min-width: 521px)").matches) {
         const px = map.project(at);
-        const edge = window.innerWidth - Math.min(380, window.innerWidth - 120) - 12 - 24;
+        const edge = window.innerWidth - Math.min(380, window.innerWidth - 120) - (window.innerWidth > 860 ? 16 : 12) - 24;
         if (px.x > edge) map.panBy([px.x - edge, 0], { duration: motionDuration(400) });
       }
       void loadSeatHistory().then((history) => {
