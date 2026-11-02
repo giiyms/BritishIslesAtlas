@@ -27,7 +27,7 @@ import { singularLabel } from "./layer-groups";
 import { PLACES } from "./geo";
 import { mountVotingLegend, showVotingToast, hideVotingToast } from "./voting-ui";
 import { HEAT_MAXZOOM, ICON_FADE, heatmapPaint, iconScale, pointOpacity, pointRadius, pointStroke } from "./point-style";
-import { SLAB_SOURCES, SLAB_RELIEF_LAYERS, SLAB_SEA_LAYERS, SLAB_OUTSIDE, SLAB_WOOD, SLAB_LABEL_LAYERS, SLAB_PLACE_LABELS, SLAB_CREAM, SLAB_SEA, TERRAIN_SOURCE } from "./slab";
+import { SLAB_SOURCES, SLAB_RELIEF_LAYERS, SLAB_SEA_LAYERS, SLAB_OUTSIDE, SLAB_WOOD, SLAB_PARKS, SLAB_BORDERS, SLAB_NATIONAL_ROADS, SLAB_COUNTRY_LABELS, SLAB_LABEL_LAYERS, SLAB_PLACE_LABELS, SLAB_LAND, SLAB_SEA, TERRAIN_SOURCE } from "./slab";
 /** ~43k points each: plain points and heat only, no chip icons (they would pile up at z11). */
 const DENSE_LAYERS: ReadonlySet<LayerId> = new Set<LayerId>(["places-of-worship", "pubs"]);
 const ELECTION_OPACITY: ExpressionSpecification = ["coalesce", ["get", "electionOpacity"], 0.78];
@@ -103,9 +103,10 @@ const STYLE: StyleSpecification = {
     ...SLAB_SOURCES,
   },
   layers: [
-    { id: "land", type: "background", paint: { "background-color": SLAB_CREAM } },
+    { id: "land", type: "background", paint: { "background-color": SLAB_LAND } },
     ...SLAB_RELIEF_LAYERS,
     SLAB_WOOD,
+    SLAB_PARKS,
     SLAB_OUTSIDE,
     ...BASEMAP_GROUND,
     {
@@ -121,11 +122,13 @@ const STYLE: StyleSpecification = {
       source: "openmaptiles",
       "source-layer": "water",
       filter: ["!=", ["get", "class"], "swimming_pool"],
-      paint: { "fill-color": ["interpolate", ["linear"], ["zoom"], 9, SLAB_SEA, 13, "#9ccbef"] as unknown as ExpressionSpecification },
+      paint: { "fill-color": ["interpolate", ["linear"], ["zoom"], 9, SLAB_SEA, 13, "#8ED6F4"] as unknown as ExpressionSpecification },
     },
     ...SLAB_SEA_LAYERS,
+    ...SLAB_BORDERS,
     ...BASEMAP_WATERWAYS,
     ...BASEMAP_BUILDINGS,
+    SLAB_NATIONAL_ROADS,
     ...BASEMAP_ROADS,
     {
       id: "non-gb-label",
@@ -142,6 +145,7 @@ const STYLE: StyleSpecification = {
       paint: { "text-color": "#6b7280", "text-halo-color": "rgba(255,255,255,0.85)", "text-halo-width": 1.2 },
     },
     ...SLAB_LABEL_LAYERS,
+    ...SLAB_COUNTRY_LABELS,
     SLAB_PLACE_LABELS,
     ...BASEMAP_LABELS,
   ],
