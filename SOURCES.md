@@ -1466,6 +1466,38 @@ per local authority, from the latest census in each jurisdiction (downloaded 202
 - Not covered: the Isle of Man (2021 census) and Jersey (2021) and Guernsey (no census; population
   register) have no council marker yet.
 
+## Schools
+
+`public/data/schools.geojson` (33,086 schools) is built by `scripts/build_schools.py` (downloaded
+2026-11-01):
+
+- **England (24,860)**: DfE *Get Information about Schools* all-establishments extract, open
+  establishments only, universities, online providers, British schools overseas, offshore and
+  service-children schools and Welsh-establishment records dropped; positions are the GIAS
+  easting/northing converted from OSGB36 to WGS84 with pyproj. Licence: **OGL v3**.
+- **Ofsted grades**: Ofsted's monthly management information *State-funded schools inspections
+  and outcomes* (latest publication date in the file 29 September 2026), joined on URN. The card
+  shows the new report-card judgements (achievement, curriculum and teaching, attendance and
+  behaviour, personal development, inclusion, leadership, safeguarding met / not met) where a
+  school has had one, the latest graded overall effectiveness (1 Outstanding to 4 Inadequate) with
+  its date, and the latest ungraded inspection outcome. **OGL v3**. Independent schools are not in
+  that file; their card names the inspectorate GIAS lists (Ofsted, Independent Schools
+  Inspectorate or School Inspection Service) and links the GIAS record.
+- **Wales, Scotland, Northern Ireland, Ireland, the Isle of Man, Jersey and Guernsey (8,226)**:
+  OpenStreetMap `amenity=school` (ODbL) from the Geofabrik extracts via `scripts/extract_pbf.py`,
+  named and not disused, dropping anything inside England (ONS Countries December 2023 BUC, OGL)
+  or within about 200 m of a GIAS school, and keeping one point where a school is mapped both as a
+  node and an outline. The card names the inspectorate (Estyn, Education Scotland, ETI, the
+  Department of Education Inspectorate, ...) but carries no grades: Estyn stopped summary grades
+  in 2022, and Education Scotland, ETI and the Irish inspectorate publish reports rather than a
+  bulk grade file.
+- Card links are built from the id: the Ofsted report (`reports.ofsted.gov.uk/provider/ELS/<URN>`)
+  for graded schools, the GIAS record otherwise, the OSM object outside England.
+- Caveats: OSM completeness varies (Ireland 2,790 against roughly 3,950 Department of Education
+  schools; Wales and Scotland near complete for state schools). The ONS country outline is
+  generalised, so a school within a few hundred metres of the English border can land on either
+  side.
+
 ## Remaining honest caveats
 
 - Constituencies layer is ONS BGC GB-only (632); NI deferred; no endorse/polling UI yet.

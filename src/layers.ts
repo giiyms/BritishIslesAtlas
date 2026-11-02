@@ -65,7 +65,7 @@ export const LAYERS = [
     color: "#3f7fbf",
     kind: "dot",
     defaultOn: true,
-    blurb: "Preview schools",
+    blurb: "Every open school: DfE GIAS with latest Ofsted grades for England; OpenStreetMap schools for Wales, Scotland, Ireland, NI and the islands",
     icon: ICONS.schools,
   },
   {

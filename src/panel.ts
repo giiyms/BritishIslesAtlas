@@ -12,7 +12,7 @@ const DATA_CREDITS: Array<[string, string]> = [
   ["Polls", "Wikipedia national polling, Electoral Calculus and More in Common seat projections. Projections are projections."],
   ["Place card ratings", "Food hygiene: Food Standards Agency FHRS/FHIS (live API, OGL v3.0); health and care: Care Quality Commission ratings, 1 Oct 2026 (OGL v3.0). Fuel prices not shown: DESNZ Fuel Finder needs One Login credentials."],
   ["Place card photos", "Wikimedia Commons, Wikipedia and Geograph Britain and Ireland; author and licence shown on each photo"],
-  ["Sample layers", "Roads, schools, population, census and the remaining Upcoming layers use sample geometry, not real data. Churches, mosques and other religious sites are the OpenStreetMap places-of-worship extract split by religion."],
+  ["Sample layers", "Roads and the remaining Upcoming layers use sample geometry, not real data. Churches, mosques and other religious sites are the OpenStreetMap places-of-worship extract split by religion."],
 ];
 
 function chipButton(layer: LayerDef, on: boolean): HTMLButtonElement {

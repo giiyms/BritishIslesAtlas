@@ -1796,5 +1796,13 @@
     "source": "Census 2021 (E&W, NI), Census 2022 (Scotland, Ireland)",
     "url": "https://www.nomisweb.co.uk/sources/census_2021",
     "filter": "one marker per local authority"
+  },
+  "schools": {
+    "layer": "schools",
+    "count": 33086,
+    "license": "OGL v3 (DfE, Ofsted); ODbL (OpenStreetMap)",
+    "source": "GIAS + Ofsted MI (England); OpenStreetMap amenity=school (elsewhere)",
+    "url": "https://get-information-schools.service.gov.uk/Downloads",
+    "filter": "open schools; universities excluded"
   }
 }

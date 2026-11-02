@@ -438,26 +438,6 @@ function loadRoads(table: string): Array<{ name: string; coords: [number, number
 
 const ROADS = loadRoads(ROAD_TABLE);
 
-function mulberry32(seed: number): () => number {
-  let state = seed >>> 0;
-  return () => {
-    state = (state + 0x6d2b79f5) >>> 0;
-    let t = state;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-function seedFrom(text: string): number {
-  let hash = 2166136261;
-  for (let i = 0; i < text.length; i += 1) {
-    hash ^= text.charCodeAt(i);
-    hash = Math.imul(hash, 16777619);
-  }
-  return hash >>> 0;
-}
-
 function collection(features: Feature[]): FeatureCollection {
   return { type: "FeatureCollection", features };
 }
@@ -472,64 +452,6 @@ function point(
     geometry: { type: "Point", coordinates: [lon, lat] },
     properties,
   };
-}
-
-interface ScatterRule {
-  perMillion: number;
-  minPop: number;
-  max: number;
-  nouns: string[];
-}
-
-const SCATTER: Record<string, ScatterRule> = {
-  schools: {
-    perMillion: 4,
-    minPop: 14000,
-    max: 3,
-    nouns: ["Primary", "Academy", "High School", "College"],
-  },
-  hospitals: {
-    perMillion: 1.4,
-    minPop: 80000,
-    max: 3,
-    nouns: ["General Hospital", "Royal Infirmary", "Community Hospital"],
-  },
-};
-
-function radiusFor(pop: number): number {
-  if (pop > 2_000_000) return 0.34;
-  if (pop > 700_000) return 0.2;
-  if (pop > 250_000) return 0.11;
-  if (pop > 80000) return 0.07;
-  return 0.04;
-}
-
-function scatterLayer(id: string): Feature[] {
-  const rule = SCATTER[id];
-  if (!rule) return [];
-  const features: Feature[] = [];
-  for (const place of PLACES) {
-    if (place.pop < rule.minPop) continue;
-    const rand = mulberry32(seedFrom(`${id}:${place.id}`));
-    const expected = Math.min(rule.max, (place.pop / 1_000_000) * rule.perMillion);
-    const count = Math.min(rule.max, Math.max(1, Math.round(expected)));
-    const radius = radiusFor(place.pop);
-    for (let index = 0; index < count; index += 1) {
-      const angle = rand() * Math.PI * 2;
-      const distance = Math.sqrt(rand()) * radius;
-      const lon = place.lon + distance * Math.cos(angle) / Math.cos((place.lat * Math.PI) / 180);
-      const lat = place.lat + distance * Math.sin(angle);
-      const noun = rule.nouns[index % rule.nouns.length];
-      features.push(
-        point(lon, lat, {
-          name: `${place.name} ${noun}`,
-          layer: id,
-          note: `Preview stub · ${place.region}`,
-        }),
-      );
-    }
-  }
-  return features;
 }
 
 function namedLayer(id: string, note: string): Feature[] {
@@ -563,7 +485,7 @@ function roadLayer(): Feature[] {
 const builders: Record<LayerId, () => Feature[]> = {
   roads: roadLayer,
   pubs: () => [],
-  schools: () => scatterLayer("schools"),
+  schools: () => [],
   libraries: () => [],
   universities: () => [],
   museums: () => [],

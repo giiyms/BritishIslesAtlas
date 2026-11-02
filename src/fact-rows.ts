@@ -25,6 +25,31 @@ export const FACT_ROWS: Readonly<Record<string, Array<[key: string, label: strin
     ["county", "County", text],
     ["summit_feature", "Summit", text],
   ],
+  schools: [
+    ["phase", "Phase", text],
+    ["school_type", "Type", text],
+    ["ages", "Ages", text],
+    ["pupils", "Pupils", count],
+    ["gender", "Pupils admitted", text],
+    ["religion", "Religious character", text],
+    ["ofsted_framework", "Latest Ofsted", text],
+    ["ofsted_date", "Inspected", text],
+    ["ofsted_achievement", "Achievement", text],
+    ["ofsted_curriculum", "Curriculum and teaching", text],
+    ["ofsted_behaviour", "Attendance and behaviour", text],
+    ["ofsted_wellbeing", "Personal development", text],
+    ["ofsted_inclusion", "Inclusion", text],
+    ["ofsted_leadership", "Leadership and governance", text],
+    ["ofsted_safeguarding", "Safeguarding", text],
+    ["ofsted_overall", "Ofsted overall effectiveness", text],
+    ["ofsted_overall_date", "Graded inspection", text],
+    ["ofsted_ungraded", "Latest ungraded inspection", text],
+    ["ofsted_ungraded_date", "Ungraded inspection date", text],
+    ["inspectorate", "Inspectorate", text],
+    ["isced", "ISCED level", text],
+    ["town", "Town", text],
+    ["nation", "Nation", text],
+  ],
   census: [
     ["residents", "Usual residents", count],
     ["born_outside_uk_pct", "Born outside the UK", pct],
@@ -54,6 +79,21 @@ export const FACT_ROWS: Readonly<Record<string, Array<[key: string, label: strin
   ],
 };
 
+/** Layers whose files carry an id instead of a per-feature source/url (keeps default-on files small). */
+const DERIVED_SOURCE: Readonly<Record<string, (p: Record<string, unknown>) => [source: string, url: string] | null>> = {
+  schools: (p) => {
+    if (p.urn != null) {
+      const graded = Object.keys(p).some((key) => key.startsWith("ofsted_"));
+      return graded
+        ? ["Ofsted report (DfE GIAS + Ofsted)", `https://reports.ofsted.gov.uk/provider/ELS/${Number(p.urn)}`]
+        : ["DfE Get Information about Schools", `https://get-information-schools.service.gov.uk/Establishments/Establishment/Details/${Number(p.urn)}`];
+    }
+    return typeof p.osm_id === "string" && /^(node|way|relation)\/\d+$/.test(p.osm_id)
+      ? ["OpenStreetMap", `https://www.openstreetmap.org/${p.osm_id}`]
+      : null;
+  },
+};
+
 /** Label/value rows plus a source link; empty for layers with no dataset facts. */
 export function factRows(layerId: string, props: Record<string, unknown>): string {
   const spec = FACT_ROWS[layerId];
@@ -61,8 +101,10 @@ export function factRows(layerId: string, props: Record<string, unknown>): strin
   const rows = spec
     .filter(([key]) => props[key] != null && props[key] !== "")
     .map(([key, label, fmt]) => `<dt>${escapeHtml(label)}</dt><dd>${escapeHtml(fmt(props[key], props))}</dd>`);
-  const source = props.source ? String(props.source) : "";
-  const url = typeof props.url === "string" && /^https:\/\//.test(props.url) ? props.url : "";
+  const derived = props.source ? null : DERIVED_SOURCE[layerId]?.(props);
+  const source = derived ? derived[0] : props.source ? String(props.source) : "";
+  const rawUrl = derived ? derived[1] : props.url;
+  const url = typeof rawUrl === "string" && /^https:\/\//.test(rawUrl) ? rawUrl : "";
   if (source) {
     rows.push(`<dt>Source</dt><dd>${url ? `<a href="${escapeHtml(url)}" target="_blank" rel="noopener">${escapeHtml(source)}</a>` : escapeHtml(source)}</dd>`);
   }
