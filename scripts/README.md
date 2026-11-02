@@ -3,8 +3,9 @@
 ## `ingest_ons_pcon2024.py`
 
 Downloads ONS July 2024 Westminster PCON **BGC** boundaries (WGS84 GeoJSON) from
-the ArcGIS FeatureServer, drops Northern Ireland (18 seats), and writes
-`public/data/constituencies-gb-2024.geojson` (632 GB features) plus a
+the ArcGIS FeatureServer and writes
+`public/data/constituencies-gb-2024.geojson` (650 UK features, including
+Northern Ireland's 18; the `-gb` file name is kept for compatibility) plus a
 `constituencies` entry in `public/data/extract-meta.json`.
 
 ```bash
@@ -808,7 +809,7 @@ refresh an extract, copy its new `count` into `src/point-counts.ts` (heat weight
 
 ## `build_results_history.py`
 
-Builds `public/data/results-history-gb.json`: each GB seat's vote share at the
+Builds `public/data/results-history-gb.json`: the vote share in each UK seat (GB and Northern Ireland) at the
 2019 general election (notional, on the 2024 boundaries) and the 2024 general
 election, from the UK Parliament election results CSVs (Open Parliament Licence).
 The seat panel draws it as the "Past results" line chart. Downloads into

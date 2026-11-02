@@ -30,7 +30,7 @@ pnpm preview
 
 Dense point preview layers cluster at low zoom and reveal individual points as you zoom in. The population glow remains visible independently of its chip. Water shares the OpenFreeMap vector source, so its overzoom follows the provider tile metadata. Mobile attribution is always visible; panel, search, scale, and controls share glass styling tokens.
 
-Petrol stations, EV charging, power plants, hospitals, fire stations, police, castles, libraries, universities, museums, railway stations, aerodromes, ferry terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme parks, viewpoints, arts centres, aquariums, piers, ruins, golf courses, galleries, marketplaces, nature reserves, camp sites, memorials, sports centres, caravan sites, fitness centres, community centres, playgrounds, beaches, swimming pools, pharmacies, town halls, places of worship, lighthouses, courthouses, nightclubs, windmills, prisons, clinics, dentists, pubs, and post offices load once from static OpenStreetMap GeoJSON under `public/data/` (ODbL 1.0; see `SOURCES.md`). Constituencies load from static ONS BGC GeoJSON (`constituencies-gb-2024.geojson`, OGL v3; GB-only 632 seats). Other feature geometry in this version is still preview data for the scaffold, not a live survey.
+Petrol stations, EV charging, power plants, hospitals, fire stations, police, castles, libraries, universities, museums, railway stations, aerodromes, ferry terminals, marinas, zoos, theatres, battlefields, cinemas, stadiums, theme parks, viewpoints, arts centres, aquariums, piers, ruins, golf courses, galleries, marketplaces, nature reserves, camp sites, memorials, sports centres, caravan sites, fitness centres, community centres, playgrounds, beaches, swimming pools, pharmacies, town halls, places of worship, lighthouses, courthouses, nightclubs, windmills, prisons, clinics, dentists, pubs, and post offices load once from static OpenStreetMap GeoJSON under `public/data/` (ODbL 1.0; see `SOURCES.md`). Constituencies load from static ONS BGC GeoJSON (`constituencies-gb-2024.geojson`, OGL v3; all 650 UK seats including Northern Ireland). Other feature geometry in this version is still preview data for the scaffold, not a live survey.
 
 ## Planned stack
 
@@ -49,7 +49,7 @@ Concept 1 is locked:
 
 ## Voting (editorial)
 
-The default map colouring is a transparent **tactical-voting pick: who to back to stop Labour** in each of the 632 GB seats. The picks reflect the site owner's tactical goal (Labour should not win seats). The voter decides. Other colourings: 2024 winner, 2024 majority, and the projected winner from each seat-projection provider.
+The default map colouring is a transparent **tactical-voting pick: who to back to stop Labour** in each of the 632 GB seats. In Northern Ireland's 18 seats Labour does not stand, so the map shows the projected winner (Electoral Calculus, with the 2024 result) and says so in the seat card. The picks reflect the site owner's tactical goal (Labour should not win seats). The voter decides. Other colourings: 2024 winner, 2024 majority, and the projected winner from each seat-projection provider.
 
 Pick rule (`src/tactical.ts`, tested in `src/tactical.test.ts`). There is no default party, and Labour and Green are never picked (site-owner rule):
 

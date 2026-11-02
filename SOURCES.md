@@ -1338,15 +1338,15 @@ Pipeline `note` repeats brand or operator on 6230 of 43184.
 | | |
 |---|---|
 | **File** | `public/data/constituencies-gb-2024.geojson` |
-| **Features** | **632** polygons (GB Westminster only) |
-| **Coverage** | England 543 + Scotland 57 + Wales 32 = **632**. Northern Ireland 18 seats **dropped** for v1 (different party system; deferred). Republic of Ireland, Isle of Man, and Channel Islands have no Westminster seats and are out of scope. Source download is the full UK set (650); ingest filters to GB. |
-| **Sample vs full** | Full ONS July 2024 Westminster Parliamentary Constituency boundaries (BGC), filtered to Great Britain. BGC is generalised (~20 m) and clipped to Mean High Water — suitable for web MapLibre; not survey-grade cadastral edges. |
+| **Features** | **650** polygons (all UK Westminster seats) |
+| **Coverage** | England 543 + Scotland 57 + Wales 32 + Northern Ireland 18 = **650**. Northern Ireland was added on 2 Nov 2026. Republic of Ireland, Isle of Man, and Channel Islands have no Westminster seats and are out of scope. File names keep the old `-gb` suffix so cached URLs and scripts keep working; the contents are UK-wide. |
+| **Sample vs full** | Full ONS July 2024 Westminster Parliamentary Constituency boundaries (BGC), UK-wide. BGC is generalised (~20 m) and clipped to Mean High Water — suitable for web MapLibre; not survey-grade cadastral edges. |
 | **Source** | [Office for National Statistics](https://www.ons.gov.uk/) Open Geography Portal — Westminster Parliamentary Constituencies (July 2024) Boundaries UK **BGC** |
 | **As-of** | 4 July 2024 (post-2023 Boundary Commission review; used for the 2024 general election) |
 | **Endpoint used** | ArcGIS FeatureServer GeoJSON (WGS84 `outSR=4326`): `https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/Westminster_Parliamentary_Constituencies_July_2024_Boundaries_UK_BGC/FeatureServer/0/query` |
 | **Hub** | [data.gov.uk BGC](https://www.data.gov.uk/dataset/7165b3a0-a1f2-40ff-a8e0-cfc2a573be30/westminster-parliamentary-constituencies-july-2024-boundaries-uk-bgc) · [Open Geography Portal](https://geoportal.statistics.gov.uk/datasets/ons::westminster-parliamentary-constituencies-july-2024-boundaries-uk-bgc-2/about) |
 | **Extract date (UTC)** | 2026-10-02T19:21:57Z |
-| **Method** | `scripts/ingest_ons_pcon2024.py` — download FeatureServer GeoJSON with `resultOffset` pagination, keep `PCON24CD` / `PCON24NM`, drop NI codes (`PCON24CD` starting with `N`), assert exactly 632 GB features |
+| **Method** | `scripts/ingest_ons_pcon2024.py` — download FeatureServer GeoJSON with `resultOffset` pagination, keep `PCON24CD` / `PCON24NM`, assert exactly 650 UK features (543 E, 57 S, 32 W, 18 N) |
 | **File size** | ~20.5 MB GeoJSON (minified). Prefer GeoJSON for v1; TopoJSON/PMTiles deferred if mobile load becomes painful |
 | **License** | [Open Government Licence v3.0](https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/) — contains Ordnance Survey **and** ONS IPR |
 | **Attribution** | Contains Ordnance Survey data © Crown copyright and database right 2024. Contains National Statistics data © Crown copyright and database right 2024. |
@@ -1364,7 +1364,7 @@ Popup shows **name + PCON24CD only** in this PR — no candidates, polls, or end
 ### Honest caveats
 
 - Boundaries are **BGC** (~20 m generalisation), not full-resolution BFC/BFE.
-- **GB-only**: NI 18 seats deferred; Ireland / IoM / CI out.
+- **UK-wide** (650 incl. Northern Ireland's 18); Ireland / IoM / CI have no Westminster seats.
 - No party colours, endorse badges, candidates, or polling in this layer yet.
 
 
@@ -1682,7 +1682,7 @@ the police publish recorded-crime counts for, with the total, the main offence g
 
 ## Remaining honest caveats
 
-- Constituencies layer is ONS BGC GB-only (632); NI deferred; no endorse/polling UI yet.
+- Constituencies layer is ONS BGC, all 650 UK seats (Northern Ireland added 2 Nov 2026).
 - OSM tagging completeness varies; absence of a station on the map is not proof
   it does not exist on the ground.
 - Ways are centre points, not footprints.
@@ -2292,7 +2292,7 @@ the police publish recorded-crime counts for, with the total, the main offence g
 
 ## Voting P1 — candidates, polls, endorsements
 
-Editorial **Reform / Restore Britain** endorsement map over GB Westminster seats (632).
+Editorial **Reform / Restore Britain** endorsement map over GB Westminster seats (632). Northern Ireland is not part of this legacy map: Reform UK and Restore Britain have no NI candidates or projections; NI seats are handled by the tactical pick (see *Northern Ireland* below).
 Never endorses Labour or Conservatives. Daniel per-seat overrides always win.
 **Restore-ahead rule (locked 2026-10-05):** any trusted seat poll (EC or More in Common)
 with Restore share strictly ahead of Reform → Vote Restore, even without a Democracy Club
@@ -2306,7 +2306,7 @@ Democracy Club is **sparse** — most seats are presumed Reform under locked ant
 | Field | Value |
 |---|---|
 | **File** | `public/data/candidates-gb.json` |
-| **Source** | [Democracy Club Candidates](https://candidates.democracyclub.org.uk/) CSV export (`party_id` PP7931 Reform UK, PP18382 Restore Britain; `election_id=^parl.*`) |
+| **Source** | [Democracy Club Candidates](https://candidates.democracyclub.org.uk/) CSV export, all parties (`election_id=^parl.*&field_group=person_profiles`, no `party_id` filter). GB seats keep Reform UK / Restore Britain standing; NI seats list `ni_candidates` (any party, current or future parl candidacies only). On 2 Nov 2026 Democracy Club listed **no** NI candidates for the next general election, so every NI seat has an empty list and the card says so. |
 | **License** | **CC-BY-SA** |
 | **Script** | `scripts/fetch_candidates.py` (idempotent; writes `retrieved_at`) |
 | **Join** | DC `post_label` → ONS `PCON24NM` via name normalisation; keyed by `PCON24CD` |
@@ -2339,8 +2339,9 @@ Democracy Club is **sparse** — most seats are presumed Reform under locked ant
 |---|---|
 | **File** | `public/data/polls-seats-history.json` (fetched only when a seat panel opens) |
 | **Shape** | `seats[code][provider] = [[date, con, lab, ld, ref, grn, snp, pc, rb, oth], …]`, shares in %, 0.1 dp, `null` = not published. `providers[key].editions` lists each point's date, fieldwork, date basis and source URL; `skipped` says what was left out and why. |
-| **Electoral Calculus** | Earlier editions of `electdata_pred.txt` from Internet Archive (Wayback) captures, plus the live file. Only captures on 2024 boundaries (all 632 seats match) are used; captures up to 2024-06 are on 2019 boundaries and are skipped. Each point is dated by the EC "Updated" date on the archived/live prediction page, checked by comparing the page's headline seat totals with the file. |
-| **More in Common** | Each published MRP edition (XLSX/CSV under moreincommon.org.uk uploads) that parses cleanly, dated by publication date. Non-vote-share MRPs (e.g. leader ratings) are skipped. |
+| **Electoral Calculus** | Earlier editions of `electdata_pred.txt` from Internet Archive (Wayback) captures, plus the live file. Only captures on 2024 boundaries (all 650 seats match) are used; captures up to 2024-06 are on 2019 boundaries and are skipped. Each point is dated by the EC "Updated" date on the archived/live prediction page, checked by comparing the page's headline seat totals with the file. |
+| **More in Common** | Each published MRP edition (XLSX/CSV under moreincommon.org.uk uploads) that parses cleanly, dated by publication date. Non-vote-share MRPs (e.g. leader ratings) are skipped. GB only (632 seats): More in Common's MRP does not cover Northern Ireland. |
+| **Northern Ireland (EC)** | NI rows use the party list in `parties_ni` (`dup, sf, sdlp, uup, alliance, tuv, ind, oth`). EC's file reuses its GB columns for NI: CON=UUP, LAB=SDLP, LIB=DUP, Reform=Alliance, Green=TUV, NAT=Sinn Féin, MIN=Independent, OTH=Other (checked against the 2024 results). NI figures were byte-identical in every archived edition checked (April 2025 to October 2026) and are within ~0.1 pt of the 2024 result, so the NI line is flat; the seat card says so. |
 | **Scripts** | `scripts/build_seat_history.py` (one-off backfill; re-runnable), `scripts/fetch_polls_seats.py` (daily refresh appends a point for a new edition date, replaces a same-date point, never deletes history). |
 
 ### Past general-election results (`results-history-gb`)
@@ -2348,8 +2349,8 @@ Democracy Club is **sparse** — most seats are presumed Reform under locked ant
 | Field | Value |
 |---|---|
 | **File** | `public/data/results-history-gb.json` (fetched only when a seat panel opens; drawn as a line chart, one line per party) |
-| **Shape** | `seats[code] = [[date, con, lab, ld, ref, grn, snp, pc, spk, oth], …]`, % of valid votes, 0.1 dp, `null` = no candidate. GB only, 2024 boundaries. |
-| **2019-12-12 (notional)** | UK Parliament election results, [general election 5](https://electionresults.parliament.uk/general-elections/5) ([`candidacies.csv`](https://electionresults.parliament.uk/general-elections/5/candidacies.csv)): notional 2019 results on the 2024 boundaries by Rallings & Thrasher (Prof David Denver for Scotland) for BBC, ITV News, Sky News and PA, published by the House of Commons Library. Estimates, not votes cast. |
+| **Shape** | `seats[code] = [[date, con, lab, ld, ref, grn, snp, pc, spk, oth], …]` for GB; NI seats use `parties_ni` (`dup, sf, sdlp, uup, alliance, tuv, con, grn, aont, pbp, ind, oth`). % of valid votes, 0.1 dp, `null` = no candidate. All 650 UK seats, 2024 boundaries. |
+| **2019-12-12 (notional)** | UK Parliament election results, [general election 5](https://electionresults.parliament.uk/general-elections/5) ([`candidacies.csv`](https://electionresults.parliament.uk/general-elections/5/candidacies.csv)): notional 2019 results on the 2024 boundaries by Rallings & Thrasher (Prof David Denver for Scotland, Nicholas Whyte for Northern Ireland) for BBC, ITV News, Sky News and PA, published by the House of Commons Library. Estimates, not votes cast. |
 | **2024-07-04 (actual)** | Same site, [general election 6](https://electionresults.parliament.uk/general-elections/6) ([`candidacies.csv`](https://electionresults.parliament.uk/general-elections/6/candidacies.csv)); matches `results-2024-gb.json`. |
 | **Licence** | [Open Parliament Licence v3.0](https://www.parliament.uk/site-information/copyright-parliament/open-parliament-licence/) |
 | **Mapping** | 2019 Brexit Party (BRX) is plotted on the Reform UK line: same registered party, renamed January 2021 (said on screen). Speaker is its own series; minor parties and independents are `oth`. |
@@ -2380,11 +2381,19 @@ Democracy Club is **sparse** — most seats are presumed Reform under locked ant
 
 | | |
 |---|---|
-| **File** | `public/data/results-2024-gb.json` (~205 KB, 632 GB seats keyed by ONS `PCON24CD`; joins 632/632 to `constituencies-gb-2024.geojson`) |
+| **File** | `public/data/results-2024-gb.json` (650 UK seats keyed by ONS `PCON24CD`; joins 650/650 to `constituencies-gb-2024.geojson`) |
 | **Source** | House of Commons Library / UK Parliament [election results service](https://electionresults.parliament.uk/general-elections/6), general election of 4 July 2024, [candidacies CSV](https://electionresults.parliament.uk/general-elections/6/candidacies.csv). Same underlying data as Commons Library [CBP-10009](https://commonslibrary.parliament.uk/research-briefings/cbp-10009/) (whose file host is behind a Cloudflare challenge for scripted fetches). |
 | **Licence** | [Open Parliament Licence v3.0](https://www.parliament.uk/site-information/copyright-parliament/open-parliament-licence/) — attribute "Contains Parliamentary information licensed under the Open Parliament Licence v3.0." |
 | **Script** | `scripts/build_results_2024.py` (downloads the raw CSV to `data-raw/`, gitignored, when missing; `--refresh` re-downloads; exits non-zero on any join mismatch) |
-| **Fields per seat** | `name`, `country`, `winner_party`, `winner_name`, `result`, `majority`, `majority_pct`, `turnout_pct` (valid votes / electorate), `electorate`, `valid_votes`, `shares` (top 6 candidates as `[party, %]` plus summed `Other`). Party names in top-level `parties`. Northern Ireland excluded. |
+| **Fields per seat** | `name`, `country`, `winner_party`, `winner_name`, `result`, `majority`, `majority_pct`, `turnout_pct` (valid votes / electorate), `electorate`, `valid_votes`, `shares` (top 6 candidates as `[party, %]` plus summed `Other`). Party names in top-level `parties`. Northern Ireland included (DUP, Sinn Féin, SDLP, UUP, Alliance, TUV, etc.). |
+
+### Northern Ireland (18 seats)
+
+| | |
+|---|---|
+| **Covered** | ONS 2024 boundaries; 2024 results and 2019 notional results (UK Parliament, Open Parliament Licence); Electoral Calculus seat projection with win probabilities; NI party colours. |
+| **Pick rule** | Labour does not stand in Northern Ireland, so the stop-Labour rule does not apply. The card says so and shows the Electoral Calculus projected winner with its win probability (low confidence under 60%), plus the 2024 result. Without a projection it falls back to the 2024 winner. Owner overrides still win; Labour and Green are never picked. Reform UK / Restore Britain are not shown for NI (no candidates or projections). Code: `src/tactical.ts`. |
+| **Missing** | More in Common's MRP is GB only. Electoral Calculus's NI figures have not changed since at least April 2025 and match the 2024 result, so they add little beyond 2024. Democracy Club lists no NI candidates for the next general election yet. |
 
 ### Postcode → seat
 
