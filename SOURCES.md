@@ -1581,6 +1581,31 @@ nation's official register, geocoded by postcode with postcodes.io (ONS Postcode
 - 9 UK practices whose postcode does not geocode are omitted.
 - Replaces the eight-point preview.
 
+## Immigration
+
+`public/data/immigration.geojson` (70 points) is built by `scripts/build_immigration.py`.
+
+- UK airports: CAA annual airport data 2025, Table 10.1, international (EU and other) terminal
+  passengers, for every reporting airport with at least 10,000 (the Channel Islands and Isle of Man
+  are CAA "non-UK reporting airports"; their figure is non-UK traffic). CAA statistics are cited, not resold.
+- Irish airports: CSO table TAA05, all passengers 2025 (CC BY 4.0). Ireland has almost no domestic flights.
+- UK seaports: DfT sea passenger statistics SPAS0101, international short-sea ferry and cruise
+  passengers 2025 (OGL), for each port with at least 20,000. Milford Haven's ferry traffic is shown
+  at the Pembroke Dock terminal. Routes between Great Britain and Northern Ireland are domestic and not counted.
+- Channel Tunnel: the ORR figure in SPAS0101 (Eurotunnel shuttles and Eurostar together), placed at
+  the Folkestone terminal. St Pancras is shown without a separate number.
+- Irish seaports: CSO table TBA12, passenger cars 2025. CSO stopped publishing passenger numbers by
+  port after 2019 (table TBA13), so cars are the latest official measure.
+- Detention: Home Office immigration detention statistics, table Det_03a, people detained at each
+  removal centre and residential short-term holding facility on 30 June 2026 (OGL). Sites marked
+  closed in that column drop out (Dungavel), and reopened ones appear (Campsfield House).
+- Coordinates: Wikidata by ICAO code or item (CC0); OpenStreetMap terminal elements for Harwich, Tyne,
+  Hull, Immingham, Tilbury, Liverpool and Ringaskiddy, where Wikidata marks the harbour (ODbL);
+  postcodes.io for the Manchester holding facility's gov.uk address.
+- Under the Common Travel Area there is no routine passport control between the UK, Ireland, the
+  Isle of Man and the Channel Islands, so passenger counts are traffic, not immigration checks.
+- Replaces the ten-point preview.
+
 ## Nuclear
 
 `public/data/nuclear.geojson` (46 sites) is built by `scripts/build_nuclear.py`.

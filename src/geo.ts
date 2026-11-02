@@ -208,18 +208,6 @@ st-peter-port|St Peter Port|Crown dependency|-2.537|49.455|19000
 `;
 
 const NAMED_POINTS: Record<string, string> = {
-  immigration: `
-Heathrow preview|London|-0.454|51.470
-Gatwick preview|Crawley|-0.182|51.153
-Manchester Airport preview|Manchester|-2.275|53.354
-Stansted preview|Stansted|0.235|51.886
-Dublin Airport preview|Dublin|-6.270|53.426
-Belfast International preview|Belfast|-6.216|54.658
-Dover preview|Dover|1.340|51.127
-Holyhead preview|Holyhead|-4.633|53.309
-Rosslare preview|Rosslare|-6.341|52.251
-Cairnryan preview|Cairnryan|-5.016|54.971
-`,
   crime: `
 Crime preview|London|-0.10|51.52
 Crime preview|Birmingham|-1.90|52.49
@@ -376,7 +364,7 @@ const builders: Record<LayerId, () => Feature[]> = {
   petrol: () => [],
   ev: () => [],
   cemeteries: () => [],
-  immigration: () => namedLayer("immigration", "Preview checkpoint"),
+  immigration: () => [],
   crime: () => namedLayer("crime", "Preview only, not an offence record"),
   health: () => [],
   weather: () => [],

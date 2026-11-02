@@ -1850,5 +1850,12 @@
     "count": 46,
     "method": "ONR register of nuclear site licences and ONR regulated-sites map; Wikidata coordinates and reactor facts",
     "license": "OGL v3 (ONR); CC0 (Wikidata); OGL v3 (ONSPD postcodes)"
+  },
+  "immigration": {
+    "extracted_at": "2026-11-01",
+    "layer": "immigration",
+    "count": 70,
+    "method": "CAA 2025 and CSO airport passengers, DfT SPAS0101 and CSO port traffic, Home Office Det_03a detention; Wikidata, OSM and postcodes.io coordinates",
+    "license": "CAA statistics (cited); OGL v3 (DfT, Home Office, ONSPD); CC BY 4.0 (CSO); CC0 (Wikidata); ODbL (OSM)"
   }
 }

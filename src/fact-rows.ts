@@ -73,6 +73,17 @@ export const FACT_ROWS: Readonly<Record<string, Array<[key: string, label: strin
     ["cqc_date", "Rating published", text],
     ["updated", "Register entry updated", text],
   ],
+  immigration: [
+    ["kind", "Type", text],
+    ["icao", "ICAO code", text],
+    ["passengers", "Passengers", count],
+    ["passengers_note", "Counted", text],
+    ["ferry_passengers", "Ferry passengers", count],
+    ["cruise_passengers", "Cruise passengers", count],
+    ["passenger_cars", "Passenger cars, 2025", count],
+    ["detained", "People detained", count],
+    ["detained_note", "Counted", text],
+  ],
   nuclear: [
     ["category", "Site", text],
     ["status", "Status", text],

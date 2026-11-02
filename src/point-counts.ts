@@ -29,6 +29,7 @@ export const POINT_COUNTS: Readonly<Record<string, number>> = {
   "health": 10099,
   "historic": 40871,
   "hospitals": 1946,
+  "immigration": 70,
   "legends": 1681,
   "libraries": 4293,
   "lighthouses": 582,
