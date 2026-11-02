@@ -1745,5 +1745,24 @@
       ],
       "repd_operational_gap_count": 22
     }
+  },
+  "ratings-cqc": {
+    "source": "CQC Latest ratings (Locations), 1 October 2026",
+    "licence": "OGL v3.0",
+    "cqc_locations": 9296,
+    "layers": {
+      "hospitals": {
+        "features": 1946,
+        "rated": 501
+      },
+      "clinics": {
+        "features": 3723,
+        "rated": 444
+      },
+      "dentists": {
+        "features": 7135,
+        "rated": 1
+      }
+    }
   }
 }

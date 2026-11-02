@@ -1368,6 +1368,20 @@ Popup shows **name + PCON24CD only** in this PR — no candidates, polls, or end
 - No party colours, endorse badges, candidates, or polling in this layer yet.
 
 
+## Place card: live tags, ratings and photos (t251u/t252u)
+
+The rich place card has no data of its own. When a place is opened, it fetches the details below in the browser. Nothing is scraped, and no ratings come from Google or Tripadvisor.
+
+| Part of card | Source | Licence | How |
+|---|---|---|---|
+| Rows (hours, fee, capacity, denomination, heritage, wheelchair, operator, address, phone, website, Wikipedia/Wikidata, all tags) | OpenStreetMap API `api/0.6/{type}/{id}.json` | © OpenStreetMap contributors, ODbL 1.0 | Fetched live for the clicked `osm_id`. The "Open now / closes at" badge is computed in Europe/London time from `opening_hours`. If the value can't be parsed (PH, months or sunrise), the raw text is shown with no badge. |
+| Food hygiene rating (pubs, nightclubs, restaurants, cafés, fast food, bars) | Food Standards Agency FHRS (England, Wales, NI) / FHIS (Scotland) API `api.ratings.food.gov.uk` | Open Government Licence v3.0 | Fetched live: establishments within 0.25 mi, keeping the best name match (score at least 0.5). The card shows the rating, the inspection date and a link to `ratings.food.gov.uk/business/{id}`. With no confident match it says so and shows no rating. |
+| CQC overall rating (hospitals, clinics) | Care Quality Commission "Care directory with ratings" / latest ratings file, 1 Oct 2026 | Open Government Licence v3.0 | Joined offline by `scripts/extract_cqc_ratings.py` into `public/data/ratings-cqc.json`. It uses only Overall rows rated Outstanding, Good, Requires improvement or Inadequate. Postcodes are geocoded via postcodes.io (ONSPD, OGL). A match needs to be within 400 m with a strict name similarity (shared/max tokens at least 0.6, or at least 2 shared tokens with one name contained in the other). Matched: hospitals 501/1946 and clinics 444/3723. The card shows the rating, the publication date and a link to `cqc.org.uk/location/{id}`. |
+| Dentists | CQC registers dentists but publishes no overall ratings for them | — | No rating is shown (1/7135 matched; not used). |
+| Schools | Ofsted / Estyn / Education Scotland | — | Deferred until the schools layer has real GIAS/SEED data (item f). |
+| Petrol stations | DESNZ Fuel Finder (Motor Fuel Price (Open Data) Regulations 2025) | — | **Not available**: the API needs GOV.UK One Login plus OAuth client credentials, and the open CSV page returns 403 to automated access. No fuel prices are shown. |
+| Photo | Wikimedia Commons (`wikimedia_commons=*`, `image=` Commons file, Wikidata P18, Wikipedia page image), Geograph Britain and Ireland (oEmbed) | Per image, shown on the card (author + licence from Commons extmetadata / Geograph oEmbed, usually CC BY-SA) | Lazy-loaded behind a skeleton. Arbitrary `image=` URLs are never loaded. With no photo the card says "No open-licence photo linked yet". No placeholder or generated images are used. |
+
 ## Remaining honest caveats
 
 - Constituencies layer is ONS BGC GB-only (632); NI deferred; no endorse/polling UI yet.

@@ -1,4 +1,4 @@
-import { turbineRows } from "./turbine";
+import { hydratePoiCard, poiCardHtml } from "./rich-popup";
 import { BASEMAP_BUILDINGS, BASEMAP_GROUND, BASEMAP_LABELS, BASEMAP_ROADS, BASEMAP_WATERWAYS } from "./basemap";
 import {
   AttributionControl,
@@ -676,13 +676,33 @@ export function createAtlas(container: HTMLElement): Atlas {
   const popup = new Popup({ closeButton: true, closeOnClick: false, maxWidth: "260px", className: "atlas-popup", offset: 10 });
   popup.on("close", () => {
     popupLayer = null;
+    poiAbort?.abort();
+    poiAbort = null;
+    document.body.classList.remove("poi-sheet-open");
     setSelected(null);
     document.body.classList.remove("seat-sheet-open");
   });
   let popupIsSeat = false;
+  let popupIsPoi = false;
+  let poiAbort: AbortController | null = null;
+  /** Desktop popups never sit under the search box: pan the map down until the card clears it. */
+  const keepPopupClearOfSearch = () => {
+    const el = popup.getElement();
+    const search = document.querySelector<HTMLElement>(".search");
+    if (!el || !search || !popupIsPoi || window.innerWidth <= 520) return;
+    const a = el.getBoundingClientRect(), b = search.getBoundingClientRect();
+    // Keep the whole card on screen and below the search box when they share columns.
+    const overlaps = a.left < b.right && a.right > b.left && a.top < b.bottom + 8 && a.bottom > b.top;
+    const minTop = overlaps ? b.bottom + 12 : 12;
+    const maxBottom = window.innerHeight - 56; // clear of the scale bar
+    if (a.top < minTop) map.panBy([0, -(minTop - a.top)], { duration: motionDuration(250) });
+    else if (a.bottom > maxBottom) map.panBy([0, Math.min(a.bottom - maxBottom, a.top - minTop)], { duration: motionDuration(250) });
+  };
   popup.on("open", () => {
     popupLayer = nextPopupLayer;
     popup.getElement()?.classList.toggle("is-seat", popupIsSeat);
+    popup.getElement()?.classList.toggle("is-poi", popupIsPoi && !popupIsSeat);
+    document.body.classList.toggle("poi-sheet-open", popupIsPoi && !popupIsSeat);
     popup.getElement()?.classList.remove("sheet-peek");
     document.body.classList.toggle("seat-sheet-open", popupIsSeat);
   });
@@ -691,7 +711,7 @@ export function createAtlas(container: HTMLElement): Atlas {
     let startY = 0, dy = 0, dragging = false, sheet: HTMLElement | null = null, content: HTMLElement | null = null, wasPeek = false;
     const sheetFrom = (target: EventTarget | null) => {
       if (!window.matchMedia("(max-width: 520px)").matches || !(target instanceof Element)) return null;
-      return target.closest<HTMLElement>(".atlas-popup.is-seat");
+      return target.closest<HTMLElement>(".atlas-popup.is-seat, .atlas-popup.is-poi");
     };
     document.addEventListener("touchstart", (event) => {
       sheet = sheetFrom(event.target);
@@ -751,6 +771,7 @@ export function createAtlas(container: HTMLElement): Atlas {
     setSelected(code);
     // ≤520px: seat popups render as a bottom sheet (fix 7); nav/scale hide while it is open.
     popupIsSeat = true;
+    popupIsPoi = false;
     nextPopupLayer = "constituencies";
     try {
       if (!electionData) electionData = await loadElection();
@@ -850,21 +871,24 @@ export function createAtlas(container: HTMLElement): Atlas {
     // Generic POI popup (fix 10): name, singular type + context, one source link.
     const brand = properties.brand ? String(properties.brand) : "";
     const isSample = !OSM_STATIC.has(layerId as LayerId);
-    const osmUrl = properties.osm_url ? String(properties.osm_url) : "";
     const point = feature.geometry.type === "Point" ? feature.geometry.coordinates as [number, number] : null;
     const context = brand && brand !== name ? brand : point ? nearestPlace(point[0], point[1]) : "";
     const typeBits = [layer ? singularLabel(layer.label) : "Place", context].filter(Boolean);
     popupIsSeat = false;
+    popupIsPoi = true;
     nextPopupLayer = layer?.id ?? null;
-    popup.setLngLat(event.lngLat).setMaxWidth("260px").setHTML(
-      `<strong class="popup-title popup-title-poi">${escapeHtml(name)}</strong>` +
-      `<div class="popup-meta">${escapeHtml(typeBits.join(" · "))}</div>` +
-      (isSample ? `<div class="popup-sample">Sample data</div>` : "") +
-      turbineRows(properties) +
-      (osmUrl
-        ? `<a class="popup-link" href="${escapeHtml(osmUrl)}" target="_blank" rel="noopener noreferrer">View on OpenStreetMap<span class="ext" aria-hidden="true">↗</span></a>`
-        : ""),
-    ).addTo(map);
+    const card = {
+      layerId, name, typeLine: [...typeBits, isSample ? "Sample data" : ""].filter(Boolean).join(" · "),
+      accent: layer?.accent ?? "#0f6e5f", tint: layer?.tint ?? "#e7f3f0", icon: layer?.icon ?? "",
+      props: properties, lngLat: point ?? [event.lngLat.lng, event.lngLat.lat] as [number, number],
+    };
+    popup.setLngLat(card.lngLat).setMaxWidth("340px").setHTML(poiCardHtml(card)).addTo(map);
+    poiAbort?.abort();
+    const abort = new AbortController();
+    poiAbort = abort;
+    const root = popup.getElement()?.querySelector<HTMLElement>(".poi-card");
+    keepPopupClearOfSearch();
+    if (root) void hydratePoiCard(root, card, abort.signal, keepPopupClearOfSearch).catch(() => undefined);
   });
   map.on("mousemove", (event) => {
     const feature = topFeature(event.point);
