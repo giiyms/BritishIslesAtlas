@@ -79,7 +79,7 @@ function aboutDialog(): HTMLDialogElement {
   dialog.setAttribute("aria-labelledby", "about-data-title");
   dialog.innerHTML =
     `<div class="about-head"><h2 id="about-data-title">About the data</h2>` +
-    `<button type="button" class="about-close" aria-label="Close">×</button></div>` +
+    `<button type="button" class="about-close" aria-label="Close About the data">×</button></div>` +
     `<dl>${DATA_CREDITS.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("")}</dl>`;
   dialog.querySelector(".about-close")?.addEventListener("click", () => dialog.close());
   dialog.addEventListener("click", (event) => {

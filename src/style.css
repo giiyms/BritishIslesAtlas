@@ -384,6 +384,7 @@ button { cursor: pointer; }
 
 .search input {
   flex: 1;
+  align-self: stretch;
   min-width: 0;
   border: 0;
   outline: none;
@@ -863,7 +864,7 @@ button { cursor: pointer; }
 }
 
 .election-controls { position:absolute; z-index:3; top:var(--rail-top); right:var(--edge); width:var(--rail-w); max-height:calc(100vh - var(--rail-top) - var(--rail-bottom)); max-height:calc(100dvh - var(--rail-top) - var(--rail-bottom)); overflow:auto; overscroll-behavior:contain; padding:16px; border-radius:18px; background:rgba(255,255,255,0.96); border:1px solid rgba(255,255,255,0.72); box-shadow:var(--shadow); color:#25323d; font-size:12px; }
-.election-controls h1 { font-size:20px; margin:0 0 4px; }.election-controls p { margin:5px 0 10px; line-height:1.4; }.election-controls select { display:block; width:100%; margin:5px 0 10px; padding:7px; }.election-controls button,.election-seat button,.table-tools button { cursor:pointer; padding:8px; border:1px solid #c8d2d9; border-radius:6px; background:#f5f8fa; }.election-legend { display:flex; flex-wrap:wrap; gap:6px 10px; margin:8px 0; }.election-legend span { white-space:nowrap; }.election-legend i { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:4px; }.election-controls details { margin:10px 0; }.election-controls summary { cursor:pointer; font-weight:600; }.election-seat { font-size:12px; line-height:1.4; max-height:65vh; overflow:auto; }.election-seat h2 { font-size:18px; margin:0 22px 5px 0; }.election-seat h3 { font-size:13px; margin:12px 0 4px; }.election-seat p,.election-seat ul { margin:4px 0; }.election-seat ul { padding-left:18px; }.election-table { width:min(1000px,95vw); max-height:85vh; border:0; border-radius:12px; padding:18px; }.election-table::backdrop { background:#17253377; }.election-table header,.table-tools { display:flex; justify-content:space-between; gap:12px; align-items:center; }.election-table header h2 { margin:0 0 12px; }.close-table { font-size:24px; border:0; background:none; cursor:pointer; }.table-tools input { padding:9px; flex:1; }.table-scroll { overflow:auto; max-height:65vh; }.election-table table { border-collapse:collapse; width:100%; font-size:13px; text-align:left; }.election-table th,.election-table td { padding:10px; border-bottom:1px solid #e4e8eb; }.election-table th button,.election-table td button { background:none; border:0; text-align:left; cursor:pointer; color:#245e87; }.election-table th button { font-weight:bold; }
+.election-controls h1 { font-size:20px; margin:0 0 4px; }.election-controls p { margin:5px 0 10px; line-height:1.4; }.election-controls select { display:block; width:100%; margin:5px 0 10px; padding:7px; }.election-controls button,.election-seat button,.table-tools button { cursor:pointer; padding:8px; border:1px solid #c8d2d9; border-radius:6px; background:#f5f8fa; }.election-legend { display:flex; flex-wrap:wrap; gap:6px 10px; margin:8px 0; }.election-legend span { white-space:nowrap; }.election-legend i { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:4px; }.election-controls details { margin:10px 0; }.election-controls summary { cursor:pointer; font-weight:600; padding:6px 0; }.election-seat { font-size:12px; line-height:1.4; max-height:65vh; overflow:auto; }.election-seat h2 { font-size:18px; margin:0 22px 5px 0; }.election-seat h3 { font-size:13px; margin:12px 0 4px; }.election-seat p,.election-seat ul { margin:4px 0; }.election-seat ul { padding-left:18px; }.election-table { width:min(1000px,95vw); max-height:85vh; border:0; border-radius:12px; padding:18px; }.election-table::backdrop { background:#17253377; }.election-table header,.table-tools { display:flex; justify-content:space-between; gap:12px; align-items:center; }.election-table header h2 { margin:0 0 12px; }.close-table { font-size:24px; border:0; background:none; cursor:pointer; }.table-tools input { padding:9px; flex:1; }.table-scroll { overflow:auto; max-height:65vh; }.election-table table { border-collapse:collapse; width:100%; font-size:13px; text-align:left; }.election-table th,.election-table td { padding:10px; border-bottom:1px solid #e4e8eb; }.election-table th button,.election-table td button { background:none; border:0; text-align:left; cursor:pointer; color:#245e87; }.election-table th button { font-weight:bold; }
 @media(max-width:860px) { .election-controls { top:auto; bottom:12px; right:12px; left:12px; width:auto; max-height:35vh; padding:10px 12px; }.election-controls h1 { font-size:16px; }.election-controls p { margin:3px 0; }.election-controls select { margin:3px 0; }.election-controls details { margin:4px 0; }.election-seat { max-height:60vh; } }
 .election-controls .lede { color:#4a5762; }
 .owner-note, .pick-note { padding:6px 8px; border-left:3px solid #8a96a1; background:#f3f5f7; color:#3c4955; font-size:11px; line-height:1.4; border-radius:0 6px 6px 0; }
@@ -902,8 +903,8 @@ button { cursor: pointer; }
 .election-table th { position:sticky; top:0; background:#fff; }
 @media (max-width:860px) {
   .election-controls .lede { display:none; }
-  .nav { bottom:calc(35vh + 24px); }
-  .scale { bottom:calc(35vh + 22px); }
+  body:has(.election-controls:not([hidden])) .nav { bottom:calc(35vh + 24px); }
+  body:has(.election-controls:not([hidden])) .scale { bottom:calc(35vh + 22px); }
   .election-table { padding:12px; width:100vw; max-width:100vw; max-height:92vh; }
   .election-table th, .election-table td { padding:7px 6px; font-size:12px; }
   .table-tools input { min-width:100%; }
@@ -918,7 +919,7 @@ html, body { touch-action: manipulation; }
 .poll-trend { margin:4px 0 8px; }
 .tr-svg { display:block; width:100%; height:auto; touch-action:pan-y; }
 .tr-grid { stroke:#e3e7ea; stroke-width:1; }
-.tr-tick { font-size:9px; fill:#66727c; font-variant-numeric:tabular-nums; }
+.tr-tick { font-size:10.5px; fill:#66727c; font-variant-numeric:tabular-nums; }
 .tr-dots circle { opacity:.28; }
 .tr-cursor { stroke:#25323d; stroke-width:1; stroke-dasharray:3 3; }
 .tr-read { font-size:11px; margin:4px 0 !important; min-height:2.6em; line-height:1.3; }
@@ -989,4 +990,34 @@ body.seat-sheet-open .election-controls { display: none; }
 /* Tablet with a seat open: put the ⓘ credit just left of the docked seat panel. */
 @media (min-width: 521px) and (max-width: 860px) {
   body.seat-sheet-open .maplibregl-ctrl-bottom-right { bottom: 0; right: calc(min(var(--rail-w), 100vw - 120px) + var(--edge) + 4px); }
+}
+
+/* Info panel close / reopen. */
+.election-controls[hidden] { display: none; }
+.election-controls h1 { padding-right: 36px; }
+.info-close {
+  position: absolute; top: 8px; right: 8px;
+  width: 36px; height: 36px; padding: 0 !important;
+  display: grid; place-items: center;
+  border: 0 !important; border-radius: 10px !important; background: transparent !important;
+  color: var(--faint); font-size: 22px; line-height: 1;
+}
+.info-reopen {
+  position: absolute; z-index: 3; top: var(--rail-top); right: var(--edge);
+  display: inline-flex; align-items: center; gap: 6px;
+  min-height: 36px; padding: 0 14px;
+  border: 1px solid var(--glass-border); border-radius: 999px;
+  background: var(--glass-bg-strong); box-shadow: var(--shadow);
+  -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
+  color: var(--ink); font: 600 13px/1 Inter, system-ui, sans-serif; cursor: pointer;
+}
+.info-reopen span { color: #0f6e5f; font-size: 15px; }
+.info-reopen[hidden], body.seat-sheet-open .info-reopen { display: none; }
+.info-close:focus-visible, .info-reopen:focus-visible { outline: 2px solid #14967f; outline-offset: 2px; }
+@media (hover: hover) {
+  .info-close:hover { background: rgba(58, 74, 92, 0.08) !important; color: var(--ink); }
+}
+/* Honour reduced motion everywhere: no transitions or animations. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
 }

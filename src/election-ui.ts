@@ -51,7 +51,9 @@ type Column = { key: string; label: string; value: (s: ElectionSeat) => string; 
 export function mountElectionUI(openSeat: (code: string) => void): void {
   const root = document.createElement('section'); root.className = 'election-controls';
   const wide = window.matchMedia('(min-width: 861px)').matches;
-  root.innerHTML = `<h1>Stop Labour: GB tactical vote atlas</h1><p class="lede">Who is best placed to beat Labour in each of 632 GB seats, with the evidence shown. Northern Ireland is not covered.</p>` +
+  root.id = 'info-panel';
+  root.setAttribute('aria-labelledby', 'info-panel-title');
+  root.innerHTML = `<button type="button" class="info-close" aria-label="Hide info panel" aria-controls="info-panel">×</button><h1 id="info-panel-title">Stop Labour: GB tactical vote atlas</h1><p class="lede">Who is best placed to beat Labour in each of 632 GB seats, with the evidence shown. Northern Ireland is not covered.</p>` +
     `<p class="owner-note">${escapeHtml(OWNER_NOTE)}</p>` +
     `<label>Map colour <select aria-label="Map colour"><option value="tactical">Who to back to stop Labour</option><option value="winner">2024 winning party</option><option value="majority">2024 majority size</option><option value="proj:electoral_calculus">Projected winner (Electoral Calculus)</option><option value="proj:more_in_common">Projected winner (More in Common)</option></select></label>` +
     `<div class="election-legend" aria-live="polite">Loading election data…</div>` +
@@ -60,6 +62,7 @@ export function mountElectionUI(openSeat: (code: string) => void): void {
     `<details><summary>Seat counts by provider</summary><div class="seat-counts"></div></details>` +
     `<details><summary>How this works</summary>${HOW_IT_WORKS}</details>`;
   document.body.append(root);
+  mountInfoToggle(root, wide);
   const select = root.querySelector('select')!;
   select.value = DEFAULT_MEASURE;
   const legend = root.querySelector<HTMLElement>('.election-legend')!;
@@ -79,7 +82,7 @@ export function mountElectionUI(openSeat: (code: string) => void): void {
 
   // Table view.
   const dialog = document.createElement('dialog'); dialog.className = 'election-table';
-  dialog.innerHTML = `<header><h2>All GB constituencies</h2><button class="close-table" aria-label="Close">×</button></header>` +
+  dialog.innerHTML = `<header><h2>All GB constituencies</h2><button type="button" class="close-table" aria-label="Close seat table">×</button></header>` +
     `<div class="table-tools"><input type="search" placeholder="Search seats or parties" aria-label="Search seats or parties"><select class="f-party" aria-label="Filter by tactical pick"><option value="">Any pick</option></select><select class="f-conf" aria-label="Filter by confidence"><option value="">Any confidence</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select><button class="csv">Export CSV</button></div>` +
     `<p class="table-count"></p><div class="table-scroll"><table><thead></thead><tbody></tbody></table></div>`;
   document.body.append(dialog);
@@ -145,4 +148,38 @@ export function mountElectionUI(openSeat: (code: string) => void): void {
     attachTrend(root);
     root.querySelector('.seat-counts')!.innerHTML = seatCountsHtml(d);
   }).catch(() => { legend.textContent = 'Election data unavailable'; });
+}
+
+const INFO_KEY = 'atlas:info-panel';
+/** Info panel can be hidden; a chip among the map controls brings it back. Choice persists. */
+function mountInfoToggle(root: HTMLElement, wide: boolean): void {
+  const reopen = document.createElement('button');
+  reopen.type = 'button';
+  reopen.className = 'info-reopen';
+  reopen.setAttribute('aria-controls', 'info-panel');
+  reopen.innerHTML = '<span aria-hidden="true">ⓘ</span> Stop Labour guide';
+  document.body.append(reopen);
+  let saved: string | null = null;
+  try { saved = localStorage.getItem(INFO_KEY); } catch { /* private mode */ }
+  let open = saved ? saved === 'open' : wide;
+  // The guide belongs to the Constituencies layer: it and its chip go when that layer is off.
+  let voting = true;
+  const render = () => {
+    root.hidden = !(voting && open);
+    reopen.hidden = !(voting && !open);
+    reopen.setAttribute('aria-expanded', String(!root.hidden));
+  };
+  const set = (next: boolean, focus: boolean) => {
+    open = next;
+    try { localStorage.setItem(INFO_KEY, open ? 'open' : 'closed'); } catch { /* ignore */ }
+    render();
+    if (focus) (open ? root.querySelector<HTMLElement>('.info-close') : reopen)?.focus();
+  };
+  window.addEventListener('atlas:voting-mode', (event) => {
+    voting = Boolean((event as CustomEvent<{ on: boolean }>).detail?.on);
+    render();
+  });
+  render();
+  root.querySelector('.info-close')?.addEventListener('click', () => set(false, true));
+  reopen.addEventListener('click', () => set(true, true));
 }
