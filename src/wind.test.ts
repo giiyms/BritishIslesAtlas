@@ -30,6 +30,25 @@ describe("wind turbines (OSM + REPD)", () => {
     expect(whitelee.length).toBeGreaterThan(150);
   });
 
+  it("places individual turbines with REPD refs for Bhlaraidh, Brechfa Forest West, Causeymire, Hill of Towie and Dalquhandy", () => {
+    const expected: Array<[string, RegExp, number]> = [
+      ["4640", /bhlaraidh/i, 31],
+      ["3695", /brechfa forest west/i, 24],
+      ["3108", /causeymire/i, 21],
+      ["4014", /hill of towie/i, 21],
+      ["4189", /dalquhandy/i, 10],
+    ];
+    for (const [ref, farmPattern, minCount] of expected) {
+      const hits = fc.features.filter(
+        (f) => f.properties.repd_ref === ref && farmPattern.test(String(f.properties.farm ?? "")),
+      );
+      expect(hits.length, `REPD ${ref}`).toBeGreaterThanOrEqual(minCount);
+    }
+    // Brechfa Forest West must not inherit neighbouring Blaengwen's operator (Statkraft).
+    const brechfa = fc.features.filter((f) => f.properties.repd_ref === "3695");
+    expect(brechfa.every((f) => /rwe/i.test(String(f.properties.operator ?? "")))).toBe(true);
+  });
+
   it("renders farm, capacity and status rows only for turbines", () => {
     const html = turbineRows({ layer: "wind", farm: "Whitelee", capacity_mw: 2.3, status: "Operational", offshore: false });
     expect(html).toContain("<dt>Farm</dt><dd>Whitelee</dd>");

@@ -1701,21 +1701,22 @@
     }
   },
   "wind": {
-    "extracted_at": "2026-08-10T00:10:23Z",
-    "license": "ODbL 1.0 (OSM) + OGL v3 (REPD July 2026)",
-    "count": 18471,
+    "extracted_at": "2026-11-19T17:02:13Z",
+    "license": "ODbL 1.0 (OSM) + OGL v3 (REPD October 2026)",
+    "count": 18496,
     "report": {
-      "osm_base": "2026-08-10T00:10:23Z",
-      "turbines": 18471,
+      "osm_base": "2026-11-19T17:02:13Z",
+      "turbines": 18496,
       "offshore": 3712,
-      "with_farm": 14425,
-      "with_capacity": 9434,
-      "with_rotor": 2092,
-      "with_hub": 963,
-      "with_repd_match": 10896,
+      "with_farm": 14525,
+      "with_capacity": 9470,
+      "with_rotor": 2123,
+      "with_hub": 994,
+      "with_repd_match": 11693,
+      "with_repd_id_match": 9770,
       "dropped": {
         "BEL": 53,
-        "FRA": 1211,
+        "FRA": 1215,
         "outside-fence": 629
       },
       "repd": {
@@ -1724,28 +1725,18 @@
         "Wind Offshore / Under Construction / total": 8,
         "Wind Offshore / Under Construction / with_osm_turbine": 7,
         "Wind Onshore / Operational / total": 785,
-        "Wind Onshore / Operational / with_osm_turbine": 763,
+        "Wind Onshore / Operational / with_osm_turbine": 780,
         "Wind Onshore / Under Construction / total": 37,
         "Wind Onshore / Under Construction / with_osm_turbine": 34
       },
       "largest_repd_operational_gaps": [
-        "Bhlaraidh (previously Balmacaan) (Wind Onshore, 110 MW, Scotland)",
-        "Brechfa Forest West (Wind Onshore, 57.4 MW, Wales)",
-        "Causeymire (Wind Onshore, 48.3 MW, Scotland)",
-        "Hill of Towie (Drummuir) (Wind Onshore, 48 MW, Scotland)",
-        "Dalquhandy Windfarm (Wind Onshore, 42 MW, Scotland)",
-        "Ewe Hill (extension) (Wind Onshore, 36.8 MW, Scotland)",
-        "Drumderg (Wind Onshore, 36.8 MW, Scotland)",
-        "Minsca (Wind Onshore, 36.8 MW, Scotland)",
-        "Airies Farm (Wind Onshore, 35 MW, Scotland)",
-        "Calliachar (Wind Onshore, 32.2 MW, Scotland)",
-        "Kilbraur Windfarm Farlary - Extension (Wind Onshore, 20 MW, Scotland)",
-        "Bradwell Wind Farm (Repower) (Wind Onshore, 20 MW, England)",
         "Tappaghan (Wind Onshore, 19.5 MW, Northern Ireland)",
-        "Ewe Hill (Wind Onshore, 13.8 MW, Scotland)",
-        "Seegronan (Wind Onshore, 13.8 MW, Northern Ireland)"
+        "Seegronan (Wind Onshore, 13.8 MW, Northern Ireland)",
+        "Tappaghan Extension (Wind Onshore, 9 MW, Northern Ireland)",
+        "Croda Chemicals Europe (Wind Onshore, 3 MW, England)",
+        "The Haven (Wind Onshore, 1.2 MW, England)"
       ],
-      "repd_operational_gap_count": 22
+      "repd_operational_gap_count": 5
     }
   },
   "ratings-cqc": {
