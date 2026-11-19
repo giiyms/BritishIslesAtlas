@@ -29,7 +29,7 @@ describe('poll trend', () => {
   });
 });
 
-import { buildSeatSeries, ONE_POINT_NOTE, seatTrendHtml, type ResultsHistory, type SeatHistory, type SeatHistoryPoint } from './poll-trend';
+import { buildSeatSeries, NI_EC_SNAP_LABEL, ONE_POINT_NOTE, seatHistorySnaps, seatTrendHtml, type ResultsHistory, type SeatHistory, type SeatHistoryPoint } from './poll-trend';
 
 const PARTIES = ['con', 'lab', 'ld', 'ref', 'grn', 'snp', 'pc', 'rb', 'oth'];
 describe('seat projection history', () => {
@@ -56,6 +56,21 @@ describe('seat projection history', () => {
     expect(html).not.toContain('<polyline');
     expect(html).toContain(ONE_POINT_NOTE);
     expect(html).toContain('r="4"');
+  });
+  it('uses NI-appropriate wording instead of EC GB fieldwork dates on Northern Ireland charts', () => {
+    const h = JSON.parse(readFileSync('public/data/polls-seats-history.json', 'utf8')) as SeatHistory;
+    const editions = h.providers.electoral_calculus.editions;
+    const niSnaps = seatHistorySnaps('N05000001', 'electoral_calculus', editions);
+    expect(niSnaps.length).toBe(editions.length);
+    for (const s of niSnaps) {
+      expect(s.label).toBe(NI_EC_SNAP_LABEL);
+      expect(s.label).not.toContain('fieldwork');
+    }
+    const niHtml = seatTrendHtml(h.seats.N05000001.electoral_calculus, h.parties_ni!, niSnaps);
+    expect(niHtml).toContain(NI_EC_SNAP_LABEL);
+    for (const e of editions) if (e.fieldwork) expect(niHtml).not.toContain(e.fieldwork);
+    const gbSnaps = seatHistorySnaps('E14001063', 'electoral_calculus', editions);
+    expect(gbSnaps.some(s => s.label.startsWith('fieldwork '))).toBe(true);
   });
   it('ships real history for every seat: dated, sorted, 2024-boundary codes, values in range', () => {
     const h = JSON.parse(readFileSync('public/data/polls-seats-history.json', 'utf8')) as SeatHistory;

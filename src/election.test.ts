@@ -75,6 +75,13 @@ describe('election data joins', () => {
     expect(html).toContain('Democracy Club lists no candidates here for the next general election yet.');
     expect(html).not.toMatch(/Reform UK|Restore Britain/);
     expect(html).toContain('Win probability: DUP');
+    expect(html).toContain('NI figures unchanged since Apr 2025');
+    const ecFieldwork = data.projections.providers.electoral_calculus.fieldwork;
+    expect(ecFieldwork).toBeTruthy();
+    expect(html).not.toContain(ecFieldwork);
+    expect(html).not.toContain('Fieldwork ');
+    const gbHtml = seatHtml(seats.find(s => s.code === 'E14001063')!, { ...data, seats });
+    expect(gbHtml).toContain(`Fieldwork ${ecFieldwork}`);
     expect(partyColour('DUP')).not.toBe(partyColour('Other'));
     for (const p of ['Sinn Féin', 'SDLP', 'UUP', 'Alliance', 'TUV']) expect(partyColour(p)).not.toBe(partyColour('Other'));
   });

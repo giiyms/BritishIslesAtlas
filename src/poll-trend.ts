@@ -185,6 +185,17 @@ export function seatTrendHtml(points: SeatHistoryPoint[], parties: string[], sna
   });
 }
 
+export const NI_EC_SNAP_LABEL = 'NI figures unchanged since Apr 2025';
+
+/** Hover snap labels for a seat's provider editions; NI Electoral Calculus cards avoid GB fieldwork dates. */
+export function seatHistorySnaps(code: string, providerKey: string, editions: SeatHistoryEdition[]): { date: string; label: string }[] {
+  const niEc = code.startsWith('N') && providerKey === 'electoral_calculus';
+  return editions.map(e => ({
+    date: e.date,
+    label: niEc ? NI_EC_SNAP_LABEL : e.fieldwork ? `fieldwork ${e.fieldwork}` : '',
+  }));
+}
+
 /** Swap each provider's latest-share bars for its history chart. Providers without history keep their bars. */
 export function attachSeatHistory(root: ParentNode, code: string, history: SeatHistory): void {
   const seat = history.seats[code];
@@ -193,7 +204,7 @@ export function attachSeatHistory(root: ParentNode, code: string, history: SeatH
     const key = el.dataset.provider ?? '';
     const points = seat[key];
     if (!points?.length || el.dataset.history) return;
-    const snaps = (history.providers[key]?.editions ?? []).map(e => ({ date: e.date, label: e.fieldwork ? `fieldwork ${e.fieldwork}` : '' }));
+    const snaps = seatHistorySnaps(code, key, history.providers[key]?.editions ?? []);
     const html = seatTrendHtml(points, keysFor(code, history), snaps);
     if (!html) return;
     el.dataset.history = '1';

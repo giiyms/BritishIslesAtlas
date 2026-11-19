@@ -123,10 +123,13 @@ function projectionHtml(seat: ElectionSeat, { key, provider, row }: SeatProjecti
   const chances = row.chances && typeof row.chances === 'object'
     ? Object.entries(row.chances).filter(([, v]) => typeof v === 'number').sort((a, b) => b[1] - a[1]).map(([k, v]) => `${escapeHtml(canonicalParty(CHANCE_LABEL[k] ?? k, seat.code))} ${Math.round(v * 100)}%`).join(' · ')
     : '';
+  const meta = isNorthernIreland(seat.code) && key === 'electoral_calculus'
+    ? 'NI figures unchanged since Apr 2025 (no NI polling)'
+    : `Fieldwork ${provider.fieldwork ?? 'not stated'}`;
   return `<div class="proj-card"><div class="proj-head">${link(provider.url, provider.provider)} projects <strong style="--party:${partyColour(winner)}">${escapeHtml(winner)}</strong></div>` +
     `<div class="proj-shares" data-provider="${escapeHtml(key)}">${shareList(shares, seat.pick.party)}</div>` +
     (chances ? `<p class="proj-chances">Win probability: ${chances}</p>` : '') +
-    `<p class="proj-meta">Fieldwork ${escapeHtml(provider.fieldwork ?? 'not stated')} · retrieved ${escapeHtml(provider.retrieved_at.slice(0, 10))}${provider.status !== 'loaded' ? ` · ${escapeHtml(provider.status)}` : ''}</p></div>`;
+    `<p class="proj-meta">${escapeHtml(meta)} · retrieved ${escapeHtml(provider.retrieved_at.slice(0, 10))}${provider.status !== 'loaded' ? ` · ${escapeHtml(provider.status)}` : ''}</p></div>`;
 }
 
 export function seatHtml(seat: ElectionSeat, data: ElectionData): string {
