@@ -300,6 +300,8 @@ def main() -> int:
 
     for feat in geo["features"]:
         code = feat["properties"]["PCON24CD"]
+        if code.startswith("N"):
+            continue  # Reform/Restore legacy map is GB-only; NI picks live in src/tactical.ts
         name = feat["properties"]["PCON24NM"]
         standing = cand.get("seats", {}).get(code) or {
             "reform": {"standing": "unknown"},
@@ -341,7 +343,7 @@ def main() -> int:
             },
         }
 
-    assert len(seats_out) == 632
+    assert len(seats_out) == 632  # GB seats only (Northern Ireland skipped above)
     out = {
         "retrieved_at": now_iso(),
         "counts": counts,

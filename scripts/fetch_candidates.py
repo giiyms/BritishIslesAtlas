@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Fetch GB Westminster Reform/Restore candidates from Democracy Club (CC-BY-SA).
+"""Fetch Westminster candidates from Democracy Club (CC-BY-SA).
+
+GB seats: Reform UK and Restore Britain only. Northern Ireland seats (neither
+party stands there): every party's current or future candidacy, under `ni_candidates`.
 
 Writes public/data/candidates-gb.json keyed by PCON24CD.
 Never invents names — only records candidacies present in the DC export.
@@ -57,14 +60,14 @@ def load_pcon_index() -> tuple[dict[str, str], dict[str, str]]:
         nm = props["PCON24NM"]
         by_code[code] = nm
         by_norm[normalize_name(nm)] = code
-    if len(by_code) != 632:
-        raise SystemExit(f"Expected 632 GB seats in geojson, got {len(by_code)}")
+    if len(by_code) != 650:
+        raise SystemExit(f"Expected 650 UK seats in geojson, got {len(by_code)}")
     return by_norm, by_code
 
 
-def fetch_party_csv(party_id: str) -> list[dict[str, str]]:
+def fetch_party_csv(party_id: str | None) -> list[dict[str, str]]:
     params = {
-        "party_id": party_id,
+        **({"party_id": party_id} if party_id else {}),
         "election_id": "^parl.*",
         "field_group": "person_profiles",
     }
@@ -144,12 +147,16 @@ def main() -> int:
     retrieved_at = now_iso()
 
     seats: dict[str, dict] = {
-        code: {
-            "pcon24cd": code,
-            "pcon24nm": name,
-            "reform": {"standing": "unknown"},
-            "restore": {"standing": "unknown"},
-        }
+        code: (
+            {"pcon24cd": code, "pcon24nm": name, "ni_candidates": []}
+            if code.startswith("N")
+            else {
+                "pcon24cd": code,
+                "pcon24nm": name,
+                "reform": {"standing": "unknown"},
+                "restore": {"standing": "unknown"},
+            }
+        )
         for code, name in by_code.items()
     }
 
@@ -177,12 +184,26 @@ def main() -> int:
                 continue
             by_seat.setdefault(code, []).append(row)
         for code, seat_rows in by_seat.items():
+            if code.startswith("N"):
+                continue
             best = pick_best_row(seat_rows)
             name = (best.get("person_name") or "").strip()
             if not name:
                 continue  # never invent
             seats[code][party_key] = standing_record(best)
             counts[f"{party_key}_matched"] += 1
+
+    # Northern Ireland: all parties, current or future Westminster candidacies only.
+    ni_rows = [
+        r for r in fetch_party_csv(None)
+        if is_relevant_candidacy(r, today)
+        and (by_norm.get(normalize_name((r.get("post_label") or "").strip())) or "").startswith("N")
+        and (r.get("person_name") or "").strip()
+    ]
+    for row in ni_rows:
+        code = by_norm[normalize_name(row["post_label"].strip())]
+        seats[code]["ni_candidates"].append(standing_record(row))
+    counts["ni_candidates"] = len(ni_rows)
 
     # Seats with no Restore confirmation stay "unknown" (→ Reform per locked rules).
     # Do not mark Restore as "no" nationally — nominations not closed.
@@ -197,7 +218,8 @@ def main() -> int:
             "Names only when present in Democracy Club; never invented.",
             "standing=unknown means no confirmed Westminster candidacy in DC for that party in scope.",
             "Restore Britain coverage is sparse; most seats default to presumed Reform under locked anti-split rules.",
-            "GB Westminster only (632 PCON24 seats).",
+            "All 650 UK PCON24 seats. GB seats carry Reform UK and Restore Britain only.",
+            "Northern Ireland seats carry ni_candidates: every party's current or future Westminster candidacy in DC (empty = none listed yet).",
         ],
         "counts": counts,
         "unmatched": unmatched,
@@ -209,7 +231,7 @@ def main() -> int:
     print(
         f"Wrote {OUT.relative_to(ROOT)} seats={len(seats)} "
         f"reform={counts['reform_matched']} restore={counts['restore_matched']} "
-        f"unmatched={len(unmatched)} retrieved_at={retrieved_at}"
+        f"ni={counts['ni_candidates']} unmatched={len(unmatched)} retrieved_at={retrieved_at}"
     )
     return 0
 

@@ -1,18 +1,18 @@
-import { DENSE_LAYERS, DENSITY_STYLES, type DensityStyle } from "./density-styles";
 import { ICONS } from "./icons";
 import { LAYERS, isLayerId, type LayerDef, type LayerId } from "./layers";
 import { LAYER_SECTIONS } from "./layer-groups";
-import { ENDORSE_COLORS } from "./endorse";
-import { formatPollsUpdated, loadVotingBundle } from "./voting";
 
 const DATA_CREDITS: Array<[string, string]> = [
   ["Basemap", "OpenFreeMap · © OpenMapTiles · data © OpenStreetMap contributors (ODbL)"],
   ["Hillshade", "© Esri, USGS, NOAA (World Hillshade)"],
   ["Points of interest", "© OpenStreetMap contributors (ODbL 1.0): petrol, EV, power, hospitals, emergency services, heritage, culture, leisure, faith, services and post offices"],
   ["Constituencies", "ONS July 2024 BGC boundaries. Contains OS data © Crown copyright and database right 2024; contains National Statistics data © Crown copyright and database right 2024 (OGL v3.0)"],
+  ["Wind turbines", "© OpenStreetMap contributors (ODbL 1.0); farm cross-check: DESNZ Renewable Energy Planning Database, July 2026, contains public sector information licensed under the Open Government Licence v3.0"],
   ["Candidates", "© Democracy Club (CC-BY-SA)"],
   ["Polls", "Wikipedia national polling, Electoral Calculus and More in Common seat projections. Projections are projections."],
-  ["Sample layers", "Roads, schools, churches, mosques, population, census and the Upcoming layers use sample geometry, not real data. Pubs are a real OpenStreetMap layer."],
+  ["Place card ratings", "Food hygiene: Food Standards Agency FHRS/FHIS (live API, OGL v3.0); health and care: Care Quality Commission ratings, 1 Oct 2026 (OGL v3.0). Fuel prices not shown: DESNZ Fuel Finder needs One Login credentials."],
+  ["Place card photos", "Wikimedia Commons, Wikipedia and Geograph Britain and Ireland; author and licence shown on each photo"],
+  ["Religious sites", "Churches, mosques and other religious sites are the OpenStreetMap places-of-worship extract split by religion."],
 ];
 
 function chipButton(layer: LayerDef, on: boolean): HTMLButtonElement {
@@ -29,16 +29,21 @@ function chipButton(layer: LayerDef, on: boolean): HTMLButtonElement {
   return button;
 }
 
-function section(label: string, count: number, open = false, extraClass = ""): {
+function section(label: string, layers: LayerDef[], open = false, extraClass = ""): {
   details: HTMLDetailsElement;
   grid: HTMLDivElement;
 } {
   const details = document.createElement("details");
   details.className = `group${extraClass ? ` ${extraClass}` : ""}`;
   details.open = open;
+  // The section's own colour: its first layer's concept-1 accent.
+  if (layers[0]) details.style.setProperty("--group-accent", layers[0].accent);
   const summary = document.createElement("summary");
   summary.className = "group-label";
-  summary.innerHTML = `<span class="group-name"></span><span class="group-count">${count}</span>`;
+  // Folded state still says what is on: coloured dots of the enabled layers plus an "N on" badge.
+  summary.innerHTML =
+    `<span class="group-caret" aria-hidden="true"></span><span class="group-name"></span>` +
+    `<span class="group-dots" aria-hidden="true"></span><span class="group-count"></span>`;
   summary.querySelector(".group-name")!.textContent = label;
   const grid = document.createElement("div");
   grid.className = "chip-grid";
@@ -48,13 +53,36 @@ function section(label: string, count: number, open = false, extraClass = ""): {
   return { details, grid };
 }
 
+const MAX_DOTS = 4;
+/** Updates one section's summary from the chips it holds. */
+function refreshGroup(details: HTMLDetailsElement): void {
+  const chips = [...details.querySelectorAll<HTMLButtonElement>(".chip")];
+  const on = chips.filter((chip) => chip.getAttribute("aria-pressed") === "true");
+  const count = details.querySelector<HTMLElement>(".group-count");
+  const dots = details.querySelector<HTMLElement>(".group-dots");
+  details.classList.toggle("has-on", on.length > 0);
+  if (count) {
+    count.textContent = on.length ? `${on.length} on` : String(chips.length);
+    // Spoken with the section name, e.g. "Health & emergency, 2 of 8 layers on".
+    count.setAttribute("aria-label", on.length ? `, ${on.length} of ${chips.length} layers on` : `, ${chips.length} layers`);
+  }
+  if (dots) {
+    dots.replaceChildren(...on.slice(0, MAX_DOTS).map((chip) => {
+      const dot = document.createElement("i");
+      dot.style.setProperty("--accent", chip.style.getPropertyValue("--accent"));
+      return dot;
+    }));
+    if (on.length > MAX_DOTS) dots.append(Object.assign(document.createElement("b"), { textContent: `+${on.length - MAX_DOTS}` }));
+  }
+}
+
 function aboutDialog(): HTMLDialogElement {
   const dialog = document.createElement("dialog");
   dialog.className = "about-data";
   dialog.setAttribute("aria-labelledby", "about-data-title");
   dialog.innerHTML =
     `<div class="about-head"><h2 id="about-data-title">About the data</h2>` +
-    `<button type="button" class="about-close" aria-label="Close">×</button></div>` +
+    `<button type="button" class="about-close" aria-label="Close About the data">×</button></div>` +
     `<dl>${DATA_CREDITS.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("")}</dl>`;
   dialog.querySelector(".about-close")?.addEventListener("click", () => dialog.close());
   dialog.addEventListener("click", (event) => {
@@ -70,8 +98,6 @@ export function mountPanel(
     isOn: (id: LayerId) => boolean;
     setOn: (id: LayerId, on: boolean) => void;
     onRestore?: () => void;
-    getDensityStyle: () => DensityStyle;
-    setDensityStyle: (style: DensityStyle) => void;
   },
 ): void {
   root.innerHTML = `
@@ -79,7 +105,7 @@ export function mountPanel(
       <span class="panel-title">${ICONS.layers}<span>Layers</span></span>
       <span class="chevron">${ICONS.chevron}</span>
     </button>
-    <p class="panel-sub" id="layer-status"><span class="status-count"></span><button type="button" class="status-clear">Clear</button></p>
+    <p class="panel-sub" id="layer-status"><span class="status-count" role="status"></span><button type="button" class="status-clear">Clear</button></p>
     <div class="panel-body" id="layer-body"></div>
   `;
 
@@ -94,24 +120,6 @@ export function mountPanel(
   const toggle = root.querySelector<HTMLButtonElement>(".panel-toggle");
   if (!body || !count || !clear || !toggle) return;
 
-  const densityControl = document.createElement("label");
-  densityControl.className = "density-picker";
-  densityControl.textContent = "Density style";
-  const densitySelect = document.createElement("select");
-  densitySelect.setAttribute("aria-label", "Density style");
-  for (const value of DENSITY_STYLES) {
-    const option = document.createElement("option");
-    option.value = value;
-    option.textContent = value === "auto" ? "Auto (hex → points)" : value[0].toUpperCase() + value.slice(1);
-    densitySelect.append(option);
-  }
-  densitySelect.value = options.getDensityStyle();
-  densitySelect.addEventListener("change", () => options.setDensityStyle(densitySelect.value as DensityStyle));
-  densityControl.append(densitySelect);
-  root.querySelector(".panel-sub")?.after(densityControl);
-  const refreshDensityPicker = () => { densityControl.hidden = !DENSE_LAYERS.some(options.isOn); };
-  refreshDensityPicker();
-  window.addEventListener("atlas:density-layers", refreshDensityPicker);
 
   // Filter (fix 6).
   const filter = document.createElement("input");
@@ -124,46 +132,26 @@ export function mountPanel(
 
   // Pinned Voting section, expanded by default.
   const constituencies = LAYERS.find((layer) => layer.id === "constituencies")!;
-  const voting = section("Voting", 1, true, "group-voting");
+  const voting = section("Voting", [constituencies], true, "group-voting");
   voting.details.querySelector(".group-count")?.remove();
+  voting.details.querySelector(".group-dots")?.remove();
   const votingChip = chipButton(constituencies, options.isOn("constituencies"));
   votingChip.classList.add("chip-wide");
   voting.grid.append(votingChip);
   const votingBox = document.createElement("div");
   votingBox.className = "voting-strip";
-  votingBox.innerHTML = `
-    <div class="voting-legend" role="group" aria-label="Endorsement legend">
-      <span class="vote-legend-item"><span class="vote-swatch" style="background:${ENDORSE_COLORS.reform.fill};opacity:0.6"></span>Reform <span class="vote-count" data-count="reform">–</span></span>
-      <span class="vote-legend-sep" aria-hidden="true">·</span>
-      <button type="button" class="vote-legend-item vote-legend-restore" title="Fly to the Restore seat"><span class="vote-swatch" style="background:${ENDORSE_COLORS.restore.fill}"></span>Restore <span class="vote-count" data-count="restore">–</span></button>
-    </div>
-    <p class="voting-vi" id="national-vi">National VI loading…</p>
-    <p class="voting-disclaimer"><strong>Editorial endorsement map</strong>: partisan Reform / Restore Britain guide. Never Labour or Conservatives. Not Electoral Commission advice. Projections are projections.</p>
-    <p class="voting-updated" id="polls-updated"></p>
-  `;
-  votingBox.querySelector(".vote-legend-restore")?.addEventListener("click", () => {
-    if (!options.isOn("constituencies")) {
-      votingChip.setAttribute("aria-pressed", "true");
-      options.setOn("constituencies", true);
-      refreshStatus();
-    }
-    options.onRestore?.();
-  });
+  votingBox.textContent = "Who to back to stop Labour in each seat, with projections and 2024 results.";
   voting.details.append(votingBox);
 
   // Grouped sections, collapsed by default with counts.
   const groups: HTMLDetailsElement[] = [];
   for (const def of LAYER_SECTIONS) {
     const layers = def.layers.map((id) => LAYERS.find((layer) => layer.id === id)!).filter(Boolean);
-    const group = section(def.label, layers.length);
+    const group = section(def.label, layers);
     group.details.dataset.section = def.id;
     for (const layer of layers) group.grid.append(chipButton(layer, options.isOn(layer.id)));
     groups.push(group.details);
   }
-  const upcomingLayers = LAYERS.filter((layer) => layer.group === "upcoming");
-  const upcoming = section("Upcoming", upcomingLayers.length, false, "group-upcoming");
-  for (const layer of upcomingLayers) upcoming.grid.append(chipButton(layer, options.isOn(layer.id)));
-  groups.push(upcoming.details);
 
   // About the data (fix 10): one link instead of a 90-word credits paragraph.
   const about = document.createElement("button");
@@ -176,38 +164,21 @@ export function mountPanel(
     dialog.showModal();
   });
 
-  body.append(filter, voting.details, ...groups, about);
-
-  void loadVotingBundle().then((bundle) => {
-    const vi = votingBox.querySelector<HTMLElement>("#national-vi");
-    const updated = votingBox.querySelector<HTMLElement>("#polls-updated");
-    for (const el of votingBox.querySelectorAll<HTMLElement>("[data-count]")) {
-      const n = bundle.endorsements.counts[el.dataset.count ?? ""];
-      el.textContent = typeof n === "number" ? String(n) : "–";
-    }
-    const avg = bundle.national?.rolling_average;
-    if (vi && avg) {
-      const rb = avg.rb != null ? ` · RB ${avg.rb}%` : " · RB –";
-      vi.textContent = `National VI (rolling ${avg.n}): Lab ${avg.lab ?? "–"}% · Con ${avg.con ?? "–"}% · Ref ${avg.ref ?? "–"}% · LD ${avg.ld ?? "–"}% · Grn ${avg.grn ?? "–"}%${rb}`;
-    } else if (vi) {
-      vi.textContent = "National VI unavailable";
-    }
-    if (updated) {
-      updated.textContent = formatPollsUpdated(bundle.endorsements.retrieved_at || bundle.national?.retrieved_at);
-    }
-  }).catch(() => {
-    const vi = votingBox.querySelector<HTMLElement>("#national-vi");
-    if (vi) vi.textContent = "National VI unavailable";
-  });
+  // Filter stays put while the sections scroll under it.
+  const head = document.createElement("div");
+  head.className = "panel-sticky";
+  head.append(filter);
+  body.append(head, voting.details, ...groups, about);
 
   const chips = () => [...body.querySelectorAll<HTMLButtonElement>(".chip")];
 
   // "N layers on · Clear" (fix 6).
   const refreshStatus = () => {
     const n = LAYERS.filter((layer) => options.isOn(layer.id)).length;
-    count.textContent = `${n} layer${n === 1 ? "" : "s"} on`;
+    count.textContent = n === 0 ? "No layers on" : `${n} layer${n === 1 ? "" : "s"} on`;
     clear.hidden = n === 0;
     count.classList.toggle("is-off", n === 0);
+    for (const details of groups) refreshGroup(details);
   };
   refreshStatus();
 
@@ -250,6 +221,13 @@ export function mountPanel(
     const next = button.getAttribute("aria-pressed") !== "true";
     button.setAttribute("aria-pressed", next ? "true" : "false");
     options.setOn(id, next);
+    refreshStatus();
+  });
+
+  window.addEventListener("atlas:layer", (event) => {
+    const id = (event as CustomEvent<{ id: string; on: boolean }>).detail?.id;
+    const chip = chips().find((c) => c.dataset.layer === id);
+    if (chip && isLayerId(id)) chip.setAttribute("aria-pressed", options.isOn(id) ? "true" : "false");
     refreshStatus();
   });
 

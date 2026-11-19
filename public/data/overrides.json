@@ -1,10 +1,9 @@
 {
-  "description": "Daniel per-seat endorsement overrides. Always win over the automatic anti-split tree.",
+  "description": "Site owner per-seat tactical-pick overrides. An override always wins over the automatic rule in src/tactical.ts; the seat panel still shows what the data-based rule would pick.",
   "how_to_edit": [
-    "Add an object to overrides[] with pcon24cd (ONS PCON24CD), endorse (reform|restore|none|other:<label>), optional note, by, at (ISO date).",
-    "Never set endorse to Labour or Conservatives — the engine rejects those.",
-    "Optional standing_intent: { reform?: yes|no|unknown, restore?: yes|no|unknown } for editor intent before Democracy Club confirmation (future use).",
-    "After editing, run: python3 scripts/build_endorsements.py (or scripts/refresh_voting_data.py)."
+    "Add an object to overrides[] with pcon24cd (ONS PCON24CD), party (any party name, e.g. \"Conservative\", \"Reform UK\", \"Restore Britain\", \"Liberal Democrat\", \"Green\", \"SNP\", \"Plaid Cymru\", \"Independent\"), optional note and at (ISO date).",
+    "An override naming Labour is ignored. The legacy endorse field (reform|restore|none|other:<label>) is still read.",
+    "Picks are computed in the browser at load time; no rebuild step is needed."
   ],
   "overrides": []
 }

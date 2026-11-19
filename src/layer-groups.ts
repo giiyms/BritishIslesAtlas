@@ -15,18 +15,18 @@ export const LAYER_SECTIONS: readonly LayerSection[] = [
   {
     id: "transport",
     label: "Transport",
-    layers: ["roads", "railway-stations", "aerodromes", "ferry-terminals", "marinas", "petrol"],
+    layers: ["roads", "railway-stations", "aerodromes", "ferry-terminals", "immigration", "marinas", "petrol"],
   },
   {
     id: "health",
     label: "Health & emergency",
-    layers: ["hospitals", "clinics", "dentists", "pharmacies", "fire-stations", "police", "prisons", "courthouses"],
+    layers: ["hospitals", "health", "clinics", "dentists", "pharmacies", "fire-stations", "police", "crime", "prisons", "courthouses"],
   },
   {
     id: "culture",
     label: "Culture & heritage",
     layers: [
-      "museums", "galleries", "theatres", "cinemas", "arts-centres", "castles", "ruins",
+      "legends", "historic", "museums", "galleries", "theatres", "cinemas", "arts-centres", "castles", "ruins",
       "battlefields", "memorials", "windmills", "lighthouses", "piers", "townhalls", "nightclubs",
     ],
   },
@@ -34,19 +34,19 @@ export const LAYER_SECTIONS: readonly LayerSection[] = [
     id: "leisure",
     label: "Leisure & outdoors",
     layers: [
-      "zoos", "aquariums", "theme-parks", "stadiums", "viewpoints", "golf-courses", "nature-reserves",
+      "mountains", "zoos", "aquariums", "theme-parks", "stadiums", "viewpoints", "golf-courses", "nature-reserves",
       "camp-sites", "caravan-sites", "sports-centres", "fitness-centres", "playgrounds", "beaches", "swimming-pools",
     ],
   },
   {
     id: "faith",
     label: "Faith & community",
-    layers: ["places-of-worship", "churches", "mosques", "other-religious", "community-centres", "pubs", "population"],
+    layers: ["cemeteries", "places-of-worship", "churches", "mosques", "other-religious", "community-centres", "pubs", "population"],
   },
   {
     id: "services",
     label: "Services",
-    layers: ["schools", "universities", "libraries", "post-offices", "marketplaces", "ev", "power", "census"],
+    layers: ["weather", "schools", "universities", "libraries", "post-offices", "marketplaces", "ev", "power", "wind", "nuclear", "census"],
   },
 ];
 
@@ -58,12 +58,12 @@ const SINGULAR_OVERRIDES: Record<string, string> = {
   "EV charging": "EV charger",
   "Other religious": "Religious site",
   Population: "Settlement",
-  Census: "Census marker",
+  Census: "Council area",
   Roads: "Road",
-  Crime: "Crime marker",
-  Health: "Health site",
+  Crime: "Recorded crime",
+  Health: "GP practice",
   Weather: "Weather station",
-  Immigration: "Port of entry",
+  Immigration: "Immigration",
   Nuclear: "Nuclear site",
   Historic: "Historic site",
   Legends: "Legend site",
