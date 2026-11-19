@@ -15,6 +15,20 @@ python3 scripts/ingest_ons_pcon2024.py
 License: Open Government Licence v3.0 (OS + ONS Crown copyright attribution
 required). See `SOURCES.md`.
 
+## `simplify_constituencies.py`
+
+Rebuilds `public/data/constituencies-gb-2024-simplified.geojson` (~1.93 MB raw,
+~539 KB gzip) from `public/data/constituencies-gb-2024.geojson` using only the
+Python standard library. Decomposes all 650 seats into shared topological arcs
+so neighbouring borders remain bit-for-bit identical (zero gaps or slivers),
+drops non-shared coastal islets under 0.05 km², simplifies with Douglas-Peucker
+(75 m on urban seats < 30 km², 150 m on rural shared borders, 250 m on outer
+coastlines), and quantises coordinates to 4 decimal places.
+
+```bash
+python3 scripts/simplify_constituencies.py
+```
+
 
 ## `extract_osm_fuel_ev.py`
 

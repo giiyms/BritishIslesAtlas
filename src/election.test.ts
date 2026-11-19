@@ -96,4 +96,50 @@ describe('election data joins', () => {
     expect(partyColour('')).toBe('#b9bec4');
     expect(partyColour('Labour')).not.toBe(partyColour('Conservative'));
   });
+  it('ships compact, 4 dp topology-preserving simplified boundaries with matching shared edges', () => {
+    const rawText = readFileSync(new URL('../public/data/constituencies-gb-2024-simplified.geojson', import.meta.url), 'utf8');
+    expect(Buffer.byteLength(rawText, 'utf8')).toBeLessThan(2_500_000);
+    const geo = JSON.parse(rawText) as {
+      features: { geometry: { type: string; coordinates: number[][][] | number[][][][] } }[];
+    };
+    expect(geo.features).toHaveLength(650);
+    const dirCounts = new Map<string, number>();
+    const edgeOwners = new Map<string, Set<number>>();
+    for (let fi = 0; fi < geo.features.length; fi++) {
+      const geom = geo.features[fi].geometry;
+      const polys = geom.type === 'Polygon' ? [geom.coordinates as number[][][]] : (geom.coordinates as number[][][][]);
+      expect(polys.length).toBeGreaterThan(0);
+      for (const poly of polys) {
+        for (const ring of poly) {
+          expect(ring.length).toBeGreaterThanOrEqual(4);
+          expect(ring[0]).toEqual(ring[ring.length - 1]);
+          for (let i = 0; i < ring.length - 1; i++) {
+            const [x1, y1] = ring[i];
+            const [x2, y2] = ring[i + 1];
+            expect(Math.round(x1 * 1e4) / 1e4).toBe(x1);
+            expect(Math.round(y1 * 1e4) / 1e4).toBe(y1);
+            const a = `${x1},${y1}`;
+            const b = `${x2},${y2}`;
+            const dirKey = `${a}|${b}`;
+            dirCounts.set(dirKey, (dirCounts.get(dirKey) ?? 0) + 1);
+            const undir = a < b ? `${a}|${b}` : `${b}|${a}`;
+            let owners = edgeOwners.get(undir);
+            if (!owners) { owners = new Set(); edgeOwners.set(undir, owners); }
+            owners.add(fi);
+          }
+        }
+      }
+    }
+    let sharedEdges = 0;
+    let asymmetric = 0;
+    for (const [undir, owners] of edgeOwners) {
+      if (owners.size >= 2) {
+        sharedEdges++;
+        const [a, b] = undir.split('|');
+        if ((dirCounts.get(`${a}|${b}`) ?? 0) !== (dirCounts.get(`${b}|${a}`) ?? 0)) asymmetric++;
+      }
+    }
+    expect(sharedEdges).toBeGreaterThan(25_000);
+    expect(asymmetric).toBe(0);
+  });
 });

@@ -3,10 +3,10 @@
 
 Downloads WGS84 GeoJSON from the ONS ArcGIS FeatureServer and writes all 650
 seats (632 GB + 18 Northern Ireland) to public/data/constituencies-gb-2024.geojson
-(file name kept from the GB-only era). Also writes the 18 NI seats into
-public/data/constituencies-gb-2024-simplified.geojson, simplified with shapely
-(tolerance SIMPLIFY_TOL degrees, 5 dp) to match the existing GB simplified
-features, and merges metadata into public/data/extract-meta.json.
+(file name kept from the GB-only era). Also rebuilds
+public/data/constituencies-gb-2024-simplified.geojson via
+scripts/simplify_constituencies.py (topology-preserving shared-arc simplification,
+4 dp) and merges metadata into public/data/extract-meta.json.
 
 Usage:
   python3 scripts/ingest_ons_pcon2024.py
@@ -25,9 +25,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 OUT_GEOJSON = ROOT / "public" / "data" / "constituencies-gb-2024.geojson"
 OUT_SIMPLIFIED = ROOT / "public" / "data" / "constituencies-gb-2024-simplified.geojson"
-# GB simplified features predate this script; 0.0004 deg (~40 m) with shapely
-# reproduces their ~62% vertex retention, so NI is simplified to match.
-SIMPLIFY_TOL = 0.0004
 META_PATH = ROOT / "public" / "data" / "extract-meta.json"
 
 FEATURE_SERVER = (
@@ -117,33 +114,23 @@ def slim_feature(feat: dict) -> dict:
     }
 
 
-def _round(coords, dp: int = 5):
-    if coords and isinstance(coords[0], (int, float)):
-        return [round(c, dp) for c in coords]
-    return [_round(c, dp) for c in coords]
+def write_simplified(collection: dict) -> dict:
+    """Write topology-preserving, 4 dp simplified UK constituencies (GB + NI)."""
+    from simplify_constituencies import simplify_collection
 
-
-def write_simplified_ni(ni: list[dict]) -> None:
-    """Replace the N* features in the simplified file; GB features untouched."""
-    from shapely.geometry import mapping, shape
-
-    data = json.loads(OUT_SIMPLIFIED.read_text(encoding="utf-8"))
-    kept = [f for f in data["features"] if not f["properties"]["PCON24CD"].startswith("N")]
-    for feat in ni:
-        geom = shape(feat["geometry"]).simplify(SIMPLIFY_TOL, preserve_topology=True)
-        g = mapping(geom)
-        kept.append(
-            {
-                "type": "Feature",
-                "geometry": {"type": g["type"], "coordinates": _round(json.loads(json.dumps(g["coordinates"])))},
-                "properties": dict(feat["properties"]),
-            }
-        )
-    if len(kept) != EXPECTED_UK:
-        raise SystemExit(f"Simplified file would have {len(kept)} features, expected {EXPECTED_UK}")
-    data["features"] = kept
-    OUT_SIMPLIFIED.write_text(json.dumps(data, separators=(",", ":")), encoding="utf-8")
-    print(f"Wrote {OUT_SIMPLIFIED} ({len(kept)} features; NI simplified)", flush=True)
+    out_data, stats = simplify_collection(collection, verbose=True)
+    if stats["features"] != EXPECTED_UK:
+        raise SystemExit(f"Simplified file would have {stats['features']} features, expected {EXPECTED_UK}")
+    if stats["asymmetric_shared_edges"] != 0:
+        raise SystemExit(f"Topology check failed: {stats['asymmetric_shared_edges']} asymmetric shared edges")
+    encoded = json.dumps(out_data, separators=(",", ":")).encode("utf-8")
+    OUT_SIMPLIFIED.write_bytes(encoded)
+    print(
+        f"Wrote {OUT_SIMPLIFIED} ({len(encoded):,} bytes, {stats['features']} features, "
+        f"{stats['vertices']:,} verts, 0 asymmetric shared edges)",
+        flush=True,
+    )
+    return stats
 
 
 def main() -> int:
@@ -195,7 +182,7 @@ def main() -> int:
     OUT_GEOJSON.write_text(json.dumps(collection, separators=(",", ":")), encoding="utf-8")
     size_bytes = OUT_GEOJSON.stat().st_size
     print(f"Wrote {OUT_GEOJSON} ({size_bytes:,} bytes, {len(uk)} features)", flush=True)
-    write_simplified_ni(ni)
+    simp_stats = write_simplified(collection)
 
     extracted_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     meta_entry = {
@@ -221,7 +208,10 @@ def main() -> int:
             f"UK Westminster: England+Scotland+Wales = {len(gb)}, "
             f"Northern Ireland = {len(ni)}; Ireland/IoM/CI have no Westminster seats"
         ),
-        "simplified_ni": f"shapely simplify(tolerance={SIMPLIFY_TOL}, preserve_topology=True), 5 dp",
+        "simplified": (
+            f"shared-arc DP (urban={simp_stats['urban_tol_m']}m, internal={simp_stats['internal_tol_m']}m, "
+            f"coastal={simp_stats['coastal_tol_m']}m, islet>={simp_stats['min_islet_km2']}km2), {simp_stats['dp']} dp"
+        ),
         "attribution": (
             "Contains Ordnance Survey data © Crown copyright and database right 2024. "
             "Contains National Statistics data © Crown copyright and database right 2024. "

@@ -50,6 +50,11 @@ export function loadElection(): Promise<ElectionData> {
     getJson('overrides.json').catch(() => ({ overrides: [] })),
   ]).then(([geo, results, candidates, projections, national, overrides]) => ({ geo, seats: joinSeats(geo, results, candidates, projections, overrides), results, candidates, projections, national, overrides }));
 }
+let fullBoundaries: Promise<Geo> | undefined;
+/** Full-detail ONS BGC boundaries (~20 m): fetched lazily only if the user zooms to street level. */
+export function loadFullBoundaries(): Promise<Geo> {
+  return fullBoundaries ??= getJson('constituencies-gb-2024.geojson').catch((err: unknown) => { fullBoundaries = undefined; throw err; });
+}
 let seatHistory: Promise<import('./poll-trend').SeatHistory> | undefined;
 /** Per-seat projection history: fetched only when a seat panel first opens. A failed fetch can be retried. */
 export function loadSeatHistory(): Promise<import('./poll-trend').SeatHistory> {

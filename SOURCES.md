@@ -1347,7 +1347,7 @@ Pipeline `note` repeats brand or operator on 6230 of 43184.
 | **Hub** | [data.gov.uk BGC](https://www.data.gov.uk/dataset/7165b3a0-a1f2-40ff-a8e0-cfc2a573be30/westminster-parliamentary-constituencies-july-2024-boundaries-uk-bgc) · [Open Geography Portal](https://geoportal.statistics.gov.uk/datasets/ons::westminster-parliamentary-constituencies-july-2024-boundaries-uk-bgc-2/about) |
 | **Extract date (UTC)** | 2026-10-02T19:21:57Z |
 | **Method** | `scripts/ingest_ons_pcon2024.py` — download FeatureServer GeoJSON with `resultOffset` pagination, keep `PCON24CD` / `PCON24NM`, assert exactly 650 UK features (543 E, 57 S, 32 W, 18 N) |
-| **File size** | ~20.5 MB GeoJSON (minified). Prefer GeoJSON for v1; TopoJSON/PMTiles deferred if mobile load becomes painful |
+| **File size** | ~21.1 MB full BGC (`constituencies-gb-2024.geojson`, loaded lazily only at street zoom z ≥ 11.5); ~1.93 MB raw / ~539 KB gzip (`constituencies-gb-2024-simplified.geojson`, built by `scripts/simplify_constituencies.py` via topology-preserving shared-arc simplification at 4 dp) for first load |
 | **License** | [Open Government Licence v3.0](https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/) — contains Ordnance Survey **and** ONS IPR |
 | **Attribution** | Contains Ordnance Survey data © Crown copyright and database right 2024. Contains National Statistics data © Crown copyright and database right 2024. |
 

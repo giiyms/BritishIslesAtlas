@@ -21,7 +21,7 @@ import {
   type FeatureCollection as VotingFeatureCollection,
 } from "./voting";
 import { ENDORSE_COLORS } from "./endorse";
-import { DEFAULT_MEASURE, loadElection, loadResultsHistory, loadSeatHistory, seatColour, seatHtml, type ElectionData, type Measure } from "./election";
+import { DEFAULT_MEASURE, loadElection, loadFullBoundaries, loadResultsHistory, loadSeatHistory, seatColour, seatHtml, type ElectionData, type Measure } from "./election";
 import { attachResultHistory, attachSeatHistory } from "./poll-trend";
 import { singularLabel } from "./layer-groups";
 import { loadPlaces, loadedPlaces } from "./geo";
@@ -588,6 +588,7 @@ export function createAtlas(container: HTMLElement): Atlas {
             electionData = data;
             enrichedSeats = data.geo as VotingFeatureCollection;
             updateElectionColours();
+            maybeUpgradeBoundaries();
             const code = new URLSearchParams(location.search).get("seat");
             if (code) void openSeat(code);
           } catch (err) {
@@ -783,6 +784,18 @@ export function createAtlas(container: HTMLElement): Atlas {
     }
     (map.getSource("constituencies") as import("maplibre-gl").GeoJSONSource | undefined)?.setData(enrichedSeats as never);
   };
+  const FULL_BOUNDARY_ZOOM = 11.5;
+  let fullBoundariesLoading: Promise<void> | null = null;
+  function maybeUpgradeBoundaries() {
+    if (fullBoundariesLoading || !enrichedSeats || !electionData || !state.constituencies || map.getZoom() < FULL_BOUNDARY_ZOOM) return;
+    fullBoundariesLoading = loadFullBoundaries()
+      .then((fullGeo) => {
+        enrichedSeats = fullGeo as VotingFeatureCollection;
+        updateElectionColours();
+      })
+      .catch(() => { fullBoundariesLoading = null; });
+  }
+  map.on("zoomend", maybeUpgradeBoundaries);
   window.addEventListener("atlas:measure", (event) => { measure = (event as CustomEvent<Measure>).detail; updateElectionColours(); });
   const seatLngLat = (code: string): [number, number] | null => {
     const feature = enrichedSeats?.features.find((f) => f.properties?.PCON24CD === code);
